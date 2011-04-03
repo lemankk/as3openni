@@ -1,4 +1,0 @@
-<?xml version="1.0"?>
-<componentPackage>
-	<component id="AS3OpenNI" class="org.as3openni.AS3OpenNI"/>
-</componentPackage>
