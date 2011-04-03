@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   minWidth="800" minHeight="600"
+			   addedToStage="init(event)" 
+			   horizontalAlign="center"
+			   verticalAlign="middle" 
+			   horizontalScrollPolicy="off"
+			   verticalScrollPolicy="off">
+	
+	<fx:Script>
+		<![CDATA[
+			import org.as3openni.AS3OpenNI;
+			import org.as3openni.nite.events.NiteCircleEvent;
+			import org.as3openni.nite.events.NiteSessionEvent;
+			
+			private var _as3OpenNIClient:NativeProcess;
+			private var _as3OpenNIServer:AS3OpenNI;
+			
+			// Run or debug application.
+			private var _runAppOnly:Boolean = false;
+			private var _radius:Number = 250;
+			private var _armRadius:Number = 25;
+			
+			protected function init(event:Event):void
+			{
+				this.drawCircle();
+				this.drawArm();
+				
+				if(!this._runAppOnly)
+				{
+					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
+					
+					this._as3OpenNIServer = new AS3OpenNI();
+					this.addListeners();
+					this.addCircleListeners();
+					
+					if(NativeProcess.isSupported) this.runAS3OpenNIClient();
+				}
+			}
+			
+			protected function drawCircle():void
+			{
+				this._circle.graphics.beginFill(0xFF0000);
+				this._circle.graphics.drawCircle(0, 0, this._radius);
+				this._circle.graphics.endFill();
+			}
+			
+			protected function drawArm():void
+			{
+				this._arm.graphics.beginFill(0xFFFFFF);
+				this._arm.graphics.drawCircle(0, 0, this._armRadius);
+				this._arm.graphics.endFill();
+			}
+			
+			protected function runAS3OpenNIClient():void
+			{     
+				var file:File = new File();
+				var nativeProcessStartupInfo:NativeProcessStartupInfo = new NativeProcessStartupInfo();
+				
+				if (Capabilities.os.toLowerCase().indexOf("win") > -1)
+				{
+					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.8.exe");
+				} 
+				else if (Capabilities.os.toLowerCase().indexOf("mac") > -1) 
+				{
+					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.8");
+				}
+				
+				// Turn on the Circle feature.
+				var processArgs:Vector.<String> = new Vector.<String>();
+				processArgs.push("-ocf");
+				
+				nativeProcessStartupInfo.arguments = processArgs;
+				nativeProcessStartupInfo.executable = file;
+				
+				this._as3OpenNIClient = new NativeProcess();
+				this._as3OpenNIClient.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onOutputData);
+				this._as3OpenNIClient.addEventListener(ProgressEvent.STANDARD_ERROR_DATA, this.onErrorData);
+				this._as3OpenNIClient.addEventListener(NativeProcessExitEvent.EXIT, this.onExit);
+				this._as3OpenNIClient.start(nativeProcessStartupInfo);
+			}
+			
+			protected function onClose(event:Event):void
+			{
+				if(this._as3OpenNIClient) this._as3OpenNIClient.exit(true);
+			}
+			
+			protected function onOutputData(event:ProgressEvent):void
+			{
+				var msg:String = this._as3OpenNIClient.standardOutput.readMultiByte(this._as3OpenNIClient.standardOutput.bytesAvailable, File.systemCharset);
+				trace("Output:", msg);
+			}
+			
+			protected function onErrorData(event:ProgressEvent):void
+			{
+				trace("ERROR:", this._as3OpenNIClient.standardError.readMultiByte(this._as3OpenNIClient.standardOutput.bytesAvailable, File.systemCharset));
+				this._as3OpenNIClient.closeInput();
+			}
+			
+			protected function onExit(event:NativeProcessExitEvent):void
+			{
+				if(!this._runAppOnly)
+				{
+					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
+				}
+			}
+			
+			protected function addListeners():void
+			{
+				NativeApplication.nativeApplication.addEventListener(Event.EXITING, onClose);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_PROGRESS, sessionProgress);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_ENDED, sessionEnded);
+			}
+			
+			protected function addCircleListeners():void
+			{
+				this._as3OpenNIServer.session.addEventListener(NiteCircleEvent.ANGLE, circleAngle);
+				this._as3OpenNIServer.session.addEventListener(NiteCircleEvent.NO_CIRCLE, noCircle);
+			}
+			
+			protected function sessionStarted(event:NiteSessionEvent):void
+			{
+				trace('Session Started');
+			}
+			
+			protected function sessionProgress(event:NiteSessionEvent):void
+			{
+				trace('Session Progress');
+			}
+			
+			protected function sessionEnded(event:NiteSessionEvent):void
+			{
+				trace('Session Ended');
+			}
+			
+			protected function circleAngle(event:NiteCircleEvent):void
+			{
+				//trace('Circle Angle: ' + event.angle);
+				//trace('Clockwise: ' + event.clockwise);
+				
+				var angle:Number = event.angle;
+				var rad:Number = (this._radius - this._armRadius - 10);
+				var centerPoint:Number = this._circleArea.width/2;
+				
+				this._arm.x = centerPoint + Math.cos(angle) * rad;
+				this._arm.y = centerPoint + Math.sin(angle) * rad;
+			}
+			
+			protected function noCircle(event:NiteCircleEvent):void
+			{
+				trace('No Circle Found');
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:Canvas id="_circleArea" width="500" height="500" clipContent="true" 
+			   horizontalScrollPolicy="off" verticalScrollPolicy="off">
+		<mx:UIComponent id="_circle" x="250" y="250"/>
+		<mx:UIComponent id="_arm" x="250" y="35" />
+	</mx:Canvas>
+	
+</mx:WindowedApplication>
