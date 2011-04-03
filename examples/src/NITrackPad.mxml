@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   minWidth="850" minHeight="600"
+			   addedToStage="init(event)" 
+			   horizontalAlign="left"
+			   verticalAlign="top" 
+			   horizontalScrollPolicy="off"
+			   verticalScrollPolicy="off"
+			   layout="absolute">
+	
+	<fx:Script>
+		<![CDATA[
+			import org.as3openni.AS3OpenNI;
+			import org.as3openni.nite.events.NiteSessionEvent;
+			import org.as3openni.nite.events.NiteTrackPadEvent;
+			
+			private var _as3OpenNIClient:NativeProcess;
+			private var _as3OpenNIServer:AS3OpenNI;
+			
+			// Run or debug application.
+			private var _runAppOnly:Boolean = false;
+			
+			protected function init(event:Event):void
+			{
+				if(!this._runAppOnly)
+				{
+					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
+					
+					this._as3OpenNIServer = new AS3OpenNI();
+					this.addListeners();
+					this.addTrackPadListeners();
+					
+					if(NativeProcess.isSupported)
+					{
+						this.runAS3OpenNIClient();
+					}
+				}
+			}
+			
+			protected function runAS3OpenNIClient():void
+			{     
+				var file:File = new File();
+				var nativeProcessStartupInfo:NativeProcessStartupInfo = new NativeProcessStartupInfo();
+				
+				if (Capabilities.os.toLowerCase().indexOf("win") > -1)
+				{
+					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.5.exe");
+				} 
+				else if (Capabilities.os.toLowerCase().indexOf("mac") > -1) 
+				{
+					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.5");
+				}
+				
+				// Turn on the TrackPad feature.
+				var processArgs:Vector.<String> = new Vector.<String>();
+				processArgs.push("-otpf");
+				
+				// Change the number of TrackPad columns.
+				processArgs.push("-tpc");
+				processArgs.push("4"); // default is 4.
+				
+				// Change the number of TrackPad rows.
+				processArgs.push("-tpr");
+				processArgs.push("4"); // default is 4.
+				
+				nativeProcessStartupInfo.arguments = processArgs;
+				nativeProcessStartupInfo.executable = file;
+				
+				this._as3OpenNIClient = new NativeProcess();
+				this._as3OpenNIClient.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onOutputData);
+				this._as3OpenNIClient.addEventListener(ProgressEvent.STANDARD_ERROR_DATA, this.onErrorData);
+				this._as3OpenNIClient.addEventListener(NativeProcessExitEvent.EXIT, this.onExit);
+				this._as3OpenNIClient.start(nativeProcessStartupInfo);
+			}
+			
+			protected function onClose(event:Event):void
+			{
+				if(this._as3OpenNIClient) this._as3OpenNIClient.exit(true);
+			}
+			
+			protected function onOutputData(event:ProgressEvent):void
+			{
+				var msg:String = this._as3OpenNIClient.standardOutput.readMultiByte(this._as3OpenNIClient.standardOutput.bytesAvailable, File.systemCharset);
+				trace("Output:", msg);
+			}
+			
+			protected function onErrorData(event:ProgressEvent):void
+			{
+				trace("ERROR:", this._as3OpenNIClient.standardError.readMultiByte(this._as3OpenNIClient.standardOutput.bytesAvailable, File.systemCharset));
+				this._as3OpenNIClient.closeInput();
+			}
+			
+			protected function onExit(event:NativeProcessExitEvent):void
+			{
+				if(!this._runAppOnly)
+				{
+					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
+				}
+			}
+			
+			protected function addListeners():void
+			{
+				NativeApplication.nativeApplication.addEventListener(Event.EXITING, onClose);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_PROGRESS, sessionProgress);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_ENDED, sessionEnded);
+			}
+			
+			protected function addTrackPadListeners():void
+			{
+				this._as3OpenNIServer.session.addEventListener(NiteTrackPadEvent.TRACKPAD_HOVER, trackPadHover);
+			}
+			
+			protected function sessionStarted(event:NiteSessionEvent):void
+			{
+				trace('Session Started');
+			}
+			
+			protected function sessionProgress(event:NiteSessionEvent):void
+			{
+				//trace('Session Progress');
+			}
+			
+			protected function sessionEnded(event:NiteSessionEvent):void
+			{
+				//trace('Session Ended');
+			}
+			
+			protected function trackPadHover(event:NiteTrackPadEvent):void
+			{
+				/*trace('TrackPad-Hover Column: ' + event.column);
+				trace('TrackPad-Hover Row: ' + event.row);
+				trace('TrackPad-Hover Direction: ' + event.direction);*/
+				this.runThroughGrid(event.column, event.row, event.direction);
+			}
+			
+			protected function runThroughGrid(column:Number = 0, row:Number = 0, direction:String = ''):void
+			{
+				for(var i:Number = 0; i < 16; i++)
+				{
+					var btn:Button = this['_btn' + (i+1)] as Button;
+					btn.dispatchEvent(new MouseEvent(MouseEvent.ROLL_OUT));
+					btn.dispatchEvent(new MouseEvent(MouseEvent.ROLL_OUT));
+					
+					if(btn.label == ('('+row+','+column+')'))
+					{
+						btn.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_OVER));
+						btn.dispatchEvent(new MouseEvent(MouseEvent.ROLL_OVER));
+						
+						if(direction == NiteTrackPadEvent.TRACKPAD_DOWN)
+						{
+							btn.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_DOWN));
+							this.btnDown(btn);
+						}
+						else
+						{
+							btn.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP));
+							this.btnUp(btn);
+						}
+					}
+				}
+			}
+			
+			protected function btnDown(btn:Button):void
+			{
+				trace(btn.label + ': is down!');
+			}
+			
+			protected function btnUp(btn:Button):void
+			{
+				trace(btn.label + ': is up!');
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:Box width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+		<mx:Grid id="_grid">
+			<!-- Row One -->
+			<mx:GridRow>
+				<mx:GridItem>
+					<mx:Button id="_btn1" label="(3,0)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn2" label="(3,1)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn3" label="(3,2)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn4" label="(3,3)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+			</mx:GridRow>
+			
+			<!-- Row Two -->
+			<mx:GridRow>
+				<mx:GridItem>
+					<mx:Button id="_btn5" label="(2,0)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn6" label="(2,1)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn7" label="(2,2)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn8" label="(2,3)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+			</mx:GridRow>
+			
+			<!-- Row Three -->
+			<mx:GridRow>
+				<mx:GridItem>
+					<mx:Button id="_btn9" label="(1,0)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn10" label="(1,1)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn11" label="(1,2)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn12" label="(1,3)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+			</mx:GridRow>
+			
+			<!-- Row Four -->
+			<mx:GridRow>
+				<mx:GridItem>
+					<mx:Button id="_btn13" label="(0,0)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn14" label="(0,1)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn15" label="(0,2)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Button id="_btn16" label="(0,3)" width="200" height="100" fontWeight="bold" fontSize="16"/>
+				</mx:GridItem>
+			</mx:GridRow>
+			
+		</mx:Grid>
+	</mx:Box>
+	
+</mx:WindowedApplication>
