@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>AS3OpenNI_Alpha_1.0.8_Examples</name>
+	<name>AS3OpenNI_Examples</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -21,11 +21,4 @@
 		<nature>com.adobe.flexbuilder.project.actionscriptnature</nature>
 		<nature>com.adobe.flexbuilder.project.flexnature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>[source path] src</name>
-			<type>2</type>
-			<locationURI>DOCUMENTS/AS3OpenNI/src</locationURI>
-		</link>
-	</linkedResources>
 </projectDescription>
