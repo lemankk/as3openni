@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   minWidth="900" minHeight="600"
+			   addedToStage="init(event)"
+			   horizontalScrollPolicy="off"
+			   verticalScrollPolicy="off"
+			   paddingLeft="0" paddingRight="0"
+			   paddingTop="0" paddingBottom="0"
+			   layout="absolute" horizontalAlign="center"
+			   verticalAlign="middle">
+	
+	<fx:Script>
+		<![CDATA[
+			import org.as3openni.AS3OpenNI;
+			import org.as3openni.nite.events.NiteGestureEvent;
+			import org.as3openni.nite.events.NiteSessionEvent;
+			
+			private var _as3OpenNIClient:NativeProcess;
+			private var _as3OpenNIServer:AS3OpenNI;
+			
+			// Run or debug application.
+			private var _runAppOnly:Boolean = false;
+			
+			private var _currentState:Box;
+			private var _states:Array = new Array();
+			
+			protected function init(event:Event):void
+			{
+				this._states =
+				[
+					this._waveBox,
+					this._steadyHandBox,
+					this._pushBox,
+					this._swipeLeftBox,
+					this._swipeRightBox,
+					this._swipeUpBox,
+					this._swipeDownBox
+				];
+				
+				if(!this._runAppOnly)
+				{
+					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
+					
+					this._as3OpenNIServer = new AS3OpenNI();
+					this.addListeners();
+					this.addGestureListeners();
+					
+					if(NativeProcess.isSupported)
+					{
+						this.runAS3OpenNIClient();
+					}
+				}
+			}
+		
+			protected function runAS3OpenNIClient():void
+			{     
+				var file:File = new File();
+				var nativeProcessStartupInfo:NativeProcessStartupInfo = new NativeProcessStartupInfo();
+				
+				if (Capabilities.os.toLowerCase().indexOf("win") > -1)
+				{
+					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.5.exe");
+				} 
+				else if (Capabilities.os.toLowerCase().indexOf("mac") > -1) 
+				{
+					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.5");
+				}
+				
+				// Turn on the Slider feature.
+				var processArgs:Vector.<String> = new Vector.<String>();
+				processArgs.push("-ogf");
+				
+				nativeProcessStartupInfo.arguments = processArgs;
+				nativeProcessStartupInfo.executable = file;
+				
+				this._as3OpenNIClient = new NativeProcess();
+				this._as3OpenNIClient.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onOutputData);
+				this._as3OpenNIClient.addEventListener(ProgressEvent.STANDARD_ERROR_DATA, this.onErrorData);
+				this._as3OpenNIClient.addEventListener(NativeProcessExitEvent.EXIT, this.onExit);
+				this._as3OpenNIClient.start(nativeProcessStartupInfo);
+			}
+			
+			protected function onClose(event:Event):void
+			{
+				if(this._as3OpenNIClient) this._as3OpenNIClient.exit(true);
+			}
+			
+			protected function onOutputData(event:ProgressEvent):void
+			{
+				var msg:String = this._as3OpenNIClient.standardOutput.readMultiByte(this._as3OpenNIClient.standardOutput.bytesAvailable, File.systemCharset);
+				trace("Output:", msg);
+				this._statusField.text = ("Output: " + msg);
+			}
+			
+			protected function onErrorData(event:ProgressEvent):void
+			{
+				var msg:String = this._as3OpenNIClient.standardError.readMultiByte(this._as3OpenNIClient.standardOutput.bytesAvailable, File.systemCharset);
+				trace("ERROR:", msg);
+				this._as3OpenNIClient.closeInput();
+				this._statusField.text = ("Output: " + msg);
+			}
+			
+			protected function onExit(event:NativeProcessExitEvent):void
+			{
+				if(!this._runAppOnly)
+				{
+					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
+				}
+			}
+			
+			protected function addListeners():void
+			{
+				NativeApplication.nativeApplication.addEventListener(Event.EXITING, onClose);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_PROGRESS, sessionProgress);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_ENDED, sessionEnded);
+			}
+			
+			protected function addGestureListeners():void
+			{
+				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.PUSH, pushDetected);
+				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.WAVE, waveDetected);
+				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.SWIPE_UP, swipeUp);
+				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.SWIPE_DOWN, swipeDown);
+				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.SWIPE_LEFT, swipeLeft);
+				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.SWIPE_RIGHT, swipeRight);
+				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.STEADY, steadyDetected);
+			}
+			
+			protected function sessionStarted(event:NiteSessionEvent):void
+			{
+				trace('Session Started');
+				this._statusField.text = 'Session Started';
+			}
+			
+			protected function sessionProgress(event:NiteSessionEvent):void
+			{
+				trace('Session Progress');
+				this._statusField.text = 'Session Progress';
+			}
+			
+			protected function sessionEnded(event:NiteSessionEvent):void
+			{
+				trace('Session Ended');
+				this._statusField.text = 'Session Ended';
+			}
+			
+			protected function pushDetected(event:NiteGestureEvent):void
+			{
+				//trace('Push Detected');
+				this._currentState = this._pushBox;
+				this.setState();
+			}
+			
+			protected function waveDetected(event:NiteGestureEvent):void
+			{
+				//trace('Wave Detected');
+				this._currentState = this._waveBox;
+				this.setState();
+			}
+			
+			protected function swipeUp(event:NiteGestureEvent):void
+			{
+				//trace('Swipe Up');
+				this._currentState = this._swipeUpBox;
+				this.setState();
+			}
+			
+			protected function swipeDown(event:NiteGestureEvent):void
+			{
+				//trace('Swipe Down');
+				this._currentState = this._swipeDownBox;
+				this.setState();
+			}
+			
+			protected function swipeLeft(event:NiteGestureEvent):void
+			{
+				//trace('Swipe Left');
+				this._currentState = this._swipeLeftBox;
+				this.setState();
+			}
+			
+			protected function swipeRight(event:NiteGestureEvent):void
+			{
+				//trace('Swipe Right');
+				this._currentState = this._swipeRightBox;
+				this.setState();
+			}
+			
+			protected function steadyDetected(event:NiteGestureEvent):void
+			{
+				//trace('Steady Hand');
+				this._currentState = this._steadyHandBox;
+				this.setState();
+			}
+			
+			protected function setState():void
+			{
+				this.resetStates();
+				this._currentState.setStyle('backgroundColor', 0x000000);
+			}
+			
+			protected function resetStates():void
+			{
+				for(var i:Number = 0; i < this._states.length; i++)
+				{
+					var box:Box = this._states[i] as Box;
+					box.setStyle('backgroundColor', 0xFF0000);
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:VBox horizontalAlign="center" verticalAlign="middle" width="100%" height="100%">
+		<mx:Box id="_swipeUpBox" backgroundColor="#FF0000" verticalAlign="middle" paddingRight="10"
+				horizontalScrollPolicy="off" verticalScrollPolicy="off" paddingLeft="10">
+			<mx:Label text="SWIPE UP" fontWeight="bold" fontSize="35" color="#FFFFFF"/>
+		</mx:Box>
+		<mx:Spacer height="100%" />
+		<mx:Box id="_swipeDownBox" backgroundColor="#FF0000" verticalAlign="middle" paddingRight="10"
+				horizontalScrollPolicy="off" verticalScrollPolicy="off" paddingLeft="10">
+			<mx:Label text="SWIPE DOWN" fontWeight="bold" fontSize="35" color="#FFFFFF"/>
+		</mx:Box>
+	</mx:VBox>
+	
+	<mx:HBox horizontalAlign="center" verticalAlign="middle" width="100%" height="100%">
+		<mx:Box id="_swipeLeftBox" backgroundColor="#FF0000" verticalAlign="middle" paddingRight="10"
+				horizontalScrollPolicy="off" verticalScrollPolicy="off" paddingLeft="10">
+			<mx:Label text="SWIPE LEFT" fontWeight="bold" fontSize="35" color="#FFFFFF"/>
+		</mx:Box>
+		
+		<mx:VBox horizontalAlign="center" verticalAlign="middle" width="100%">
+			<mx:Box id="_waveBox" backgroundColor="#FF0000" verticalAlign="middle" paddingRight="10"
+					horizontalScrollPolicy="off" verticalScrollPolicy="off" paddingLeft="10">
+				<mx:Label text="WAVE" fontWeight="bold" fontSize="35" color="#FFFFFF"/>
+			</mx:Box>
+			
+			<mx:Box id="_steadyHandBox" backgroundColor="#FF0000" verticalAlign="middle" paddingRight="10"
+					horizontalScrollPolicy="off" verticalScrollPolicy="off" paddingLeft="10">
+				<mx:Label text="STEADY HAND" fontWeight="bold" fontSize="35" color="#FFFFFF"/>
+			</mx:Box>
+			
+			<mx:Box id="_pushBox" backgroundColor="#FF0000" verticalAlign="middle" paddingRight="10"
+					horizontalScrollPolicy="off" verticalScrollPolicy="off" paddingLeft="10">
+				<mx:Label text="PUSH" fontWeight="bold" fontSize="35" color="#FFFFFF"/>
+			</mx:Box>
+		</mx:VBox>
+		
+		<mx:Box id="_swipeRightBox" backgroundColor="#FF0000" verticalAlign="middle" paddingRight="10"
+				horizontalScrollPolicy="off" verticalScrollPolicy="off" paddingLeft="10">
+			<mx:Label text="SWIPE RIGHT" fontWeight="bold" fontSize="35" color="#FFFFFF"/>
+		</mx:Box>
+	</mx:HBox>
+	
+	<mx:Box id="_statusBox" backgroundColor="#CCCCCC" verticalAlign="middle" paddingRight="10"
+			horizontalScrollPolicy="off" verticalScrollPolicy="off" paddingLeft="10">
+		<mx:Label id="_statusField" text="STATUS" fontWeight="bold" fontSize="14" color="#EEEEEE"/>
+	</mx:Box>
+	
+</mx:WindowedApplication>

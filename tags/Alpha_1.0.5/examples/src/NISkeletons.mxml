@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   minWidth="800" minHeight="600"
+			   addedToStage="init(event)"
+			   horizontalScrollPolicy="off"
+			   verticalScrollPolicy="off"
+			   layout="absolute">
+	
+	<fx:Script>
+		<![CDATA[
+			import org.as3openni.AS3OpenNI;
+			import org.as3openni.nite.events.NiteSessionEvent;
+			import org.as3openni.objects.NiPoint2D;
+			import org.as3openni.objects.NiPoint3D;
+			import org.as3openni.objects.NiSkeleton;
+			import org.as3openni.openni.events.ONISkeletonEvent;
+			import org.as3openni.openni.events.ONIUserTrackingEvent;
+			import org.as3openni.util.math.NiPoint3DUtil;
+			import org.papervision3d.core.geom.Lines3D;
+			import org.papervision3d.materials.special.LineMaterial;
+			
+			// Setup the AS3OpenNI client and server.
+			private var _as3OpenNIClient:NativeProcess;
+			private var _as3OpenNIServer:AS3OpenNI;
+			
+			// Run or debug application.
+			private var _runAppOnly:Boolean = false;
+			
+			// Setup the skeletons 3D world.
+			private var _skeletons3DWorld:Skeletons3DWorld;
+			
+			protected function init(event:Event):void
+			{
+				this.setupSkeletons3DWorld();
+				
+				if(!this._runAppOnly)
+				{
+					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
+					
+					this._as3OpenNIServer = new AS3OpenNI();
+					this.addListeners();
+					this.addUserTrackingListeners();
+					
+					if(NativeProcess.isSupported)
+					{
+						this.runAS3OpenNIClient();
+					}
+				}
+			}
+			
+			protected function setupSkeletons3DWorld():void
+			{
+				this._skeletons3DWorld = new Skeletons3DWorld();
+				this._skeletons3DWorldContainer.addChild(this._skeletons3DWorld);
+			}
+			
+			protected function runAS3OpenNIClient():void
+			{     
+				var file:File = new File();
+				var nativeProcessStartupInfo:NativeProcessStartupInfo = new NativeProcessStartupInfo();
+				
+				if (Capabilities.os.toLowerCase().indexOf("win") > -1)
+				{
+					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.5.exe");
+				} 
+				else if (Capabilities.os.toLowerCase().indexOf("mac") > -1) 
+				{
+					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.5");
+				}
+				
+				// Turn on the UserTracking feature.
+				var processArgs:Vector.<String> = new Vector.<String>();
+				processArgs.push("-outf");
+				
+				nativeProcessStartupInfo.arguments = processArgs;
+				nativeProcessStartupInfo.executable = file;
+				
+				this._as3OpenNIClient = new NativeProcess();
+				this._as3OpenNIClient.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onOutputData);
+				this._as3OpenNIClient.addEventListener(ProgressEvent.STANDARD_ERROR_DATA, this.onErrorData);
+				this._as3OpenNIClient.addEventListener(NativeProcessExitEvent.EXIT, this.onExit);
+				this._as3OpenNIClient.start(nativeProcessStartupInfo);
+			}
+			
+			protected function onClose(event:Event):void
+			{
+				if(this._as3OpenNIClient) this._as3OpenNIClient.exit(true);
+			}
+			
+			protected function onOutputData(event:ProgressEvent):void
+			{
+				var msg:String = this._as3OpenNIClient.standardOutput.readMultiByte(this._as3OpenNIClient.standardOutput.bytesAvailable, File.systemCharset);
+				trace("Output:", msg);
+			}
+			
+			protected function onErrorData(event:ProgressEvent):void
+			{
+				trace("ERROR:", this._as3OpenNIClient.standardError.readMultiByte(this._as3OpenNIClient.standardOutput.bytesAvailable, File.systemCharset));
+				this._as3OpenNIClient.closeInput();
+			}
+			
+			protected function onExit(event:NativeProcessExitEvent):void
+			{
+				if(!this._runAppOnly)
+				{
+					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
+				}
+			}
+			
+			protected function addListeners():void
+			{
+				NativeApplication.nativeApplication.addEventListener(Event.EXITING, onClose);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_PROGRESS, sessionProgress);
+				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_ENDED, sessionEnded);
+			}
+			
+			protected function addUserTrackingListeners():void
+			{
+				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_NEW_USER, newUser);
+				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_LOST_USER, userLost);
+				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_POSE_DETECTED, userPoseDetected);
+				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_START, userCalibrationStarted);
+				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_COMPLETE, userCalibrationComplete);
+				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, userCalibrationFailed);
+				this._as3OpenNIServer.userTracking.addEventListener(ONISkeletonEvent.USER_TRACKING, skeleton);
+			}
+			
+			protected function sessionStarted(event:NiteSessionEvent):void
+			{
+				trace('Session Started');
+			}
+			
+			protected function sessionProgress(event:NiteSessionEvent):void
+			{
+				//trace('Session Progress');
+			}
+			
+			protected function sessionEnded(event:NiteSessionEvent):void
+			{
+				//trace('Session Ended');
+			}
+			
+			protected function newUser(event:ONIUserTrackingEvent):void
+			{
+				//trace('New User Found: ' + event.user);
+				this._statusField.text = 'New User Found: ' + event.user;
+			}
+			
+			protected function userLost(event:ONIUserTrackingEvent):void
+			{
+				//trace('Lost User: ' + event.user);
+				this._statusField.text = 'Lost User: ' + event.user;
+			}
+			
+			protected function userPoseDetected(event:ONIUserTrackingEvent):void
+			{
+				//trace('Pose Detected for User: ' + event.user);
+				this._statusField.text = 'Pose Detected for User: ' + event.user;
+			}
+			
+			protected function userCalibrationStarted(event:ONIUserTrackingEvent):void
+			{
+				//trace('Calibration Started for User: ' + event.user);
+				this._statusField.text = 'Calibration Started for User: ' + event.user;
+			}
+			
+			protected function userCalibrationComplete(event:ONIUserTrackingEvent):void
+			{
+				//trace('Calibration Complete for User: ' + event.user);
+				this._statusField.text = 'Calibration Complete for User: ' + event.user;
+				this._skeletons3DWorld.startRendering();
+			}
+			
+			protected function userCalibrationFailed(event:ONIUserTrackingEvent):void
+			{
+				//trace('Calibration Failed for User: ' + event.user);
+				this._statusField.text = 'Calibration Failed for User: ' + event.user;
+				this._skeletons3DWorld.removeUser(event.user);
+			}
+			
+			protected function skeleton(event:ONISkeletonEvent):void
+			{
+				if(!this._skeletons3DWorld.checkIfUserExist(event.user))
+				{
+					this._skeletons3DWorld.addUser(event.user);
+				}
+				else
+				{
+					var skeleton:NiSkeleton = event.skeleton as NiSkeleton;
+					this._skeletons3DWorld.skeleton = skeleton;
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:Box id="_statusBox" backgroundColor="#CCCCCC" verticalAlign="middle" paddingRight="10"
+			horizontalScrollPolicy="off" verticalScrollPolicy="off" paddingLeft="10">
+		<mx:Label id="_statusField" text="STATUS" fontWeight="bold" fontSize="25" color="#EEEEEE"/>
+	</mx:Box>
+	
+	<mx:UIComponent id="_skeletons3DWorldContainer" width="800" height="600"/>
+	
+</mx:WindowedApplication>
