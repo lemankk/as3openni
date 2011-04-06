@@ -7,7 +7,7 @@ package org.as3openni.faast.gestures
 	import org.as3openni.objects.NiSkeleton;
 	import org.as3openni.util.math.NiPoint3DUtil;
 
-	public class FAASTLeftArmGestures extends FAASTBasicGesture
+	public class FAASTLeftArmGestures extends FAASTBasicGestures
 	{
 		public function FAASTLeftArmGestures(senseRange:Number = 75, useInches:Boolean = false)
 		{
