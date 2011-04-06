@@ -58,17 +58,31 @@
 				this._faast = new FAAST();
 				this._skeletons3DWorldContainer.addChild(this._faast);
 				
-				this._faast.leftArmGestures.addEventListener(FAASTEvent.LEFT_ARM_OUT, onFAASTEvent);
+				// Left Arm.
+				/*this._faast.leftArmGestures.addEventListener(FAASTEvent.LEFT_ARM_OUT, onFAASTEvent);
 				this._faast.leftArmGestures.addEventListener(FAASTEvent.LEFT_ARM_UP, onFAASTEvent);
 				this._faast.leftArmGestures.addEventListener(FAASTEvent.LEFT_ARM_DOWN, onFAASTEvent);
 				this._faast.leftArmGestures.addEventListener(FAASTEvent.LEFT_ARM_FORWARD, onFAASTEvent);
 				this._faast.leftArmGestures.addEventListener(FAASTEvent.LEFT_ARM_ACCROSS, onFAASTEvent);
 				
-				this._faast.leftArmGestures.addEventListener(FAASTEvent.RIGHT_ARM_OUT, onFAASTEvent);
-				this._faast.leftArmGestures.addEventListener(FAASTEvent.RIGHT_ARM_UP, onFAASTEvent);
-				this._faast.leftArmGestures.addEventListener(FAASTEvent.RIGHT_ARM_DOWN, onFAASTEvent);
-				this._faast.leftArmGestures.addEventListener(FAASTEvent.RIGHT_ARM_FORWARD, onFAASTEvent);
-				this._faast.leftArmGestures.addEventListener(FAASTEvent.RIGHT_ARM_ACCROSS, onFAASTEvent);
+				// Right Arm.
+				this._faast.rightArmGestures.addEventListener(FAASTEvent.RIGHT_ARM_OUT, onFAASTEvent);
+				this._faast.rightArmGestures.addEventListener(FAASTEvent.RIGHT_ARM_UP, onFAASTEvent);
+				this._faast.rightArmGestures.addEventListener(FAASTEvent.RIGHT_ARM_DOWN, onFAASTEvent);
+				this._faast.rightArmGestures.addEventListener(FAASTEvent.RIGHT_ARM_FORWARD, onFAASTEvent);
+				this._faast.rightArmGestures.addEventListener(FAASTEvent.RIGHT_ARM_ACCROSS, onFAASTEvent);*/
+				
+				// Left Leg.
+				this._faast.leftFootGestures.addEventListener(FAASTEvent.LEFT_FOOT_SIDEWAYS, onFAASTEvent);
+				this._faast.leftFootGestures.addEventListener(FAASTEvent.LEFT_FOOT_FORWARD, onFAASTEvent);
+				this._faast.leftFootGestures.addEventListener(FAASTEvent.LEFT_FOOT_BACKWARD, onFAASTEvent);
+				this._faast.leftFootGestures.addEventListener(FAASTEvent.LEFT_FOOT_UP, onFAASTEvent);
+				
+				// Right Leg.
+				this._faast.rightFootGestures.addEventListener(FAASTEvent.RIGHT_FOOT_SIDEWAYS, onFAASTEvent);
+				this._faast.rightFootGestures.addEventListener(FAASTEvent.RIGHT_FOOT_FORWARD, onFAASTEvent);
+				this._faast.rightFootGestures.addEventListener(FAASTEvent.RIGHT_FOOT_BACKWARD, onFAASTEvent);
+				this._faast.rightFootGestures.addEventListener(FAASTEvent.RIGHT_FOOT_UP, onFAASTEvent);
 			}
 			
 			protected function setupSkeletons3DWorld():void
@@ -232,7 +246,7 @@
 			
 			protected function onFAASTEvent(event:FAASTEvent):void
 			{
-				trace(event.type);
+				trace(event.type + ', d: ' + event.value);
 			}
 		]]>
 	</fx:Script>
