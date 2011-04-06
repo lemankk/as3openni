@@ -29,7 +29,7 @@ package org.as3openni.faast.gestures
 			var leftArmRangeZ:Number = (Math.max(leftShoulder.pointZ, leftElbow.pointZ, leftHand.pointZ) - Math.min(leftShoulder.pointZ, leftElbow.pointZ, leftHand.pointZ));
 			
 			// Left Arm Out.
-			if(leftArmRangeY <= this.senseRange && leftHand.pointX < 0 
+			if(leftArmRangeY <= this.senseRange && leftHand.pointX < leftShoulder.pointX 
 				&& leftArmRangeZ <= this.senseRange)
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(leftArmRangeX) : leftArmRangeX;
@@ -37,7 +37,7 @@ package org.as3openni.faast.gestures
 			}
 			
 			// Left Arm Across.
-			if(leftArmRangeY <= this.senseRange && leftHand.pointX > 0 
+			if(leftArmRangeY <= this.senseRange && leftHand.pointX > leftShoulder.pointX 
 				&& leftArmRangeZ <= this.senseRange)
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(leftArmRangeX) : leftArmRangeX;
@@ -45,15 +45,15 @@ package org.as3openni.faast.gestures
 			}
 			
 			// Left Arm Forward.
-			if(leftArmRangeX <= this.senseRange && 
-				leftArmRangeY <= this.senseRange)
+			if(leftArmRangeX <= this.senseRange && leftHand.pointZ < leftShoulder.pointZ
+				&& leftArmRangeY <= this.senseRange)
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(leftArmRangeZ) : leftArmRangeZ;
 				this.dispatchEvent(new FAASTEvent(FAASTEvent.LEFT_ARM_FORWARD, this.distance));
 			}
 			
 			// Left Arm Up.
-			if(leftArmRangeX <= this.senseRange && leftHand.pointY > 0 
+			if(leftArmRangeX <= this.senseRange && leftHand.pointY > leftShoulder.pointY 
 				&& leftArmRangeZ <= (this.senseRange*3))
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(leftArmRangeY) : leftArmRangeY;
@@ -61,7 +61,7 @@ package org.as3openni.faast.gestures
 			}
 			
 			// Left Arm Down.
-			if(leftArmRangeX <= this.senseRange && leftHand.pointY < 0 
+			if(leftArmRangeX <= this.senseRange && leftHand.pointY < leftShoulder.pointY 
 				&& leftArmRangeZ <= (this.senseRange*3))
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(leftArmRangeY) : leftArmRangeY;
