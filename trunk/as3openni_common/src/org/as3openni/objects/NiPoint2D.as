@@ -13,8 +13,7 @@ package org.as3openni.objects
 		{
 			var str:String = "id: " + user + 
 							 ", x: " + this.pointX + 
-							 ", y: " + this.pointY + 
-							 ", t: " + this.pointTime;
+							 ", y: " + this.pointY;
 			return str;
 		}
 	}
