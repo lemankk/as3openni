@@ -24,5 +24,10 @@ package org.as3openni.util.math
 			
 			return point2D;
 		}
+		
+		public static function convertMMToInches(value:Number):Number
+		{
+			return value * 0.0393700787;
+		}
 	}
 }
