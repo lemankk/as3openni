@@ -21,4 +21,11 @@
 		<nature>com.adobe.flexbuilder.project.actionscriptnature</nature>
 		<nature>com.adobe.flexbuilder.project.flexnature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>[source path] src</name>
+			<type>2</type>
+			<locationURI>DOCUMENTS/AS3OpenNI_Alpha_1.0.9/src</locationURI>
+		</link>
+	</linkedResources>
 </projectDescription>
