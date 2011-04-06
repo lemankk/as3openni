@@ -51,6 +51,6 @@ Author: Tony Birleffi
   * Second player detection and additional socket added
 
 ===TODO LIST:===
+  * Adding the FAAST action list to the AS3OpenNI code base
   * Node.js/Pure ActionScript 3.0 project examples
   * Add Hand Tracking
-  * More Gestures
