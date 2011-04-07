@@ -7,12 +7,10 @@ package org.as3openni.faast.gestures
 	public class FAASTBasicGestures extends EventDispatcher
 	{
 		public var distance:Number = 0;
-		public var senseRange:Number = 75;
 		public var useInches:Boolean = false;
 		
-		public function FAASTBasicGestures(senseRange:Number = 75, useInches:Boolean = false)
+		public function FAASTBasicGestures(useInches:Boolean = false)
 		{
-			this.senseRange = senseRange;
 			this.useInches = useInches;
 		}
 		

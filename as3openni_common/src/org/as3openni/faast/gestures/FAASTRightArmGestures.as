@@ -9,9 +9,9 @@ package org.as3openni.faast.gestures
 
 	public class FAASTRightArmGestures extends FAASTBasicGestures
 	{
-		public function FAASTRightArmGestures(senseRange:Number = 75, useInches:Boolean = false)
+		public function FAASTRightArmGestures(useInches:Boolean = false)
 		{
-			super(senseRange, useInches);
+			super(useInches);
 		}
 		
 		override public function configure(skeleton:NiSkeleton):void
@@ -27,42 +27,43 @@ package org.as3openni.faast.gestures
 			var rightArmRangeX:Number = (Math.max(rightShoulder.pointX, rightElbow.pointX, rightHand.pointX) - Math.min(rightShoulder.pointX, rightElbow.pointX, rightHand.pointX));
 			var rightArmRangeY:Number = (Math.max(rightShoulder.pointY, rightElbow.pointY, rightHand.pointY) - Math.min(rightShoulder.pointY, rightElbow.pointY, rightHand.pointY));
 			var rightArmRangeZ:Number = (Math.max(rightShoulder.pointZ, rightElbow.pointZ, rightHand.pointZ) - Math.min(rightShoulder.pointZ, rightElbow.pointZ, rightHand.pointZ));
+			var rightArmRange:Number = (rightArmRangeX + rightArmRangeY + rightArmRangeZ)/3;
 			
 			// Right Arm Out.
-			if(rightArmRangeY <= this.senseRange && rightHand.pointX > rightShoulder.pointX 
-				&& rightArmRangeZ <= this.senseRange)
+			if(rightArmRangeY <= rightArmRange && rightHand.pointX > rightShoulder.pointX 
+				&& rightArmRangeZ <= rightArmRange)
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(rightArmRangeX) : rightArmRangeX;
 				this.dispatchEvent(new FAASTEvent(FAASTEvent.RIGHT_ARM_OUT, this.distance));
 			}
 			
 			// Right Arm Across.
-			if(rightArmRangeY <= this.senseRange && rightHand.pointX < rightShoulder.pointY 
-				&& rightArmRangeZ <= this.senseRange)
+			if(rightArmRangeY <= rightArmRange && rightHand.pointX < rightShoulder.pointY 
+				&& rightArmRangeZ <= rightArmRange)
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(rightArmRangeX) : rightArmRangeX;
 				this.dispatchEvent(new FAASTEvent(FAASTEvent.RIGHT_ARM_ACCROSS, this.distance));
 			}
 			
 			// Right Arm Forward.
-			if(rightArmRangeX <= this.senseRange && rightHand.pointZ < rightShoulder.pointZ
-				&& rightArmRangeY <= this.senseRange)
+			if(rightArmRangeX <= rightArmRange && rightHand.pointZ < rightShoulder.pointZ
+				&& rightArmRangeY <= rightArmRange)
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(rightArmRangeZ) : rightArmRangeZ;
 				this.dispatchEvent(new FAASTEvent(FAASTEvent.RIGHT_ARM_FORWARD, this.distance));
 			}
 			
 			// Right Arm Up.
-			if(rightArmRangeX <= this.senseRange && rightHand.pointY > rightShoulder.pointY 
-				&& rightArmRangeZ <= (this.senseRange*3))
+			if(rightArmRangeX <= rightArmRange && rightHand.pointY > rightShoulder.pointY 
+				&& rightArmRangeZ <= rightArmRange)
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(rightArmRangeY) : rightArmRangeY;
 				this.dispatchEvent(new FAASTEvent(FAASTEvent.RIGHT_ARM_UP, this.distance));
 			}
 			
 			// Right Arm Down.
-			if(rightArmRangeX <= this.senseRange && rightHand.pointY < rightShoulder.pointY 
-				&& rightArmRangeZ <= (this.senseRange*3))
+			if(rightArmRangeX <= rightArmRange && rightHand.pointY < rightShoulder.pointY 
+				&& rightArmRangeZ <= rightArmRange)
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(rightArmRangeY) : rightArmRangeY;
 				this.dispatchEvent(new FAASTEvent(FAASTEvent.RIGHT_ARM_DOWN, this.distance));

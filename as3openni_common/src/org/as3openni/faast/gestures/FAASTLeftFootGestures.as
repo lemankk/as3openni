@@ -9,9 +9,9 @@ package org.as3openni.faast.gestures
 
 	public class FAASTLeftFootGestures extends FAASTBasicGestures
 	{
-		public function FAASTLeftFootGestures(senseRange:Number = 450, useInches:Boolean = false)
+		public function FAASTLeftFootGestures(useInches:Boolean = false)
 		{
-			super(senseRange, useInches);
+			super(useInches);
 		}
 		
 		override public function configure(skeleton:NiSkeleton):void
@@ -25,18 +25,16 @@ package org.as3openni.faast.gestures
 			var leftFoot:NiPoint3D = skeleton.leftFoot;
 			
 			// Define Right Foot.
-			var rightHip:NiPoint3D = skeleton.rightHip;
-			var rightKnee:NiPoint3D = skeleton.rightKnee;
 			var rightFoot:NiPoint3D = skeleton.rightFoot;
 			
 			// Define Ranges.
-			var leftFootRangeX:Number = (Math.max(leftHip.pointX, leftKnee.pointX, leftFoot.pointX) - Math.min(leftHip.pointX, leftKnee.pointX, leftFoot.pointX));
+			var leftFootRangeX:Number = (Math.max(leftHip.pointX, leftKnee.pointY, leftFoot.pointX) - Math.min(leftHip.pointX, leftKnee.pointX, leftFoot.pointX));
 			var leftFootRangeY:Number = (Math.max(leftHip.pointY, leftKnee.pointY, leftFoot.pointY) - Math.min(leftHip.pointY, leftKnee.pointY, leftFoot.pointY));
 			var leftFootRangeZ:Number = (Math.max(leftHip.pointZ, leftKnee.pointZ, leftFoot.pointZ) - Math.min(leftHip.pointZ, leftKnee.pointZ, leftFoot.pointZ));
-			var rightFootRangeZ:Number = (Math.max(rightHip.pointZ, rightKnee.pointZ, rightFoot.pointZ) - Math.min(rightHip.pointZ, rightKnee.pointZ, rightFoot.pointZ));
+			var leftFootRange:Number = (leftFootRangeX + leftFootRangeY + leftFootRangeZ)/3;
 			
 			// Left Foot Sideways.
-			if(leftFootRangeY <= this.senseRange && leftFootRangeZ <= this.senseRange
+			if(leftFootRangeY <= leftFootRange && leftFootRangeZ <= leftFootRange
 				&& leftFoot.pointX < leftHip.pointX)
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(leftFootRangeX) : leftFootRangeX;
@@ -44,7 +42,7 @@ package org.as3openni.faast.gestures
 			}
 			
 			// Left Foot Forward.
-			if(leftFootRangeX <= (this.senseRange/2.5) && leftFootRangeZ >= (this.senseRange/2.5)
+			if(leftFootRangeX <= leftFootRange && leftFootRangeZ >= leftFootRange
 				&& leftFoot.pointZ < rightFoot.pointZ)
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(leftFootRangeY) : leftFootRangeY;
@@ -52,7 +50,7 @@ package org.as3openni.faast.gestures
 			}
 			
 			// Left Foot Backward.
-			if(leftFootRangeX <= (this.senseRange/2.5) && leftFootRangeZ >= (this.senseRange/1.5)
+			if(leftFootRangeX <= leftFootRange && leftFootRangeZ >= leftFootRange
 				&& leftFoot.pointZ > rightFoot.pointZ)
 			{
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(leftFootRangeY) : leftFootRangeY;
@@ -60,7 +58,7 @@ package org.as3openni.faast.gestures
 			}
 			
 			// Left Foot Up.
-			if(leftFootRangeX <= this.senseRange && leftFootRangeY <= this.senseRange
+			if(leftFootRangeX <= leftFootRange && leftFootRangeY <= leftFootRange
 				&& leftFoot.pointY > rightFoot.pointY)
 			{
 				var val:Number = Math.abs(leftFoot.pointZ-rightFoot.pointZ);
