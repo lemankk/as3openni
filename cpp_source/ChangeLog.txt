@@ -52,5 +52,6 @@ Author: Tony Birleffi
 
 ===TODO LIST:===
   * Adding the FAAST action list to the AS3OpenNI code base
+  * Add player detection color coding option to the Depth Map capturing feature
   * Node.js/Pure ActionScript 3.0 project examples
   * Add Hand Tracking
