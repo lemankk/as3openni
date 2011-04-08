@@ -18,8 +18,7 @@
 			import org.as3openni.util.math.NiPoint3DUtil;
 			
 			// Setup the AS3OpenNI client and server.
-			private var _as3OpenNIClient:NativeProcess;
-			private var _as3OpenNIServer:AS3OpenNI;
+			private var _as3OpenNI:AS3OpenNI;
 			
 			// Run or debug application.
 			private var _runAppOnly:Boolean = false;
@@ -28,89 +27,35 @@
 			{
 				if(!this._runAppOnly)
 				{
-					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
+					if(this._as3OpenNI) this._as3OpenNI.closeSockets();
 					
-					this._as3OpenNIServer = new AS3OpenNI();
-					this.addListeners();
+					this._as3OpenNI = new AS3OpenNI();
+					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.0.9";
+					this._as3OpenNI.debug = true;
+					this._as3OpenNI.userTracking = true;
+					this._as3OpenNI.init();
+					
+					this.addSessionListeners();
 					this.addUserTrackingListeners();
-					
-					if(NativeProcess.isSupported)
-					{
-						this.runAS3OpenNIClient();
-					}
 				}
 			}
 			
-			protected function runAS3OpenNIClient():void
-			{     
-				var file:File = new File();
-				var nativeProcessStartupInfo:NativeProcessStartupInfo = new NativeProcessStartupInfo();
-				
-				if (Capabilities.os.toLowerCase().indexOf("win") > -1)
-				{
-					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.8.exe");
-				} 
-				else if (Capabilities.os.toLowerCase().indexOf("mac") > -1) 
-				{
-					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.8");
-				}
-				
-				// Turn on the UserTracking feature.
-				var processArgs:Vector.<String> = new Vector.<String>();
-				processArgs.push("-outf");
-				
-				nativeProcessStartupInfo.arguments = processArgs;
-				nativeProcessStartupInfo.executable = file;
-				
-				this._as3OpenNIClient = new NativeProcess();
-				this._as3OpenNIClient.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onOutputData);
-				this._as3OpenNIClient.addEventListener(ProgressEvent.STANDARD_ERROR_DATA, this.onErrorData);
-				this._as3OpenNIClient.addEventListener(NativeProcessExitEvent.EXIT, this.onExit);
-				this._as3OpenNIClient.start(nativeProcessStartupInfo);
-			}
-			
-			protected function onClose(event:Event):void
+			protected function addSessionListeners():void
 			{
-				if(this._as3OpenNIClient) this._as3OpenNIClient.exit(true);
-			}
-			
-			protected function onOutputData(event:ProgressEvent):void
-			{
-				var msg:String = this._as3OpenNIClient.standardOutput.readMultiByte(this._as3OpenNIClient.standardOutput.bytesAvailable, File.systemCharset);
-				trace("Output:", msg);
-			}
-			
-			protected function onErrorData(event:ProgressEvent):void
-			{
-				trace("ERROR:", this._as3OpenNIClient.standardError.readMultiByte(this._as3OpenNIClient.standardOutput.bytesAvailable, File.systemCharset));
-				this._as3OpenNIClient.closeInput();
-			}
-			
-			protected function onExit(event:NativeProcessExitEvent):void
-			{
-				if(!this._runAppOnly)
-				{
-					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
-				}
-			}
-			
-			protected function addListeners():void
-			{
-				NativeApplication.nativeApplication.addEventListener(Event.EXITING, onClose);
-				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
-				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_PROGRESS, sessionProgress);
-				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_ENDED, sessionEnded);
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_PROGRESS, sessionProgress);
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_ENDED, sessionEnded);
 			}
 			
 			protected function addUserTrackingListeners():void
 			{
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_NEW_USER, newUser);
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_LOST_USER, userLost);
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_POSE_DETECTED, userPoseDetected);
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_START, userCalibrationStarted);
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_COMPLETE, userCalibrationComplete);
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, userCalibrationFailed);
-				this._as3OpenNIServer.userTracking.addEventListener(ONISkeletonEvent.USER_TRACKING, skeleton);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_NEW_USER, newUser);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_LOST_USER, userLost);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_POSE_DETECTED, userPoseDetected);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_START, userCalibrationStarted);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_COMPLETE, userCalibrationComplete);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, userCalibrationFailed);
+				this._as3OpenNI.addEventListener(ONISkeletonEvent.USER_TRACKING, skeleton);
 			}
 			
 			protected function sessionStarted(event:NiteSessionEvent):void
