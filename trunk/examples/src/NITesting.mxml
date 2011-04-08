@@ -74,7 +74,6 @@
 				// Run the AS3OpenNI setup.
 				if(!this._runAppOnly)
 				{
-					if(this._as3OpenNI) this._as3OpenNI.closeSockets();
 					this._as3OpenNI = new AS3OpenNI();
 					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.0.9";
 					this._as3OpenNI.debug = true;
