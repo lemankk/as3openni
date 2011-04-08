@@ -1,12 +1,26 @@
 #include "setup_sockets.h"
 
+int POINT_RESULT;
+int SESSION_RESULT;
+int SLIDER_RESULT;
+int USER_TRACKING_RESULT;
+int DEPTH_MAP_RESULT;
+int RGB_RESULT;
+int SECOND_USER_TRACKING_RESULT;
+
+#define POINT_PORT "9500"
+#define SESSION_PORT "9501"
+#define SLIDER_PORT "9502"
+#define USER_TRACKING_PORT "9503"
+#define DEPTH_MAP_PORT "9504"
+#define RGB_PORT "9505"
+#define SECOND_USER_TRACKING_PORT "9506"
+
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	#include <windows.h>
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
 	#include "socket.h"
-	
-	//#define WIN32_LEAN_AND_MEAN
 	
 	// Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 	#pragma comment (lib, "Ws2_32.lib")
@@ -20,41 +34,9 @@
 	extern SOCKET DEPTH_MAP_SOCKET;
 	extern SOCKET RGB_SOCKET;
 	extern SOCKET SECOND_USER_TRACKING_SOCKET;
-	
-	int POINT_RESULT;
-	int SESSION_RESULT;
-	int SLIDER_RESULT;
-	int USER_TRACKING_RESULT;
-	int DEPTH_MAP_RESULT;
-	int RGB_RESULT;
-	int SECOND_USER_TRACKING_RESULT;
-	
-	#define WIN_POINT_PORT "9500"
-	#define WIN_SESSION_PORT "9501"
-	#define WIN_SLIDER_PORT "9502"
-	#define WIN_USER_TRACKING_PORT "9503"
-	#define WIN_DEPTH_MAP_PORT "9504"
-	#define WIN_RGB_PORT "9505"
-	#define WIN_SECOND_USER_TRACKING_PORT "9506"
 #else
 	#include <netdb.h>
 	extern int POINT_SOCKET, SESSION_SOCKET, SLIDER_SOCKET, USER_TRACKING_SOCKET, DEPTH_MAP_SOCKET, RGB_SOCKET, SECOND_USER_TRACKING_SOCKET;
-	
-	struct sockaddr_in _point_serv_addr;
-	struct sockaddr_in _session_serv_addr;
-	struct sockaddr_in _slider_serv_addr;
-	struct sockaddr_in _user_tracking_serv_addr;
-	struct sockaddr_in _depth_map_serv_addr;
-	struct sockaddr_in _rgb_serv_addr;
-	struct sockaddr_in _second_user_tracking_serv_addr;
-	
-	int POINT_PORT = 9500;
-	int SESSION_PORT = 9501;
-	int SLIDER_PORT = 9502;
-	int USER_TRACKING_PORT = 9503;
-	int DEPTH_MAP_PORT = 9504;
-	int RGB_PORT = 9505;
-	int SECOND_USER_TRACKING_PORT = 9506;
 #endif
 	
 void setupSockets()
@@ -64,6 +46,29 @@ void setupSockets()
 		//-------------------------------------------------------------------------------//
 		//------------------------- SEND DATA TO SOCKET SERVER --------------------------//
 		//-------------------------------------------------------------------------------//
+		
+		struct addrinfo sessionHints, pointHints,
+									sliderHints,
+									userTrackingHints,
+									secUserTrackingHints,
+									depthMapHints,
+									rgbHints,
+									
+									*pointResult = NULL, 
+									*sessionResult = NULL,
+									*sliderResult = NULL,
+									*userTrackingResult = NULL,
+									*depthMapResult = NULL,
+									*rgbResult = NULL,
+									*secUserTrackingResult = NULL,
+									
+									*pointObj = NULL, 
+									*sessionObj = NULL,
+									*sliderObj = NULL,
+									*userTrackingObj = NULL,
+									*secUserTrackingObj = NULL,
+									*depthMapObj = NULL,
+									*rgbObj = NULL;
 		
 	    #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	    	
@@ -82,38 +87,6 @@ void setupSockets()
 			DEPTH_MAP_SOCKET = INVALID_SOCKET;
 			RGB_SOCKET = INVALID_SOCKET;
 			SECOND_USER_TRACKING_SOCKET = INVALID_SOCKET;
-			
-	    	struct addrinfo *pointResult = NULL, 
-	    					*sessionResult = NULL,
-	    					*sliderResult = NULL,
-	    					*userTrackingResult = NULL,
-	    					*depthMapResult = NULL,
-	    					*rgbResult = NULL,
-	    					*secUserTrackingResult = NULL,
-	    					
-	    					*pointObj = NULL, 
-	    					*sessionObj = NULL,
-	    					*sliderObj = NULL,
-	    					*userTrackingObj = NULL,
-	    					*secUserTrackingObj = NULL,
-	    					*depthMapObj = NULL,
-	    					*rgbObj = NULL,
-	    					
-	    					pointHints, 
-	    					sessionHints,
-	    					sliderHints,
-	    					userTrackingHints,
-	    					secUserTrackingHints,
-	    					depthMapHints,
-	    					rgbHints;
-	    					
-	    	char *pointBuf = "This is a point test.";
-	    	char *sessionBuf = "This is a session test.";
-	    	char *sliderBuf = "This is a slider test.";
-	    	char *userTrackingBuf = "This is a user tracking test.";
-	    	char *secUserTrackingBuf = "This is a second user tracking test.";
-	    	char *depthMapBuf = "This is a depth map capture test.";
-	    	char *rgbBuf = "This is a rgb capture test.";
 	    	
 	    	//------------------------- SESSION SOCKET --------------------------//
 	    	//------------------------------------------------------------------//
@@ -130,7 +103,7 @@ void setupSockets()
 	   		sessionHints.ai_socktype = SOCK_STREAM;
 	    	sessionHints.ai_protocol = IPPROTO_TCP;
 	    	
-	    	SESSION_SOCKET = getaddrinfo("127.0.0.1", WIN_SESSION_PORT, &sessionHints, &sessionResult);
+	    	SESSION_SOCKET = getaddrinfo("127.0.0.1", SESSION_PORT, &sessionHints, &sessionResult);
 	    	if(SESSION_RESULT != 0) 
 	    	{
 	        	printf("Getaddrinfo failed on session socket server: %d\n", SESSION_SOCKET);
@@ -166,14 +139,6 @@ void setupSockets()
 	        	return;
 	    	}
 	    	
-	    	// Send an initial buffer to session server.
-	    	SESSION_RESULT = send(SESSION_SOCKET, sessionBuf, (int)strlen(sessionBuf), 0);
-	    	if(SESSION_RESULT == SOCKET_ERROR) 
-	    	{
-	        	printf("Send failed to session server: %d\n", WSAGetLastError());
-	        	return;
-	    	}
-	    	
 	    	if(_featureSinglePoint)
 	    	{
 		    	//------------------------- POINT SOCKET --------------------------//
@@ -192,7 +157,7 @@ void setupSockets()
 		    	pointHints.ai_protocol = IPPROTO_TCP;
 		    	
 		    	// Resolve the server address and port
-		    	POINT_RESULT = getaddrinfo("127.0.0.1", WIN_POINT_PORT, &pointHints, &pointResult);
+		    	POINT_RESULT = getaddrinfo("127.0.0.1", POINT_PORT, &pointHints, &pointResult);
 		    	if(POINT_RESULT != 0) 
 		    	{
 		        	printf("Getaddrinfo failed on point server: %d\n", POINT_RESULT);
@@ -227,14 +192,6 @@ void setupSockets()
 		        	printf("Unable to connect to point server!\n");
 		        	return;
 		    	}
-		    	
-		    	// Send an initial buffer to point server.
-		    	POINT_RESULT = send(POINT_SOCKET, pointBuf, (int)strlen(pointBuf), 0);
-		    	if(POINT_RESULT == SOCKET_ERROR) 
-		    	{
-		        	printf("Send failed to point server: %d\n", WSAGetLastError());
-		        	return;
-		    	}
 	    	}
 	        
 	    	if(_featureSlider)
@@ -254,7 +211,7 @@ void setupSockets()
 		   		sliderHints.ai_socktype = SOCK_STREAM;
 		    	sliderHints.ai_protocol = IPPROTO_TCP;
 		    	
-		        SLIDER_SOCKET = getaddrinfo("127.0.0.1", WIN_SLIDER_PORT, &sliderHints, &sliderResult);
+		        SLIDER_SOCKET = getaddrinfo("127.0.0.1", SLIDER_PORT, &sliderHints, &sliderResult);
 		    	if(SLIDER_RESULT != 0) 
 		    	{
 		        	printf("Getaddrinfo failed on slider socket server: %d\n", SLIDER_SOCKET);
@@ -289,14 +246,6 @@ void setupSockets()
 		        	printf("Unable to connect to slider server!\n");
 		        	return;
 		    	}
-		    	
-		    	// Send an initial buffer to slider server.
-		    	SLIDER_RESULT = send(SLIDER_SOCKET, sliderBuf, (int)strlen(sliderBuf), 0);
-		    	if(SLIDER_RESULT == SOCKET_ERROR) 
-		    	{
-		        	printf("Send failed to slider server: %d\n", WSAGetLastError());
-		        	return;
-		    	}
 	    	}
 	    	
 	    	if(_featureUserTracking)
@@ -316,7 +265,7 @@ void setupSockets()
 		    	userTrackingHints.ai_socktype = SOCK_STREAM;
 		    	userTrackingHints.ai_protocol = IPPROTO_TCP;
 		    	
-		    	USER_TRACKING_SOCKET = getaddrinfo("127.0.0.1", WIN_USER_TRACKING_PORT, &userTrackingHints, &userTrackingResult);
+		    	USER_TRACKING_SOCKET = getaddrinfo("127.0.0.1", USER_TRACKING_PORT, &userTrackingHints, &userTrackingResult);
 		    	if(USER_TRACKING_RESULT != 0) 
 		    	{
 		        	printf("Getaddrinfo failed on user tracking socket server: %d\n", USER_TRACKING_SOCKET);
@@ -352,14 +301,6 @@ void setupSockets()
 		        	return;
 		    	}
 		    	
-		    	// Send an initial buffer to user tracking server.
-		    	USER_TRACKING_RESULT = send(USER_TRACKING_SOCKET, userTrackingBuf, (int)strlen(userTrackingBuf), 0);
-		    	if(USER_TRACKING_RESULT == SOCKET_ERROR) 
-		    	{
-		        	printf("Send failed to user tracking server: %d\n", WSAGetLastError());
-		        	return;
-		    	}
-		    	
 		    	//------------------------- SECOND USER TRACKING SOCKET --------------------------//
 		    	//--------------------------------------------------------------------------------//
 		    	SECOND_USER_TRACKING_RESULT = WSAStartup(MAKEWORD(2,2), &secUserTrackingData);
@@ -375,7 +316,7 @@ void setupSockets()
 		    	secUserTrackingHints.ai_socktype = SOCK_STREAM;
 		    	secUserTrackingHints.ai_protocol = IPPROTO_TCP;
 		    	
-		    	SECOND_USER_TRACKING_SOCKET = getaddrinfo("127.0.0.1", WIN_SECOND_USER_TRACKING_PORT, &secUserTrackingHints, &secUserTrackingResult);
+		    	SECOND_USER_TRACKING_SOCKET = getaddrinfo("127.0.0.1", SECOND_USER_TRACKING_PORT, &secUserTrackingHints, &secUserTrackingResult);
 		    	if(SECOND_USER_TRACKING_RESULT != 0) 
 		    	{
 		        	printf("Getaddrinfo failed on second user tracking socket server: %d\n", SECOND_USER_TRACKING_SOCKET);
@@ -410,14 +351,6 @@ void setupSockets()
 		        	printf("Unable to connect to second user tracking server!\n");
 		        	return;
 		    	}
-		    	
-		    	// Send an initial buffer to second user tracking server.
-		    	SECOND_USER_TRACKING_RESULT = send(SECOND_USER_TRACKING_SOCKET, secUserTrackingBuf, (int)strlen(secUserTrackingBuf), 0);
-		    	if(SECOND_USER_TRACKING_RESULT == SOCKET_ERROR) 
-		    	{
-		        	printf("Send failed to second user tracking server: %d\n", WSAGetLastError());
-		        	return;
-		    	}
 	    	}
 	    	
 	    	if(_featureDepthMapCapture)
@@ -437,7 +370,7 @@ void setupSockets()
 		    	depthMapHints.ai_socktype = SOCK_STREAM;
 		    	depthMapHints.ai_protocol = IPPROTO_TCP;
 		    	
-		    	DEPTH_MAP_SOCKET = getaddrinfo("127.0.0.1", WIN_DEPTH_MAP_PORT, &depthMapHints, &depthMapResult);
+		    	DEPTH_MAP_SOCKET = getaddrinfo("127.0.0.1", DEPTH_MAP_PORT, &depthMapHints, &depthMapResult);
 		    	if(DEPTH_MAP_RESULT != 0) 
 		    	{
 		        	printf("Getaddrinfo failed on depth map capture socket server: %d\n", DEPTH_MAP_SOCKET);
@@ -472,14 +405,6 @@ void setupSockets()
 		        	printf("Unable to connect to depth map capture server!\n");
 		        	return;
 		    	}
-		    	
-		    	// Send an initial buffer to depth map capture server.
-		    	DEPTH_MAP_RESULT = send(DEPTH_MAP_SOCKET, depthMapBuf, (int)strlen(depthMapBuf), 0);
-		    	if(DEPTH_MAP_RESULT == SOCKET_ERROR) 
-		    	{
-		        	printf("Send failed to depth map capture server: %d\n", WSAGetLastError());
-		        	return;
-		    	}
 	    	}
 	    	
 	    	if(_featureRGBCapture)
@@ -499,7 +424,7 @@ void setupSockets()
 		    	rgbHints.ai_socktype = SOCK_STREAM;
 		    	rgbHints.ai_protocol = IPPROTO_TCP;
 		    	
-		    	RGB_SOCKET = getaddrinfo("127.0.0.1", WIN_RGB_PORT, &rgbHints, &rgbResult);
+		    	RGB_SOCKET = getaddrinfo("127.0.0.1", RGB_PORT, &rgbHints, &rgbResult);
 		    	if(RGB_RESULT != 0) 
 		    	{
 		        	printf("Getaddrinfo failed on rgb capture socket server: %d\n", RGB_SOCKET);
@@ -534,122 +459,177 @@ void setupSockets()
 		        	printf("Unable to connect to rgb capture server!\n");
 		        	return;
 		    	}
-		    	
-		    	// Send an initial buffer to rgb capture server.
-		    	RGB_RESULT = send(RGB_SOCKET, rgbBuf, (int)strlen(rgbBuf), 0);
-		    	if(RGB_RESULT == SOCKET_ERROR) 
-		    	{
-		        	printf("Send failed to rgb capture server: %d\n", WSAGetLastError());
-		        	return;
-		    	}
 	    	}
 	    	
 	    #else
 	    
 	    	//------------------------- SESSION SOCKET --------------------------//
 	        //------------------------------------------------------------------//
-	        SESSION_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
-	    	if (SESSION_SOCKET < 0) 
-	        	error("ERROR opening session socket");
+	    	memset(&sessionHints, 0, sizeof(struct addrinfo));
+	    	sessionHints.ai_family = PF_UNSPEC;
+	    	sessionHints.ai_socktype = SOCK_STREAM;
+	    	sessionHints.ai_protocol = IPPROTO_TCP;
 	        
-	        memset(&_session_serv_addr, 0, sizeof(struct sockaddr_in));
-	    	_session_serv_addr.sin_family = AF_INET;
-	    	_session_serv_addr.sin_port = htons(SESSION_PORT);
-	    
-	    	if (connect(SESSION_SOCKET,(struct sockaddr *) &_session_serv_addr,sizeof(_session_serv_addr)) < 0) 
-	        	error("ERROR connecting to session socket");
+	        SESSION_RESULT = getaddrinfo("127.0.0.1", SESSION_PORT, &sessionHints, &sessionResult);
+	        if(SESSION_RESULT < 0)
+	        	error("ERROR opening session socket");
+	    	
+	        for(sessionObj=sessionResult; sessionObj != NULL; sessionObj=sessionObj->ai_next) 
+	    	{
+	    		SESSION_SOCKET = socket(sessionObj->ai_family, sessionObj->ai_socktype, sessionObj->ai_protocol);
+	    		if (SESSION_SOCKET < 0) 
+	    			error("ERROR setting up session socket");
+	    	
+	    		SESSION_RESULT = connect(SESSION_SOCKET, sessionObj->ai_addr, (int)sessionObj->ai_addrlen);
+	    		if (SESSION_RESULT < 0) 
+	    			error("ERROR connecting session socket");
+	    	}
 	    	
 	    	if(_featureSinglePoint)
 	    	{
 		    	//------------------------- POINT SOCKET --------------------------//
 		    	//----------------------------------------------------------------//
-		    	POINT_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
-		    	if (POINT_SOCKET < 0) 
-		        	error("ERROR opening point socket");
+	    		memset(&pointHints, 0, sizeof(struct addrinfo));
+		    	pointHints.ai_family = PF_UNSPEC;
+		    	pointHints.ai_socktype = SOCK_STREAM;
+		    	pointHints.ai_protocol = IPPROTO_TCP;
 		        
-		        memset(&_point_serv_addr, 0, sizeof(struct sockaddr_in));
-		        _point_serv_addr.sin_family = AF_INET;
-		    	_point_serv_addr.sin_port = htons(POINT_PORT);
+		        POINT_RESULT = getaddrinfo("127.0.0.1", POINT_PORT, &pointHints, &pointResult);
+		        if(POINT_RESULT < 0)
+		        	error("ERROR opening point socket");
 		    	
-		    	if (connect(POINT_SOCKET,(struct sockaddr *) &_point_serv_addr,sizeof(_point_serv_addr)) < 0) 
-		        	error("ERROR connecting to point socket");
+		        for(pointObj=pointResult; pointObj != NULL; pointObj=pointObj->ai_next) 
+		    	{
+		    		POINT_SOCKET = socket(pointObj->ai_family, pointObj->ai_socktype, pointObj->ai_protocol);
+		    		if (POINT_SOCKET < 0) 
+		    			error("ERROR setting up point socket");
+		    	
+		    		POINT_RESULT = connect(POINT_SOCKET, pointObj->ai_addr, (int)pointObj->ai_addrlen);
+		    		if (POINT_RESULT < 0) 
+		    			error("ERROR connecting point socket");
+		    	}
 	    	}
 	        	
 	    	if(_featureSlider)
 	    	{
 		        //------------------------- SLIDER SOCKET --------------------------//
-		    	//-----------------------------------------------------------------//
-		        SLIDER_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
-		    	if (SLIDER_SOCKET < 0) 
-		        	error("ERROR opening slider socket");
+		    	//------------------------------------------------------------------//
+	    		memset(&sliderHints, 0, sizeof(struct addrinfo));
+		    	sliderHints.ai_family = PF_UNSPEC;
+		    	sliderHints.ai_socktype = SOCK_STREAM;
+		    	sliderHints.ai_protocol = IPPROTO_TCP;
 		        
-		        memset(&_slider_serv_addr, 0, sizeof(struct sockaddr_in));
-		    	_slider_serv_addr.sin_family = AF_INET;
-		    	_slider_serv_addr.sin_port = htons(SLIDER_PORT);
-		    
-		    	if (connect(SLIDER_SOCKET,(struct sockaddr *) &_slider_serv_addr,sizeof(_slider_serv_addr)) < 0) 
-		        	error("ERROR connecting to slider socket");
+		        SLIDER_RESULT = getaddrinfo("127.0.0.1", SLIDER_PORT, &sliderHints, &sliderResult);
+		        if(SLIDER_RESULT < 0)
+		        	error("ERROR opening slider socket");
+		    	
+		        for(sliderObj=sliderResult; sliderObj != NULL; sliderObj=sliderObj->ai_next) 
+		    	{
+		    		SLIDER_SOCKET = socket(sliderObj->ai_family, sliderObj->ai_socktype, sliderObj->ai_protocol);
+		    		if (SLIDER_SOCKET < 0) 
+		    			error("ERROR setting up slider socket");
+		    	
+		    		SLIDER_RESULT = connect(SLIDER_SOCKET, sliderObj->ai_addr, (int)sliderObj->ai_addrlen);
+		    		if (SLIDER_RESULT < 0) 
+		    			error("ERROR connecting slider socket");
+		    	}
 	    	}
 	    	
 	    	if(_featureUserTracking)
 	    	{
-		    	//------------------------- USER TRACKING SOCKET --------------------------//
-		    	//------------------------------------------------------------------------//
-		        USER_TRACKING_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
-		    	if (USER_TRACKING_SOCKET < 0) 
-		        	error("ERROR opening user tracking socket");
+		    	//------------------------- USER TRACKING SOCKET ---------------------------------//
+		    	//--------------------------------------------------------------------------------//
+	    		memset(&userTrackingHints, 0, sizeof(struct addrinfo));
+		    	userTrackingHints.ai_family = PF_UNSPEC;
+		    	userTrackingHints.ai_socktype = SOCK_STREAM;
+		    	userTrackingHints.ai_protocol = IPPROTO_TCP;
 		        
-		        memset(&_user_tracking_serv_addr, 0, sizeof(struct sockaddr_in));
-		        _user_tracking_serv_addr.sin_family = AF_INET;
-		        _user_tracking_serv_addr.sin_port = htons(USER_TRACKING_PORT);
-		    
-		    	if (connect(USER_TRACKING_SOCKET,(struct sockaddr *) &_user_tracking_serv_addr,sizeof(_user_tracking_serv_addr)) < 0) 
-		        	error("ERROR connecting to user tracking socket");
+		        USER_TRACKING_RESULT = getaddrinfo("127.0.0.1", USER_TRACKING_PORT, &userTrackingHints, &userTrackingResult);
+		        if(USER_TRACKING_RESULT < 0)
+		        	error("ERROR opening user tracking socket");
 		    	
+		        for(userTrackingObj=userTrackingResult; userTrackingObj != NULL; userTrackingObj=userTrackingObj->ai_next) 
+		    	{
+		    		USER_TRACKING_SOCKET = socket(userTrackingObj->ai_family, userTrackingObj->ai_socktype, userTrackingObj->ai_protocol);
+		    		if (USER_TRACKING_SOCKET < 0) 
+		    			error("ERROR setting up user tracking socket");
+		    	
+		    		USER_TRACKING_RESULT = connect(USER_TRACKING_SOCKET, userTrackingObj->ai_addr, (int)userTrackingObj->ai_addrlen);
+		    		if (USER_TRACKING_RESULT < 0) 
+		    			error("ERROR connecting user tracking socket");
+		    	}
+	    		
 		    	//------------------------- SECOND USER TRACKING SOCKET --------------------------//
 		    	//--------------------------------------------------------------------------------//
-		    	SECOND_USER_TRACKING_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
-		    	if (SECOND_USER_TRACKING_SOCKET < 0) 
-		        	error("ERROR opening second user tracking socket");
+		        memset(&secUserTrackingHints, 0, sizeof(struct addrinfo));
+		    	secUserTrackingHints.ai_family = PF_UNSPEC;
+		    	secUserTrackingHints.ai_socktype = SOCK_STREAM;
+		    	secUserTrackingHints.ai_protocol = IPPROTO_TCP;
 		        
-		        memset(&_second_user_tracking_serv_addr, 0, sizeof(struct sockaddr_in));
-		        _second_user_tracking_serv_addr.sin_family = AF_INET;
-		        _second_user_tracking_serv_addr.sin_port = htons(SECOND_USER_TRACKING_PORT);
-		    
-		    	if (connect(SECOND_USER_TRACKING_SOCKET,(struct sockaddr *) &_second_user_tracking_serv_addr,sizeof(_second_user_tracking_serv_addr)) < 0) 
-		        	error("ERROR connecting to second user tracking socket");
+		        SECOND_USER_TRACKING_RESULT = getaddrinfo("127.0.0.1", SECOND_USER_TRACKING_PORT, &secUserTrackingHints, &secUserTrackingResult);
+		        if(SECOND_USER_TRACKING_RESULT < 0)
+		        	error("ERROR opening second user tracking socket");
+		    	
+		        for(secUserTrackingObj=secUserTrackingResult; secUserTrackingObj != NULL; secUserTrackingObj=secUserTrackingObj->ai_next) 
+		    	{
+		    		SECOND_USER_TRACKING_SOCKET = socket(secUserTrackingObj->ai_family, secUserTrackingObj->ai_socktype, secUserTrackingObj->ai_protocol);
+		    		if (SECOND_USER_TRACKING_SOCKET < 0) 
+		    			error("ERROR setting up second user tracking socket");
+		    	
+		    		SECOND_USER_TRACKING_RESULT = connect(SECOND_USER_TRACKING_SOCKET, secUserTrackingObj->ai_addr, (int)secUserTrackingObj->ai_addrlen);
+		    		if (SECOND_USER_TRACKING_RESULT < 0) 
+		    			error("ERROR connecting second user tracking socket");
+		    	}
 	    	}
 	    	
 	    	if(_featureDepthMapCapture)
 	    	{
 		    	//------------------------- DEPTH MAP SOCKET -------------------------//
 		    	//--------------------------------------------------------------------//
-		        DEPTH_MAP_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
-		    	if (DEPTH_MAP_SOCKET < 0) 
-		        	error("ERROR opening depth map capture socket");
+	    		memset(&depthMapHints, 0, sizeof(struct addrinfo));
+		    	depthMapHints.ai_family = PF_UNSPEC;
+		    	depthMapHints.ai_socktype = SOCK_STREAM;
+		    	depthMapHints.ai_protocol = IPPROTO_TCP;
 		        
-		        memset(&_depth_map_serv_addr, 0, sizeof(struct sockaddr_in));
-		        _depth_map_serv_addr.sin_family = AF_INET;
-		        _depth_map_serv_addr.sin_port = htons(DEPTH_MAP_PORT);
-		    
-		    	if (connect(DEPTH_MAP_SOCKET,(struct sockaddr *) &_depth_map_serv_addr,sizeof(_depth_map_serv_addr)) < 0) 
-		        	error("ERROR connecting to depth map capture socket");
+		        DEPTH_MAP_RESULT = getaddrinfo("127.0.0.1", DEPTH_MAP_PORT, &depthMapHints, &depthMapResult);
+		        if(DEPTH_MAP_RESULT < 0)
+		        	error("ERROR opening depth map socket");
+		    	
+		        for(depthMapObj=depthMapResult; depthMapObj != NULL; depthMapObj=depthMapObj->ai_next) 
+		    	{
+		    		DEPTH_MAP_SOCKET = socket(depthMapObj->ai_family, depthMapObj->ai_socktype, depthMapObj->ai_protocol);
+		    		if (DEPTH_MAP_SOCKET < 0) 
+		    			error("ERROR setting up depth map socket");
+		    	
+		    		DEPTH_MAP_RESULT = connect(DEPTH_MAP_SOCKET, depthMapObj->ai_addr, (int)depthMapObj->ai_addrlen);
+		    		if (DEPTH_MAP_RESULT < 0) 
+		    			error("ERROR connecting depth map socket");
+		    	}
 	    	}
 	    	
 	    	if(_featureRGBCapture)
 	    	{
 		    	//------------------------- RGB SOCKET -------------------------------//
 		    	//--------------------------------------------------------------------//
-		        RGB_SOCKET = socket(AF_INET, SOCK_STREAM, 0);
-		    	if (RGB_SOCKET < 0) 
-		        	error("ERROR opening rgb capture socket");
+	    		memset(&rgbHints, 0, sizeof(struct addrinfo));
+		    	rgbHints.ai_family = PF_UNSPEC;
+		    	rgbHints.ai_socktype = SOCK_STREAM;
+		    	rgbHints.ai_protocol = IPPROTO_TCP;
 		        
-		        memset(&_rgb_serv_addr, 0, sizeof(struct sockaddr_in));
-		        _rgb_serv_addr.sin_family = AF_INET;
-		        _rgb_serv_addr.sin_port = htons(RGB_PORT);
-		    
-		    	if (connect(RGB_SOCKET,(struct sockaddr *) &_rgb_serv_addr,sizeof(_rgb_serv_addr)) < 0) 
-		        	error("ERROR connecting to rgb capture socket");
+		        RGB_RESULT = getaddrinfo("127.0.0.1", RGB_PORT, &rgbHints, &rgbResult);
+		        if(RGB_RESULT < 0)
+		        	error("ERROR opening rgb socket");
+		    	
+		        for(rgbObj=rgbResult; rgbObj != NULL; rgbObj=rgbObj->ai_next) 
+		    	{
+		    		RGB_SOCKET = socket(rgbObj->ai_family, rgbObj->ai_socktype, rgbObj->ai_protocol);
+		    		if (RGB_SOCKET < 0) 
+		    			error("ERROR setting up rgb socket");
+		    	
+		    		RGB_RESULT = connect(RGB_SOCKET, rgbObj->ai_addr, (int)rgbObj->ai_addrlen);
+		    		if (RGB_RESULT < 0) 
+		    			error("ERROR connecting rgb socket");
+		    	}
 	    	}
 	    	
 		#endif
