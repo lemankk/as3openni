@@ -21,16 +21,15 @@
 			import org.as3openni.nite.events.NiteSessionEvent;
 			import org.as3openni.nite.events.NiteSliderEvent;
 			import org.as3openni.nite.events.NiteTrackPadEvent;
-			import org.as3openni.objects.NiPoint2D;
-			import org.as3openni.objects.NiPoint3D;
 			import org.as3openni.openni.events.ONICaptureEvent;
 			import org.as3openni.openni.events.ONISkeletonEvent;
 			import org.as3openni.openni.events.ONIUserTrackingEvent;
+			
 			import org.as3openni.util.math.NiPoint3DUtil;
+			import org.as3openni.objects.NiPoint2D;
+			import org.as3openni.objects.NiPoint3D;
 			
-			private var _as3OpenNIBridge:NativeProcess;
-			private var _as3OpenNIServer:AS3OpenNI;
-			
+			private var _as3OpenNI:AS3OpenNI;
 			private var _virtualMouse:VirtualMouse;
 			private var _currentX:Number = 0;
 			private var _currentY:Number = 0;
@@ -50,20 +49,57 @@
 			
 			protected function init(event:Event):void
 			{
+				// Setup garbage collection.
 				System.gc();
 				
+				// Setup the virtual mouse.
+				this._virtualMouse = new VirtualMouse(this.stage, this._cursor.x, this._cursor.y);
+				this._virtualMouse.ignore(this._cursor);
+				this.stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
+				
+				// Setup the DepthMap bitmap and the RGB bitmap.
+				this._depthMapBmp = new Bitmap(this._depthMapCanvas);
+				this._rgbBmp = new Bitmap(this._rgbCanvas);
+				
+				// Draw left hand tracking ball.
+				this._leftHandBall.graphics.beginFill(0xFF0000);
+				this._leftHandBall.graphics.drawCircle(0,0,40);
+				this._leftHandBall.graphics.endFill();
+				
+				// Draw right hand tracking ball.
+				this._rightHandBall.graphics.beginFill(0xFF0000);
+				this._rightHandBall.graphics.drawCircle(0,0,40);
+				this._rightHandBall.graphics.endFill();
+				
+				// Run the AS3OpenNI setup.
 				if(!this._runAppOnly)
 				{
-					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
-					this._virtualMouse = new VirtualMouse(this.stage, this._cursor.x, this._cursor.y);
-					this._virtualMouse.ignore(this._cursor);
+					if(this._as3OpenNI) this._as3OpenNI.closeSockets();
+					this._as3OpenNI = new AS3OpenNI();
+					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.0.9";
+					this._as3OpenNI.debug = true;
 					
-					this._depthMapBmp = new Bitmap(this._depthMapCanvas);
-					this._rgbBmp = new Bitmap(this._rgbCanvas);
+					this._as3OpenNI.singlePoint = false;
+					this._as3OpenNI.gestures = false;
+					this._as3OpenNI.circle = false;
+					this._as3OpenNI.slider = false;
+					this._as3OpenNI.userTracking = false;
 					
-					this._as3OpenNIServer = new AS3OpenNI();
-					this.addListeners();
-					this.addSingleHandPointListeners();
+					this._as3OpenNI.trackPad = false;
+					this._as3OpenNI.trackPadColumns = 2;
+					this._as3OpenNI.trackPadRows = 4;
+					
+					this._as3OpenNI.depthMap = false;
+					this._as3OpenNI.depthMapQuality = 0;
+					this._as3OpenNI.depthMapSnap = false;
+					
+					this._as3OpenNI.video = false;
+					this._as3OpenNI.videoQuality = 0;
+					this._as3OpenNI.videoGrayscale = false;
+					this._as3OpenNI.init();
+					
+					this.addSessionListeners();
+					this.addSinglePointListeners();
 					this.addGestureListeners();
 					this.addCircleListeners();
 					this.addSliderListeners();
@@ -71,21 +107,7 @@
 					this.addUserTrackingListeners();
 					this.addDepthMapCaptureListeners();
 					this.addRGBCaptureListeners();
-					
-					if(NativeProcess.isSupported)
-					{
-						this.runAS3OpenNIClient();
-					}
 				}
-				
-				// Draw left/right hand tracking bals.
-				this._leftHandBall.graphics.beginFill(0xFF0000);
-				this._leftHandBall.graphics.drawCircle(0,0,40);
-				this._leftHandBall.graphics.endFill();
-				
-				this._rightHandBall.graphics.beginFill(0xFF0000);
-				this._rightHandBall.graphics.drawCircle(0,0,40);
-				this._rightHandBall.graphics.endFill();
 			}
 			
 			protected function mouseMove(event:MouseEvent):void
@@ -97,197 +119,66 @@
 				}
 			}
 			
-			protected function runAS3OpenNIClient():void
-			{     
-				var file:File = new File();
-				var nativeProcessStartupInfo:NativeProcessStartupInfo = new NativeProcessStartupInfo();
-				
-				if (Capabilities.os.toLowerCase().indexOf("win") > -1)
-				{
-					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.8.exe");
-				} 
-				else if (Capabilities.os.toLowerCase().indexOf("mac") > -1) 
-				{
-					file = File.applicationDirectory.resolvePath("Bin/AS3OpenNI_Alpha_1.0.8");
-				}
-				
-				/**
-				 * By default on startup all the features of the AS3OpenNI client are turned OFF, 
-				 * however if you'd like to turn certain features on for use in your application
-				 * you can pass certain process arguments to the client to turn on those features. 
-				 */
-				var processArgs:Vector.<String> = new Vector.<String>();
-				
-				// Turn on the SinglePoint feature.
-				//processArgs.push("-ospf");
-				
-				// Turn on the Gesture feature.
-				//processArgs.push("-ogf");
-				
-				// Turn on the Circle feature.
-				//processArgs.push("-ocf");
-				
-				// Turn on the Slider feature.
-				//processArgs.push("-osldf");
-				
-				// Turn on the TrackPad feature.
-				//processArgs.push("-otpf");
-				
-				/*// Change the number of TrackPad columns.
-				processArgs.push("-tpc");
-				processArgs.push("8"); // default is 4.*/
-				
-				/*// Change the number of TrackPad rows.
-				processArgs.push("-tpr");
-				processArgs.push("16"); // default is 9.*/
-				
-				// Turn on the UserTracking feature.
-				//processArgs.push("-outf");
-				
-				// PLEASE READ THIS: I've never tested running both feeds
-				// Turn on the DepthMapCapture feature only testing one or the other in this file.
-				processArgs.push("-odmc");
-				
-				// Set the DepthMapCapture quality, default is 0 = Low, 1 = Average, 2 = High, 3 = Super High.
-				processArgs.push("-dmq");
-				processArgs.push("0");
-				
-				// Turn on the RGBCapture feature only testing one or the other in this file.
-				processArgs.push("-orgbc");
-				
-				// Set the RGBCapture quality, default is 0 = Low, 1 = Average, 2 = High, 3 = Super High.
-				processArgs.push("-rgbq");
-				processArgs.push("0");
-				
-				// Sets the RGBCapture to render in greyscale.
-				//processArgs.push("-grey");
-				
-				// Snap the pixels of the DepthMap and RGB together or not, default is false.
-				//processArgs.push("-snap");
-				
-				nativeProcessStartupInfo.arguments = processArgs;
-				nativeProcessStartupInfo.executable = file;
-				
-				this._as3OpenNIBridge = new NativeProcess();
-				this._as3OpenNIBridge.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onOutputData);
-				this._as3OpenNIBridge.addEventListener(ProgressEvent.STANDARD_ERROR_DATA, this.onErrorData);
-				this._as3OpenNIBridge.addEventListener(NativeProcessExitEvent.EXIT, this.onExit);
-				this._as3OpenNIBridge.start(nativeProcessStartupInfo);
+			protected function addSessionListeners():void
+			{
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_PROGRESS, sessionProgress);
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_ENDED, sessionEnded);
 			}
 			
-			protected function onClose(event:Event):void
+			protected function addSinglePointListeners():void
 			{
-				if(this._as3OpenNIBridge) this._as3OpenNIBridge.exit(true);
-			}
-			
-			protected function onOutputData(event:ProgressEvent):void
-			{
-				var msg:String = this._as3OpenNIBridge.standardOutput.readMultiByte(this._as3OpenNIBridge.standardOutput.bytesAvailable, File.systemCharset);
-				trace("Output:", msg);
-			}
-			
-			protected function onErrorData(event:ProgressEvent):void
-			{
-				var ba:Number = this._as3OpenNIBridge.standardOutput.bytesAvailable;
-				if(ba > 0)
-				{
-					trace("ERROR:", this._as3OpenNIBridge.standardError.readMultiByte(ba, File.systemCharset));
-				}
-				this._as3OpenNIBridge.closeInput();
-			}
-			
-			protected function onExit(event:NativeProcessExitEvent):void
-			{
-				if(!this._runAppOnly)
-				{
-					if(this._as3OpenNIServer) this._as3OpenNIServer.closeSockets();
-				}
-			}
-			
-			protected function addListeners():void
-			{
-				NativeApplication.nativeApplication.addEventListener(Event.EXITING, onClose);
-				this.stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
-				
-				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
-				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_PROGRESS, sessionProgress);
-				this._as3OpenNIServer.session.addEventListener(NiteSessionEvent.SESSION_ENDED, sessionEnded);
-			}
-			
-			protected function addSingleHandPointListeners():void
-			{
-				this._as3OpenNIServer.singlePoint.addEventListener(NitePointEvent.POINT_DETECTED, pointDetected);
+				this._as3OpenNI.addEventListener(NitePointEvent.POINT_DETECTED, pointDetected);
 			}
 			
 			protected function addGestureListeners():void
 			{
-				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.PUSH, pushDetected);
-				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.WAVE, waveDetected);
-				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.SWIPE_UP, swipeUp);
-				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.SWIPE_DOWN, swipeDown);
-				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.SWIPE_LEFT, swipeLeft);
-				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.SWIPE_RIGHT, swipeRight);
-				this._as3OpenNIServer.session.addEventListener(NiteGestureEvent.STEADY, steadyDetected);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.PUSH, pushDetected);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.WAVE, waveDetected);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.SWIPE_UP, swipeUp);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.SWIPE_DOWN, swipeDown);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.SWIPE_LEFT, swipeLeft);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.SWIPE_RIGHT, swipeRight);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.STEADY, steadyDetected);
 			}
 			
 			protected function addCircleListeners():void
 			{
-				this._as3OpenNIServer.session.addEventListener(NiteCircleEvent.ANGLE, circleAngle);
-				this._as3OpenNIServer.session.addEventListener(NiteCircleEvent.NO_CIRCLE, noCircle);
+				this._as3OpenNI.addEventListener(NiteCircleEvent.ANGLE, circleAngle);
+				this._as3OpenNI.addEventListener(NiteCircleEvent.NO_CIRCLE, noCircle);
 			}
 			
 			protected function addSliderListeners():void
 			{
-				this._as3OpenNIServer.slider.addEventListener(NiteSliderEvent.SLIDER_LEFT_RIGHT_VALUE, sliderLeftRightValue);
-				this._as3OpenNIServer.slider.addEventListener(NiteSliderEvent.SLIDER_UP_DOWN_VALUE, sliderUpDownValue);
-				this._as3OpenNIServer.slider.addEventListener(NiteSliderEvent.SLIDER_IN_OUT_VALUE, sliderInOutValue);
+				this._as3OpenNI.addEventListener(NiteSliderEvent.SLIDER_LEFT_RIGHT_VALUE, sliderLeftRightValue);
+				this._as3OpenNI.addEventListener(NiteSliderEvent.SLIDER_UP_DOWN_VALUE, sliderUpDownValue);
+				this._as3OpenNI.addEventListener(NiteSliderEvent.SLIDER_IN_OUT_VALUE, sliderInOutValue);
 			}
 			
 			protected function addTrackPadListeners():void
 			{
-				this._as3OpenNIServer.session.addEventListener(NiteTrackPadEvent.TRACKPAD_HOVER, trackPadHover);
+				this._as3OpenNI.addEventListener(NiteTrackPadEvent.TRACKPAD_HOVER, trackPadHover);
 			}
 			
 			protected function addUserTrackingListeners():void
 			{
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_NEW_USER, newUser);
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_LOST_USER, userLost);
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_POSE_DETECTED, userPoseDetected);
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_START, userCalibrationStarted);
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_COMPLETE, userCalibrationComplete);
-				this._as3OpenNIServer.userTracking.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, userCalibrationFailed);
-				this._as3OpenNIServer.userTracking.addEventListener(ONISkeletonEvent.USER_TRACKING, skeleton);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_NEW_USER, newUser);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_LOST_USER, userLost);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_POSE_DETECTED, userPoseDetected);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_START, userCalibrationStarted);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_COMPLETE, userCalibrationComplete);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, userCalibrationFailed);
+				this._as3OpenNI.addEventListener(ONISkeletonEvent.USER_TRACKING, skeleton);
 			}
 			
 			protected function addDepthMapCaptureListeners():void
 			{
-				this.stage.nativeWindow.addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE, windowChanged);
-				this._as3OpenNIServer.depthMap.addEventListener(ONICaptureEvent.ONI_DEPTH_MAP, getDepthMap);
+				this._as3OpenNI.addEventListener(ONICaptureEvent.ONI_DEPTH_MAP, getDepthMap);
 			}
 			
 			protected function addRGBCaptureListeners():void
 			{
-				this._as3OpenNIServer.video.addEventListener(ONICaptureEvent.ONI_RGB, getRGB);
-			}
-			
-			protected function windowChanged(event:NativeWindowDisplayStateEvent):void
-			{
-				var state:String = this.stage.nativeWindow.displayState;
-				if(state == NativeWindowDisplayState.MINIMIZED)
-				{
-					this._as3OpenNIServer.depthMap.removeEventListener(ONICaptureEvent.ONI_DEPTH_MAP, getDepthMap);
-					this._as3OpenNIServer.video.removeEventListener(ONICaptureEvent.ONI_RGB, getRGB);
-				}
-				else
-				{
-					setTimeout(restartCapturing, 3000);
-				}
-			}
-			
-			protected function restartCapturing():void
-			{
-				this._as3OpenNIServer.depthMap.addEventListener(ONICaptureEvent.ONI_DEPTH_MAP, getDepthMap);
-				this._as3OpenNIServer.video.addEventListener(ONICaptureEvent.ONI_RGB, getRGB);
+				this._as3OpenNI.addEventListener(ONICaptureEvent.ONI_RGB, getRGB);
 			}
 			
 			protected function getDepthMap(event:ONICaptureEvent):void
