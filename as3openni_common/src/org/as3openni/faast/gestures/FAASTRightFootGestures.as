@@ -45,8 +45,11 @@ package org.as3openni.faast.gestures
 			if(rightFootRangeX <= rightFootRange && rightFootRangeZ >= rightFootRange
 				&& rightFoot.pointZ < leftFoot.pointZ)
 			{
+				var footHeight:Number = Math.abs(rightFoot.pointY-leftFoot.pointY);
+				footHeight = (this.useInches) ? NiPoint3DUtil.convertMMToInches(footHeight) : footHeight;
+				
 				this.distance = (this.useInches) ? NiPoint3DUtil.convertMMToInches(rightFootRangeY) : rightFootRangeY;
-				this.dispatchEvent(new FAASTEvent(FAASTEvent.RIGHT_FOOT_FORWARD, this.distance));
+				this.dispatchEvent(new FAASTEvent(FAASTEvent.RIGHT_FOOT_FORWARD, this.distance, footHeight));
 			}
 			
 			// Right Foot Backward.

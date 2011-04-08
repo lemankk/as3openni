@@ -27,25 +27,28 @@ package org.as3openni.util
 		
 		public function bind():void
 		{
-			if(this._serverSocket.bound) 
+			if(this._serverSocket)
 			{
-				this._serverSocket.close();
-				this._serverSocket = new ServerSocket();
-			}
-			else
-			{	
-				try 
+				if(this._serverSocket.bound) 
 				{
-					this._serverSocket.bind(this.port, this.address);
-					this._serverSocket.listen();
-				} 
-				catch(e:Error) 
-				{ 
-					this.log(e); 
-				} 
+					this._serverSocket.close();
+					this._serverSocket = new ServerSocket();
+				}
+				else
+				{	
+					try 
+					{
+						this._serverSocket.bind(this.port, this.address);
+						this._serverSocket.listen();
+						
+						trace(this.name + " - Bound to: " + this._serverSocket.localAddress + ":" + this._serverSocket.localPort);
+					} 
+					catch(e:Error) 
+					{ 
+						this.log(e); 
+					} 
+				}
 			}
-			
-			trace(this.name + " - Bound to: " + this._serverSocket.localAddress + ":" + this._serverSocket.localPort);
 		}
 		
 		public function send(value:String):void
