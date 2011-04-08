@@ -26,15 +26,19 @@ package org.as3openni.faast.events
 		public static const RIGHT_FOOT_BACKWARD:String = "event:right_foot_backward";
 		public static const RIGHT_FOOT_UP:String = "event:right_foot_up";
 		
-		public static const JUMP:String = "event:jump";
-		public static const CROUCH:String = "event:crouch";
-		public static const WALK:String = "event:walk";
+		public static const JUMPING:String = "event:jumping";
+		public static const CROUCHED:String = "event:crouched";
+		public static const WALKING:String = "event:walking";
 		
-		public var value:Number;
+		public var distance:Number = 0;
+		public var distance2:Number = 0;
+		public var angle:Number = 0;
 		
-		public function FAASTEvent(type:String, value:Number = 0, bubbles:Boolean=false, cancelable:Boolean=false)
+		public function FAASTEvent(type:String, distance:Number = 0, distance2:Number = 0, angle:Number = 0, bubbles:Boolean=false, cancelable:Boolean=false)
 		{
-			this.value = value;
+			this.distance = distance;
+			this.distance2 = distance2;
+			this.angle = angle;
 			super(type, bubbles, cancelable);
 		}
 	}
