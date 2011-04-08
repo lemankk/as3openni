@@ -11,5 +11,5 @@ SRC_FILES = \
 
 INC_DIRS = ../AS3OpenNI
 
-EXE_NAME = AS3OpenNI_Alpha_1.0.8
+EXE_NAME = AS3OpenNI_Alpha_1.0.9
 include ../NiteSampleMakefile

@@ -94,7 +94,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>OpenNI.lib;XnVNite.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>../Bin/Release/AS3OpenNI_Alpha_1.0.8.exe</OutputFile>
+      <OutputFile>../Bin/Release/AS3OpenNI_Alpha_1.0.9.exe</OutputFile>
       <AdditionalLibraryDirectories>$(OPEN_NI_LIB);..\..\Lib;../../Lib/$(Configuration);../../Lib/;..\..\Samples\AS3OpenNI\Libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile>../Bin/Release/AS3OpenNI.pdb</ProgramDatabaseFile>
