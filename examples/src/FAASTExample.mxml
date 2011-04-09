@@ -67,7 +67,7 @@
 				this._faast.addEventListener(FAASTEvent.RIGHT_ARM_UP, onFAASTEvent);
 				this._faast.addEventListener(FAASTEvent.RIGHT_ARM_DOWN, onFAASTEvent);
 				this._faast.addEventListener(FAASTEvent.RIGHT_ARM_FORWARD, onFAASTEvent);
-				this._faast.addEventListener(FAASTEvent.RIGHT_ARM_ACCROSS, onFAASTEvent);*/
+				this._faast.addEventListener(FAASTEvent.RIGHT_ARM_ACCROSS, onFAASTEvent);
 				
 				// Left Leg.
 				this._faast.addEventListener(FAASTEvent.LEFT_FOOT_SIDEWAYS, onFAASTEvent);
@@ -86,7 +86,9 @@
 				this._faast.addEventListener(FAASTEvent.JUMPING, onFAASTEvent);
 				
 				// Action events.
-				//this._faast.addEventListener(FAASTEvent.WALKING, onFAASTEvent);
+				this._faast.addEventListener(FAASTEvent.WALKING, onFAASTEvent);*/
+				this._faast.addEventListener(FAASTEvent.LEAN_LEFT, onFAASTEvent);
+				this._faast.addEventListener(FAASTEvent.LEAN_RIGHT, onFAASTEvent);
 			}
 			
 			protected function setupSkeletons3DWorld():void
@@ -194,7 +196,7 @@
 			
 			protected function onFAASTEvent(event:FAASTEvent):void
 			{
-				trace(event.type + ', distance: ' + event.distance + ', distance2: ' + event.distance2);
+				trace(event.type + ', distance: ' + event.distance + ', distance2: ' + event.distance2 + ', angle:' + event.angle);
 			}
 		]]>
 	</fx:Script>
