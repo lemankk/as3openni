@@ -121,6 +121,8 @@ package org.as3openni.faast
 		{
 			this._fullBodyGestures.addEventListener(FAASTEvent.CROUCHED, onFAASTEvent);
 			this._fullBodyGestures.addEventListener(FAASTEvent.JUMPING, onFAASTEvent);
+			this._fullBodyGestures.addEventListener(FAASTEvent.LEAN_LEFT, onFAASTEvent);
+			this._fullBodyGestures.addEventListener(FAASTEvent.LEAN_RIGHT, onFAASTEvent);
 		}
 		
 		protected function addCustomListeners():void

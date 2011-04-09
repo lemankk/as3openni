@@ -30,6 +30,14 @@ package org.as3openni.faast.events
 		public static const CROUCHED:String = "event:crouched";
 		public static const WALKING:String = "event:walking";
 		
+		public static const LEAN_LEFT:String = "event:lean_left";
+		public static const LEAN_RIGHT:String = "event:lean_right";
+		public static const LEAN_FORWARD:String = "event:lean_forward";
+		public static const LEAN_BACKWARD:String = "event:lean_backward";
+		
+		public static const TURN_LEFT:String = "event:turn_left";
+		public static const TURN_RIGHT:String = "event:turn_right";
+		
 		public var distance:Number = 0;
 		public var distance2:Number = 0;
 		public var angle:Number = 0;
