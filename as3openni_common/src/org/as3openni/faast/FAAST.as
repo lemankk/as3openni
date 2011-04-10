@@ -30,19 +30,7 @@ package org.as3openni.faast
 		public function FAAST(useInches:Boolean = false)
 		{
 			super();
-			
-			// Setup the gestures.
-			this._leftArmGestures = new FAASTLeftArmGestures(useInches);
-			this._rightArmGestures = new FAASTRightArmGestures(useInches);
-			this._leftFootGestures = new FAASTLeftFootGestures(useInches);
-			this._rightFootGestures = new FAASTRightFootGestures(useInches);
-			this._fullBodyGestures = new FAASTFullBodyGestures(useInches);
-			
-			// Add listeners.
-			this.addCustomListeners();
-			this.addUpperBodyListeners();
-			this.addLowerBodyListeners();
-			this.addFullBodyListeners();
+			this.setupFAAST(useInches);
 		}
 		
 		public function configure(skeleton:NiSkeleton):void
@@ -85,6 +73,22 @@ package org.as3openni.faast
 			}
 		}
 		
+		protected function setupFAAST(useInches:Boolean = false):void
+		{
+			// Setup the gestures.
+			this._leftArmGestures = new FAASTLeftArmGestures(useInches);
+			this._rightArmGestures = new FAASTRightArmGestures(useInches);
+			this._leftFootGestures = new FAASTLeftFootGestures(useInches);
+			this._rightFootGestures = new FAASTRightFootGestures(useInches);
+			this._fullBodyGestures = new FAASTFullBodyGestures(useInches);
+			
+			// Add listeners.
+			this.addCustomListeners();
+			this.addUpperBodyListeners();
+			this.addLowerBodyListeners();
+			this.addFullBodyListeners();	
+		}
+		
 		protected function addLowerBodyListeners():void
 		{
 			// Left Leg.
@@ -123,6 +127,10 @@ package org.as3openni.faast
 			this._fullBodyGestures.addEventListener(FAASTEvent.JUMPING, onFAASTEvent);
 			this._fullBodyGestures.addEventListener(FAASTEvent.LEAN_LEFT, onFAASTEvent);
 			this._fullBodyGestures.addEventListener(FAASTEvent.LEAN_RIGHT, onFAASTEvent);
+			this._fullBodyGestures.addEventListener(FAASTEvent.LEAN_FORWARD, onFAASTEvent);
+			this._fullBodyGestures.addEventListener(FAASTEvent.LEAN_BACKWARD, onFAASTEvent);
+			this._fullBodyGestures.addEventListener(FAASTEvent.TURN_LEFT, onFAASTEvent);
+			this._fullBodyGestures.addEventListener(FAASTEvent.TURN_RIGHT, onFAASTEvent);
 		}
 		
 		protected function addCustomListeners():void
