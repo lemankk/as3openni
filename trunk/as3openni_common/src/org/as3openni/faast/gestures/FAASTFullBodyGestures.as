@@ -6,12 +6,10 @@ package org.as3openni.faast.gestures
 	import org.as3openni.objects.NiPoint3D;
 	import org.as3openni.objects.NiSkeleton;
 	import org.as3openni.util.math.NiPoint3DUtil;
-
+	
 	public class FAASTFullBodyGestures extends FAASTBasicGestures
 	{
 		private var _configHeight:Number;
-		private var _centerRadians:Number;
-		private var _centerDegrees:Number;
 		
 		private var _configLeftFoot:NiPoint3D;
 		private var _configRightFoot:NiPoint3D;
@@ -43,6 +41,7 @@ package org.as3openni.faast.gestures
 			// Define the heights.
 			var fullBodyHeight:Number = (Math.max(leftFoot.pointY, rightFoot.pointY, head.pointY) - Math.min(leftFoot.pointY, rightFoot.pointY, head.pointY));
 			var torsoHeight:Number = (Math.max(torso.pointY, head.pointY) - Math.min(torso.pointY, head.pointY));
+			var topBodyRange:Number = (Math.max(torso.pointZ, leftShoulder.pointZ, rightShoulder.pointZ) - Math.min(torso.pointZ, leftShoulder.pointZ, rightShoulder.pointZ));
 			
 			// Grab the first recorded full body height.
 			if(!_configHeight)
@@ -78,31 +77,71 @@ package org.as3openni.faast.gestures
 						this.dispatchEvent(new FAASTEvent(FAASTEvent.JUMPING, this.distance));
 					}
 				}
-				
-				// Detect center angle.
-				if(!this._centerDegrees)
+			}
+			
+			// Detect the full body Y-degrees.
+			var fullBodyRadiansY:Number = Math.atan2((torso.pointY - this._configTorso.pointY), (torso.pointX - this._configTorso.pointX));
+			var fullBodyDegreesY:Number = Math.abs(Math.round(fullBodyRadiansY*180/Math.PI));
+			
+			// Detect if the user leans left or right.
+			if(fullBodyDegreesY < 180)
+			{
+				if(fullBodyDegreesY < 173 && fullBodyDegreesY > 167)
 				{
-					this._centerRadians = Math.atan2((torso.pointY - this._configTorso.pointY), (torso.pointX - this._configTorso.pointX));
-					this._centerDegrees = Math.round(this._centerRadians*180/Math.PI);
+					this.dispatchEvent(new FAASTEvent(FAASTEvent.LEAN_LEFT, 0, 0, fullBodyDegreesY));
+				}
+				
+				if(fullBodyDegreesY > 5 && fullBodyDegreesY < 35)
+				{
+					this.dispatchEvent(new FAASTEvent(FAASTEvent.LEAN_RIGHT, 0, 0, fullBodyDegreesY));
 				}
 			}
 			
-			// Detect the full body angles.
-			var fullBodyRadians:Number = Math.atan2((torso.pointY - this._configTorso.pointY), (torso.pointX - this._configTorso.pointX));
-			var fullBodyDegrees:Number = Math.abs(Math.round(fullBodyRadians*180/Math.PI));
+			// Detect the full body Z-degrees.
+			var fullBodyRadiansZ:Number = Math.atan2((torso.pointY - this._configTorso.pointY), (torso.pointZ - this._configTorso.pointZ));
+			var fullBodyDegreesZ:Number = Math.abs(Math.round(fullBodyRadiansZ*180/Math.PI));
 			
-			// Detect if the user is leaning left or right.
-			if(fullBodyDegrees < 180)
+			// Detect if the user leans forward.
+			if(torso.pointZ < leftFoot.pointZ && fullBodyDegreesZ < 170
+				&& torso.pointZ < rightFoot.pointZ)
 			{
-				if(fullBodyDegrees < 173 && fullBodyDegrees > 167)
-				{
-					this.dispatchEvent(new FAASTEvent(FAASTEvent.LEAN_LEFT, 0, 0, fullBodyDegrees));
-				}
-				
-				if(fullBodyDegrees > 5 && fullBodyDegrees < 35)
-				{
-					this.dispatchEvent(new FAASTEvent(FAASTEvent.LEAN_RIGHT, 0, 0, fullBodyDegrees));
-				}
+				this.dispatchEvent(new FAASTEvent(FAASTEvent.LEAN_FORWARD, 0, 0, fullBodyDegreesZ));
+			}
+			
+			// Detect the head Z-degrees.
+			var headRadiansZ:Number = Math.atan2((head.pointY - this._configHead.pointY), (head.pointZ - this._configHead.pointZ));
+			var headDegreesZ:Number = Math.abs(Math.round(headRadiansZ*180/Math.PI));
+			
+			// Detect if the user leans backward.
+			if(head.pointZ > leftFoot.pointZ 
+				&& headDegreesZ > 10 && headDegreesZ < 35
+				&& head.pointZ > rightFoot.pointZ)
+			{
+				this.dispatchEvent(new FAASTEvent(FAASTEvent.LEAN_BACKWARD, 0, 0, fullBodyDegreesZ));
+			}
+			
+			// Detect the left side X-degrees.
+			var leftSideRadians:Number = Math.atan2((leftShoulder.pointY - torso.pointY), (leftShoulder.pointZ - torso.pointZ));
+			var leftSideDegrees:Number = Math.abs(Math.round(leftSideRadians*180/Math.PI));
+			
+			// Detect the right side X-degrees.
+			var rightSideRadians:Number = Math.atan2((rightShoulder.pointY - torso.pointY), (rightShoulder.pointZ - torso.pointZ));
+			var rightSideDegrees:Number = Math.abs(Math.round(rightSideRadians*180/Math.PI));
+			
+			// Detect if the user turns left.
+			if(leftShoulder.pointZ > torso.pointZ
+				&& rightShoulder.pointZ < torso.pointZ
+				&& topBodyRange > 75)
+			{
+				this.dispatchEvent(new FAASTEvent(FAASTEvent.TURN_LEFT, 0, 0, leftSideDegrees));
+			}
+			
+			// Detect if the user turns right.
+			if(leftShoulder.pointZ < torso.pointZ
+				&& rightShoulder.pointZ > torso.pointZ
+				&& topBodyRange > 75)
+			{
+				this.dispatchEvent(new FAASTEvent(FAASTEvent.TURN_RIGHT, 0, 0, rightSideDegrees));
 			}
 		}
 	}

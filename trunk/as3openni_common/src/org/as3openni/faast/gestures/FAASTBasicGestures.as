@@ -8,6 +8,7 @@ package org.as3openni.faast.gestures
 	{
 		public var distance:Number = 0;
 		public var useInches:Boolean = false;
+		public var skeleton:NiSkeleton;
 		
 		public function FAASTBasicGestures(useInches:Boolean = false)
 		{
@@ -16,7 +17,7 @@ package org.as3openni.faast.gestures
 		
 		public function configure(skeleton:NiSkeleton):void
 		{
-			// Abstract.
+			this.skeleton = skeleton;
 		}
 	}
 }
