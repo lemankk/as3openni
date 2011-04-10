@@ -86,9 +86,14 @@
 				this._faast.addEventListener(FAASTEvent.JUMPING, onFAASTEvent);
 				
 				// Action events.
-				this._faast.addEventListener(FAASTEvent.WALKING, onFAASTEvent);*/
+				this._faast.addEventListener(FAASTEvent.WALKING, onFAASTEvent);
 				this._faast.addEventListener(FAASTEvent.LEAN_LEFT, onFAASTEvent);
 				this._faast.addEventListener(FAASTEvent.LEAN_RIGHT, onFAASTEvent);
+				this._faast.addEventListener(FAASTEvent.LEAN_FORWARD, onFAASTEvent);
+				this._faast.addEventListener(FAASTEvent.LEAN_BACKWARD, onFAASTEvent);*/
+				
+				this._faast.addEventListener(FAASTEvent.TURN_LEFT, onFAASTEvent);
+				this._faast.addEventListener(FAASTEvent.TURN_RIGHT, onFAASTEvent);
 			}
 			
 			protected function setupSkeletons3DWorld():void
