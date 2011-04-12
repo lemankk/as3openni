@@ -84,6 +84,7 @@ package org.as3openni
 		public var depthMapSnap:Boolean = false;
 		public var video:Boolean = false;
 		public var videoGrayscale:Boolean = false;
+		public var mirrorModeOff:Boolean = false;
 		
 		public function AS3OpenNI()
 		{
@@ -203,6 +204,9 @@ package org.as3openni
 			 * you can pass certain process arguments to the client to turn on those features. 
 			 */
 			var processArgs:Vector.<String> = new Vector.<String>();
+			
+			// Turn off the mirror mode.
+			if(this.mirrorModeOff) processArgs.push("-mrev");
 			
 			// Turn on the SinglePoint feature.
 			if(this.singlePoint) processArgs.push("-ospf");
