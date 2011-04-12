@@ -176,6 +176,7 @@
 				//trace('Calibration Complete for User: ' + event.user);
 				this._statusField.text = 'Calibration Complete for User: ' + event.user;
 				this._skeletons3DWorld.startRendering();
+				this._skeletons3DWorld.addUser(event.user);
 			}
 			
 			protected function userCalibrationFailed(event:ONIUserTrackingEvent):void
@@ -187,16 +188,9 @@
 			
 			protected function skeleton(event:ONISkeletonEvent):void
 			{
-				if(!this._skeletons3DWorld.checkIfUserExist(event.user))
-				{
-					this._skeletons3DWorld.addUser(event.user);
-				}
-				else
-				{
-					var skeleton:NiSkeleton = event.skeleton as NiSkeleton;
-					this._skeletons3DWorld.skeleton = skeleton;
-					this._faast.configure(skeleton);
-				}
+				var skeleton:NiSkeleton = event.skeleton as NiSkeleton;
+				//this._skeletons3DWorld.skeleton = skeleton;
+				this._faast.configure(skeleton);
 			}
 			
 			protected function onFAASTEvent(event:FAASTEvent):void

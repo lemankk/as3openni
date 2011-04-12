@@ -9,6 +9,8 @@
 	
 	<fx:Script>
 		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
 			import org.as3openni.AS3OpenNI;
 			import org.as3openni.nite.events.NiteSessionEvent;
 			import org.as3openni.objects.NiPoint2D;
@@ -28,12 +30,15 @@
 			
 			// Setup the skeletons 3D world.
 			private var _skeletons3DWorld:Skeletons3DWorld;
-			private var _secSkeletons3DWorld:Skeletons3DWorld;
+
+			// Array collections.
+			private var _pointsCollection:ArrayCollection = new ArrayCollection();
+			private var _skeletonsCollection:ArrayCollection = new ArrayCollection();
 			
 			protected function init(event:Event):void
 			{
 				this.setupSkeletons3DWorld();
-				
+
 				if(!this._runAppOnly)
 				{
 					this._as3OpenNI = new AS3OpenNI();
@@ -50,12 +55,9 @@
 			protected function setupSkeletons3DWorld():void
 			{
 				this._skeletons3DWorld = new Skeletons3DWorld();
-				this._secSkeletons3DWorld = new Skeletons3DWorld();
-				this._skeletons3DWorldContainer.addChild(this._skeletons3DWorld);
-				this._skeletons3DWorldContainer.addChild(this._secSkeletons3DWorld);
-				this._secSkeletons3DWorld.alpha = .5;
+				this._skeletons.addChild(this._skeletons3DWorld);
 			}
-			
+
 			protected function addSessionListeners():void
 			{
 				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
@@ -71,20 +73,8 @@
 				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_START, userCalibrationStarted);
 				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_COMPLETE, userCalibrationComplete);
 				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, userCalibrationFailed);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_FOUND, userFound);
 				this._as3OpenNI.addEventListener(ONISkeletonEvent.USER_TRACKING, skeleton);
-				this._as3OpenNI.addEventListener(ONISkeletonEvent.SECOND_USER_TRACKING, skeleton2);
-			}
-			
-			protected function removeUserTrackingListeners():void
-			{
-				this._as3OpenNI.removeEventListener(ONIUserTrackingEvent.USER_TRACKING_NEW_USER, newUser);
-				this._as3OpenNI.removeEventListener(ONIUserTrackingEvent.USER_TRACKING_LOST_USER, userLost);
-				this._as3OpenNI.removeEventListener(ONIUserTrackingEvent.USER_TRACKING_POSE_DETECTED, userPoseDetected);
-				this._as3OpenNI.removeEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_START, userCalibrationStarted);
-				this._as3OpenNI.removeEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_COMPLETE, userCalibrationComplete);
-				this._as3OpenNI.removeEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, userCalibrationFailed);
-				this._as3OpenNI.removeEventListener(ONISkeletonEvent.USER_TRACKING, skeleton);
-				this._as3OpenNI.removeEventListener(ONISkeletonEvent.SECOND_USER_TRACKING, skeleton2);
 			}
 			
 			protected function sessionStarted(event:NiteSessionEvent):void
@@ -102,18 +92,74 @@
 				//trace('Session Ended');
 			}
 			
+			protected function userFound(event:ONIUserTrackingEvent):void
+			{
+				//trace('User: ' + event.user + ', Single-Point: ' + event.userSinglePoint.toString());
+				//this._statusField.text = 'User: ' + event.user + ', Single-Point: ' + event.userSinglePoint.toString();
+				
+				// Setup the Single-Point balls.
+				var ballPoint:UIComponent = this.ballPointLookup(event.user);
+				if(ballPoint)
+				{
+					var point3D:NiPoint3D = event.userSinglePoint as NiPoint3D;
+					var obj:NiPoint2D = NiPoint3DUtil.convertRealWorldToScreen(point3D, this.stage.stageWidth, this.stage.stageHeight);
+					
+					if(point3D)
+					{
+						ballPoint.x = obj.pointX;
+						ballPoint.y = obj.pointY/2;
+					}
+				}
+			}
+			
 			protected function newUser(event:ONIUserTrackingEvent):void
 			{
+				this.removeBallPoint(event.user);
+				this._skeletons3DWorld.removeUser(event.user);
+				
 				//trace('New User Found: ' + event.user);
 				this._statusField.text = 'New User Found: ' + event.user;
+				
+				// Add each user's single point ball.
+				var ballPoint:UIComponent = new UIComponent();
+				ballPoint.graphics.beginFill(0xFF0000);
+				ballPoint.graphics.drawCircle(0,0,20);
+				ballPoint.graphics.endFill();
+				this._singlePoints.addChild(ballPoint);
+				this._pointsCollection.addItem({user:event.user, ball:ballPoint});
 			}
 			
 			protected function userLost(event:ONIUserTrackingEvent):void
 			{
 				//trace('Lost User: ' + event.user);
 				this._statusField.text = 'Lost User: ' + event.user;
+				this.removeBallPoint(event.user);
 				this._skeletons3DWorld.removeUser(event.user);
-				this._secSkeletons3DWorld.removeUser(event.user);
+			}
+			
+			protected function ballPointLookup(user:Number):UIComponent
+			{
+				var ballPoint:UIComponent;
+				for(var i:Number = 0; i < this._pointsCollection.length; i++)
+				{
+					var obj:Object = this._pointsCollection.getItemAt(i);
+					if(user == obj.user) ballPoint = obj.ball as UIComponent;
+				}
+				return ballPoint;
+			}
+			
+			protected function removeBallPoint(user:Number):void
+			{
+				for(var i:Number = 0; i < this._pointsCollection.length; i++)
+				{
+					var obj:Object = this._pointsCollection.getItemAt(i);
+					if(user == obj.user) 
+					{
+						var ballPoint:UIComponent = obj.ball as UIComponent;
+						this._singlePoints.removeChild(ballPoint);
+						this._pointsCollection.removeItemAt(i);
+					}
+				}
 			}
 			
 			protected function userPoseDetected(event:ONIUserTrackingEvent):void
@@ -132,42 +178,20 @@
 			{
 				//trace('Calibration Complete for User: ' + event.user);
 				this._statusField.text = 'Calibration Complete for User: ' + event.user;
+				this.removeBallPoint(event.user);
 				this._skeletons3DWorld.startRendering();
-				this._secSkeletons3DWorld.startRendering();
+				this._skeletons3DWorld.addUser(event.user);
 			}
 			
 			protected function userCalibrationFailed(event:ONIUserTrackingEvent):void
 			{
 				//trace('Calibration Failed for User: ' + event.user);
 				this._statusField.text = 'Calibration Failed for User: ' + event.user;
-				this._skeletons3DWorld.removeUser(event.user);
-				this._secSkeletons3DWorld.removeUser(event.user);
 			}
 			
 			protected function skeleton(event:ONISkeletonEvent):void
 			{
-				if(!this._skeletons3DWorld.checkIfUserExist(event.user))
-				{
-					this._skeletons3DWorld.addUser(event.user);
-				}
-				else
-				{
-					var skeleton:NiSkeleton = event.skeleton as NiSkeleton;
-					this._skeletons3DWorld.skeleton = skeleton;
-				}
-			}
-			
-			protected function skeleton2(event:ONISkeletonEvent):void
-			{
-				if(!this._secSkeletons3DWorld.checkIfUserExist(event.user))
-				{
-					this._secSkeletons3DWorld.addUser(event.user);
-				}
-				else
-				{
-					var skeleton:NiSkeleton = event.skeleton as NiSkeleton;
-					this._secSkeletons3DWorld.skeleton = skeleton;
-				}
+				this._skeletons3DWorld.updateUserSkeleton(event.skeleton);
 			}
 		]]>
 	</fx:Script>
@@ -177,6 +201,7 @@
 		<mx:Label id="_statusField" text="STATUS" fontWeight="bold" fontSize="25" color="#EEEEEE"/>
 	</mx:Box>
 	
-	<mx:UIComponent id="_skeletons3DWorldContainer" width="800" height="600"/>
+	<mx:UIComponent id="_skeletons" width="800" height="600"/>
+	<mx:UIComponent id="_singlePoints" width="800" height="600" alpha=".5"/>
 	
 </mx:WindowedApplication>
