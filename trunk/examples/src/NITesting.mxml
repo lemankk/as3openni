@@ -76,13 +76,14 @@
 				{
 					this._as3OpenNI = new AS3OpenNI();
 					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.0.9";
-					this._as3OpenNI.debug = true;
+					this._as3OpenNI.debug = false;
+					this._as3OpenNI.traceLog = false;
 					
 					this._as3OpenNI.singlePoint = false;
 					this._as3OpenNI.gestures = false;
 					this._as3OpenNI.circle = false;
 					this._as3OpenNI.slider = false;
-					this._as3OpenNI.userTracking = false;
+					this._as3OpenNI.userTracking = true;
 					
 					this._as3OpenNI.trackPad = false;
 					this._as3OpenNI.trackPadColumns = 2;
@@ -167,6 +168,7 @@
 				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_START, userCalibrationStarted);
 				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_COMPLETE, userCalibrationComplete);
 				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, userCalibrationFailed);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_FOUND, userFound);
 				this._as3OpenNI.addEventListener(ONISkeletonEvent.USER_TRACKING, skeleton);
 			}
 			
@@ -205,6 +207,11 @@
 			protected function sessionEnded(event:NiteSessionEvent):void
 			{
 				trace('Session Ended');
+			}
+			
+			protected function userFound(event:ONIUserTrackingEvent):void
+			{
+				trace('User: ' + event.user + ', Single-Point: ' + event.userSinglePoint.toString());
 			}
 			
 			protected function newUser(event:ONIUserTrackingEvent):void
