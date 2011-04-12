@@ -120,6 +120,7 @@ XnBool _featureRGBCapture = false;
 XnBool _featureDepthMapCapture = false;
 XnBool _rgbGoGrey = false;
 XnBool _snapPixels = false;
+XnBool _mirror = true;
 
 // User tracking vars
 XnBool _needPose = false;
@@ -682,7 +683,7 @@ int main(int argc, char *argv[])
     // Context Init and Add license.
 	_status = _context.Init();
 	CHECK_RC(_status, "Initialize context");
-	_context.SetGlobalMirror(true);
+	_context.SetGlobalMirror(_mirror);
 	
 	XnChar vendor[XN_MAX_NAME_LENGTH];
 	XnChar license[XN_MAX_LICENSE_LENGTH];
