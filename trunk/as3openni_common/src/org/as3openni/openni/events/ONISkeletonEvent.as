@@ -8,7 +8,6 @@ package org.as3openni.openni.events
 	public class ONISkeletonEvent extends Event
 	{
 		public static const USER_TRACKING:String = "user_tracking:";
-		public static const SECOND_USER_TRACKING:String = "second_user_tracking:";
 		
 		public var user:Number = 0;
 		public var leftHand:NiPoint3D;
@@ -16,7 +15,7 @@ package org.as3openni.openni.events
 		public var skeleton:NiSkeleton;
 		
 		public function ONISkeletonEvent(type:String, user:Number, leftHand:NiPoint3D, rightHand:NiPoint3D,
-										 skeleton:NiSkeleton, bubbles:Boolean=false, cancelable:Boolean=false)
+										 	skeleton:NiSkeleton, bubbles:Boolean=false, cancelable:Boolean=false)
 		{
 			this.user = user;
 			this.leftHand = leftHand;

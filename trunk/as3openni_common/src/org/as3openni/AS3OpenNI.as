@@ -50,7 +50,6 @@ package org.as3openni
 	import org.as3openni.openni.events.ONIUserTrackingEvent;
 	import org.as3openni.openni.sockets.ONIDepthMapSocket;
 	import org.as3openni.openni.sockets.ONIRGBSocket;
-	import org.as3openni.openni.sockets.ONISecUserTrackingSocket;
 	import org.as3openni.openni.sockets.ONIUserTrackingSocket;
 
 	public class AS3OpenNI extends EventDispatcher
@@ -62,7 +61,6 @@ package org.as3openni
 		public var sessionSocket:NiteSessionSocket;
 		public var sliderSocket:NiteSliderSocket;
 		public var userTrackingSocket:ONIUserTrackingSocket;
-		public var secondUserTrackingSocket:ONISecUserTrackingSocket;
 		public var depthMapSocket:ONIDepthMapSocket;
 		public var videoSocket:ONIRGBSocket;
 		public var bridge:NativeProcess;
@@ -125,10 +123,6 @@ package org.as3openni
 						this.userTrackingSocket = new ONIUserTrackingSocket();
 						this.userTrackingSocket.traceLog = this.traceLog;
 						this.userTrackingSocket.bind();
-						
-						this.secondUserTrackingSocket = new ONISecUserTrackingSocket();
-						this.secondUserTrackingSocket.traceLog = this.traceLog;
-						this.secondUserTrackingSocket.bind();
 						this.addUserTrackingListeners();
 					}
 					
@@ -177,9 +171,6 @@ package org.as3openni
 			if(this.userTracking && this.userTrackingSocket.server && this.userTrackingSocket.server.bound) this.userTrackingSocket.server.close();
 			if(this.userTracking && this.userTrackingSocket.client && this.userTrackingSocket.client.connected) this.userTrackingSocket.client.close();
 			
-			if(this.userTracking && this.secondUserTrackingSocket.server && this.secondUserTrackingSocket.server.bound) this.secondUserTrackingSocket.server.close();
-			if(this.userTracking && this.secondUserTrackingSocket.client && this.secondUserTrackingSocket.client.connected) this.secondUserTrackingSocket.client.close();
-				
 			if(this.depthMap && this.depthMapSocket.server && this.depthMapSocket.server.bound) this.depthMapSocket.server.close();
 			if(this.depthMap && this.depthMapSocket.client && this.depthMapSocket.client.connected) this.depthMapSocket.client.close();
 			
@@ -340,9 +331,8 @@ package org.as3openni
 			this.userTrackingSocket.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_START, this.onUserTracking);
 			this.userTrackingSocket.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_COMPLETE, this.onUserTracking);
 			this.userTrackingSocket.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, this.onUserTracking);
-			
+			this.userTrackingSocket.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_FOUND, this.onUserTracking);
 			this.userTrackingSocket.addEventListener(ONISkeletonEvent.USER_TRACKING, this.onSkeleton);
-			this.secondUserTrackingSocket.addEventListener(ONISkeletonEvent.SECOND_USER_TRACKING, this.onSkeleton);
 		}
 		
 		protected function addDepthMapCaptureListeners():void
@@ -390,7 +380,7 @@ package org.as3openni
 		
 		protected function onUserTracking(event:ONIUserTrackingEvent):void
 		{
-			this.dispatchEvent(new ONIUserTrackingEvent(event.type, event.user, event.bubbles, event.cancelable));
+			this.dispatchEvent(new ONIUserTrackingEvent(event.type, event.user, event.userSinglePoint, event.bubbles, event.cancelable));
 		}
 		
 		protected function onSkeleton(event:ONISkeletonEvent):void

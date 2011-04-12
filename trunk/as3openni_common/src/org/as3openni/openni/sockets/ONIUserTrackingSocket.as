@@ -24,7 +24,7 @@ package org.as3openni.openni.sockets
 			super.onClientSocketData(event);
 			
 			if(this.socketMessage.length > 0)
-			{	
+			{		
 				// Detect for new user.
 				if(this.socketMessage.substr(0, ONIUserTrackingEvent.USER_TRACKING_NEW_USER.length) == ONIUserTrackingEvent.USER_TRACKING_NEW_USER)
 				{
@@ -73,198 +73,225 @@ package org.as3openni.openni.sockets
 					this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, userCalFailed));
 				}
 				
-				// Detect for user tracking skeleton.
-				if(this.socketMessage.substr(0, ONISkeletonEvent.USER_TRACKING.length) == ONISkeletonEvent.USER_TRACKING)
+				var allPlayers:Array = this.socketMessage.split('|');
+				var len:Number = allPlayers.length;
+				
+				for(var p:Number = 0; p < len; p++)
 				{
-					var arr7:Array = this.socketMessage.split(':');
-					var dataStr:String = String(arr7[1]);
-					var points:Array = dataStr.split(',');
-					var user:Number = Number(points[1]);
-					
-					var skeleton:NiSkeleton = new NiSkeleton();
-					var head:NiPoint3D = new NiPoint3D();
-					var neck:NiPoint3D = new NiPoint3D();
-					var torso:NiPoint3D = new NiPoint3D();
-					
-					var leftBigHand:NiPoint3D = new NiPoint3D();
-					var rightBigHand:NiPoint3D = new NiPoint3D();
-					
-					var leftShoulder:NiPoint3D = new NiPoint3D();
-					var leftElbow:NiPoint3D = new NiPoint3D();
-					var leftHand:NiPoint3D = new NiPoint3D();
-					
-					var rightShoulder:NiPoint3D = new NiPoint3D();
-					var rightElbow:NiPoint3D = new NiPoint3D();
-					var rightHand:NiPoint3D = new NiPoint3D();
-					
-					var leftHip:NiPoint3D = new NiPoint3D();
-					var leftKnee:NiPoint3D = new NiPoint3D();
-					var leftFoot:NiPoint3D = new NiPoint3D();
-					
-					var rightHip:NiPoint3D = new NiPoint3D();
-					var rightKnee:NiPoint3D = new NiPoint3D();
-					var rightFoot:NiPoint3D = new NiPoint3D();
-					
-					for(var i:Number = 0; i < points.length; i++)
+					var eachPlayer:String = String(allPlayers[p]);
+					if(eachPlayer.length > 0)
 					{
-						var val:String = points[i] as String;
-						switch(val)
+						var eachPlayerArr:Array = eachPlayer.split(':');
+						var dataLbl:String = String(String(eachPlayerArr[0]) + ':');
+						var dataStr:String = String(eachPlayerArr[1]);
+						var points:Array = dataStr.split(',');
+						var user:Number = Number(points[1]);
+						
+						// If a user has been found.
+						if(dataLbl == ONIUserTrackingEvent.USER_TRACKING_USER_FOUND)
 						{
-							case 'head':
-								head.user = user;
-								head.pointX = Number(points[i+1]);
-								head.pointY = Number(points[i+2]);
-								head.pointZ = Number(points[i+3]);
-								break;
+							// Define.
+							var userSinglePoint:NiPoint3D = new NiPoint3D();
+							userSinglePoint.user = user;
+							userSinglePoint.pointX = Number(points[3]);
+							userSinglePoint.pointY = Number(points[4]);
+							userSinglePoint.pointZ = Number(points[5]);
 							
-							case 'neck':
-								neck.user = user;
-								neck.pointX = Number(points[i+1]);
-								neck.pointY = Number(points[i+2]);
-								neck.pointZ = Number(points[i+3]);
-								break;
+							// Then dispatch the user tracking event out.
+							this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_USER_FOUND, user, userSinglePoint));
+						}
+						
+						// If a user is being tracked.
+						if(dataLbl == ONISkeletonEvent.USER_TRACKING)
+						{
+							// Define.
+							var skeleton:NiSkeleton = new NiSkeleton();
+							var head:NiPoint3D = new NiPoint3D();
+							var neck:NiPoint3D = new NiPoint3D();
+							var torso:NiPoint3D = new NiPoint3D();
 							
-							case 'torso':
-								torso.user = user;
-								torso.pointX = Number(points[i+1]);
-								torso.pointY = Number(points[i+2]);
-								torso.pointZ = Number(points[i+3]);
-								break;
+							var leftBigHand:NiPoint3D = new NiPoint3D();
+							var rightBigHand:NiPoint3D = new NiPoint3D();
 							
-							case 'left_big_hand':
-								leftBigHand.user = user;
-								leftBigHand.pointX = Number(points[i+1]);
-								leftBigHand.pointY = Number(points[i+2]);
-								leftBigHand.pointZ = Number(points[i+3]);
-								break;
+							var leftShoulder:NiPoint3D = new NiPoint3D();
+							var leftElbow:NiPoint3D = new NiPoint3D();
+							var leftHand:NiPoint3D = new NiPoint3D();
 							
-							case 'right_big_hand':
-								rightBigHand.user = user;
-								rightBigHand.pointX = Number(points[i+1]);
-								rightBigHand.pointY = Number(points[i+2]);
-								rightBigHand.pointZ = Number(points[i+3]);
-								break;
+							var rightShoulder:NiPoint3D = new NiPoint3D();
+							var rightElbow:NiPoint3D = new NiPoint3D();
+							var rightHand:NiPoint3D = new NiPoint3D();
 							
-							case 'left_shoulder':
-								leftShoulder.user = user;
-								leftShoulder.pointX = Number(points[i+1]);
-								leftShoulder.pointY = Number(points[i+2]);
-								leftShoulder.pointZ = Number(points[i+3]);
-								break;
+							var leftHip:NiPoint3D = new NiPoint3D();
+							var leftKnee:NiPoint3D = new NiPoint3D();
+							var leftFoot:NiPoint3D = new NiPoint3D();
 							
-							case 'left_elbow':
-								leftElbow.user = user;
-								leftElbow.pointX = Number(points[i+1]);
-								leftElbow.pointY = Number(points[i+2]);
-								leftElbow.pointZ = Number(points[i+3]);
-								break;
+							var rightHip:NiPoint3D = new NiPoint3D();
+							var rightKnee:NiPoint3D = new NiPoint3D();
+							var rightFoot:NiPoint3D = new NiPoint3D();
 							
-							case 'left_hand':
-								leftHand.user = user;
-								leftHand.pointX = Number(points[i+1]);
-								leftHand.pointY = Number(points[i+2]);
-								leftHand.pointZ = Number(points[i+3]);
-								break;
+							// Grab all data.
+							for(var i:Number = 0; i < points.length; i++)
+							{
+								var val:String = points[i] as String;
+								switch(val)
+								{
+									case 'head':
+										head.user = user;
+										head.pointX = Number(points[i+1]);
+										head.pointY = Number(points[i+2]);
+										head.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'neck':
+										neck.user = user;
+										neck.pointX = Number(points[i+1]);
+										neck.pointY = Number(points[i+2]);
+										neck.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'torso':
+										torso.user = user;
+										torso.pointX = Number(points[i+1]);
+										torso.pointY = Number(points[i+2]);
+										torso.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'left_big_hand':
+										leftBigHand.user = user;
+										leftBigHand.pointX = Number(points[i+1]);
+										leftBigHand.pointY = Number(points[i+2]);
+										leftBigHand.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'right_big_hand':
+										rightBigHand.user = user;
+										rightBigHand.pointX = Number(points[i+1]);
+										rightBigHand.pointY = Number(points[i+2]);
+										rightBigHand.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'left_shoulder':
+										leftShoulder.user = user;
+										leftShoulder.pointX = Number(points[i+1]);
+										leftShoulder.pointY = Number(points[i+2]);
+										leftShoulder.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'left_elbow':
+										leftElbow.user = user;
+										leftElbow.pointX = Number(points[i+1]);
+										leftElbow.pointY = Number(points[i+2]);
+										leftElbow.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'left_hand':
+										leftHand.user = user;
+										leftHand.pointX = Number(points[i+1]);
+										leftHand.pointY = Number(points[i+2]);
+										leftHand.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'right_shoulder':
+										rightShoulder.user = user;
+										rightShoulder.pointX = Number(points[i+1]);
+										rightShoulder.pointY = Number(points[i+2]);
+										rightShoulder.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'right_elbow':
+										rightElbow.user = user;
+										rightElbow.pointX = Number(points[i+1]);
+										rightElbow.pointY = Number(points[i+2]);
+										rightElbow.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'right_hand':
+										rightHand.user = user;
+										rightHand.pointX = Number(points[i+1]);
+										rightHand.pointY = Number(points[i+2]);
+										rightHand.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'left_hip':
+										leftHip.user = user;
+										leftHip.pointX = Number(points[i+1]);
+										leftHip.pointY = Number(points[i+2]);
+										leftHip.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'left_knee':
+										leftKnee.user = user;
+										leftKnee.pointX = Number(points[i+1]);
+										leftKnee.pointY = Number(points[i+2]);
+										leftKnee.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'left_foot':
+										leftFoot.user = user;
+										leftFoot.pointX = Number(points[i+1]);
+										leftFoot.pointY = Number(points[i+2]);
+										leftFoot.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'right_hip':
+										rightHip.user = user;
+										rightHip.pointX = Number(points[i+1]);
+										rightHip.pointY = Number(points[i+2]);
+										rightHip.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'right_knee':
+										rightKnee.user = user;
+										rightKnee.pointX = Number(points[i+1]);
+										rightKnee.pointY = Number(points[i+2]);
+										rightKnee.pointZ = Number(points[i+3]);
+										break;
+									
+									case 'right_foot':
+										rightFoot.user = user;
+										rightFoot.pointX = Number(points[i+1]);
+										rightFoot.pointY = Number(points[i+2]);
+										rightFoot.pointZ = Number(points[i+3]);
+										break;
+								}
+							}
 							
-							case 'right_shoulder':
-								rightShoulder.user = user;
-								rightShoulder.pointX = Number(points[i+1]);
-								rightShoulder.pointY = Number(points[i+2]);
-								rightShoulder.pointZ = Number(points[i+3]);
-								break;
+							// Populate the skeleton object.
+							skeleton.user = user;
+							skeleton.head = head;
+							skeleton.neck = neck;
+							skeleton.torso = torso;
 							
-							case 'right_elbow':
-								rightElbow.user = user;
-								rightElbow.pointX = Number(points[i+1]);
-								rightElbow.pointY = Number(points[i+2]);
-								rightElbow.pointZ = Number(points[i+3]);
-								break;
+							skeleton.leftShoulder = leftShoulder;
+							skeleton.leftElbow = leftElbow;
+							skeleton.leftHand = leftHand;
 							
-							case 'right_hand':
-								rightHand.user = user;
-								rightHand.pointX = Number(points[i+1]);
-								rightHand.pointY = Number(points[i+2]);
-								rightHand.pointZ = Number(points[i+3]);
-								break;
+							skeleton.rightShoulder = rightShoulder;
+							skeleton.rightElbow = rightElbow;
+							skeleton.rightHand = rightHand;
 							
-							case 'left_hip':
-								leftHip.user = user;
-								leftHip.pointX = Number(points[i+1]);
-								leftHip.pointY = Number(points[i+2]);
-								leftHip.pointZ = Number(points[i+3]);
-								break;
+							skeleton.leftHip = leftHip;
+							skeleton.leftKnee = leftKnee;
+							skeleton.leftFoot = leftFoot;
 							
-							case 'left_knee':
-								leftKnee.user = user;
-								leftKnee.pointX = Number(points[i+1]);
-								leftKnee.pointY = Number(points[i+2]);
-								leftKnee.pointZ = Number(points[i+3]);
-								break;
+							skeleton.rightHip = rightHip;
+							skeleton.rightKnee = rightKnee;
+							skeleton.rightFoot = rightFoot;
 							
-							case 'left_foot':
-								leftFoot.user = user;
-								leftFoot.pointX = Number(points[i+1]);
-								leftFoot.pointY = Number(points[i+2]);
-								leftFoot.pointZ = Number(points[i+3]);
-								break;
-							
-							case 'right_hip':
-								rightHip.user = user;
-								rightHip.pointX = Number(points[i+1]);
-								rightHip.pointY = Number(points[i+2]);
-								rightHip.pointZ = Number(points[i+3]);
-								break;
-							
-							case 'right_knee':
-								rightKnee.user = user;
-								rightKnee.pointX = Number(points[i+1]);
-								rightKnee.pointY = Number(points[i+2]);
-								rightKnee.pointZ = Number(points[i+3]);
-								break;
-							
-							case 'right_foot':
-								rightFoot.user = user;
-								rightFoot.pointX = Number(points[i+1]);
-								rightFoot.pointY = Number(points[i+2]);
-								rightFoot.pointZ = Number(points[i+3]);
-								break;
+							// Then dispatch the user tracking event out.
+							this.dispatchEvent
+							(
+								new ONISkeletonEvent
+								(
+									ONISkeletonEvent.USER_TRACKING, 
+									user,
+									leftBigHand,
+									rightBigHand,
+									skeleton
+								)
+							);
 						}
 					}
-					
-					// Populate the skeleton object.
-					skeleton.user = user;
-					skeleton.head = head;
-					skeleton.neck = neck;
-					skeleton.torso = torso;
-					
-					skeleton.leftShoulder = leftShoulder;
-					skeleton.leftElbow = leftElbow;
-					skeleton.leftHand = leftHand;
-					
-					skeleton.rightShoulder = rightShoulder;
-					skeleton.rightElbow = rightElbow;
-					skeleton.rightHand = rightHand;
-					
-					skeleton.leftHip = leftHip;
-					skeleton.leftKnee = leftKnee;
-					skeleton.leftFoot = leftFoot;
-					
-					skeleton.rightHip = rightHip;
-					skeleton.rightKnee = rightKnee;
-					skeleton.rightFoot = rightFoot;
-					
-					// Then dispatch the user tracking event out.
-					this.dispatchEvent
-					(
-						new ONISkeletonEvent
-						(
-							ONISkeletonEvent.USER_TRACKING, 
-							user,
-							leftBigHand,
-							rightBigHand,
-							skeleton
-						)
-					);
 				}
 			}
 		}
