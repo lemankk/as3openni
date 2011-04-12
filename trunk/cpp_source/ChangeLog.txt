@@ -58,6 +58,6 @@ Author: Tony Birleffi
   * Turn off the mirror mode, so everything works opposite
 
 ===TODO LIST:===
+  * Add Hand/Finger Tracking
   * Add player detection color coding option to the Depth Map capturing feature
   * Node.js/Pure ActionScript 3.0 project examples
-  * Add Hand/Finger Tracking
