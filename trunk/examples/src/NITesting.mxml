@@ -79,21 +79,22 @@
 					this._as3OpenNI.debug = false;
 					this._as3OpenNI.traceLog = false;
 					
+					this._as3OpenNI.mirrorModeOff = false;
 					this._as3OpenNI.singlePoint = false;
 					this._as3OpenNI.gestures = false;
 					this._as3OpenNI.circle = false;
 					this._as3OpenNI.slider = false;
-					this._as3OpenNI.userTracking = true;
+					this._as3OpenNI.userTracking = false;
 					
 					this._as3OpenNI.trackPad = false;
 					this._as3OpenNI.trackPadColumns = 2;
 					this._as3OpenNI.trackPadRows = 4;
 					
-					this._as3OpenNI.depthMap = false;
+					this._as3OpenNI.depthMap = true;
 					this._as3OpenNI.depthMapQuality = 0;
 					this._as3OpenNI.depthMapSnap = false;
 					
-					this._as3OpenNI.video = false;
+					this._as3OpenNI.video = true;
 					this._as3OpenNI.videoQuality = 0;
 					this._as3OpenNI.videoGrayscale = false;
 					this._as3OpenNI.init();
