@@ -3,17 +3,11 @@
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	#include "socket.h"
 	extern SOCKET USER_TRACKING_SOCKET;
-	extern SOCKET SECOND_USER_TRACKING_SOCKET;
 #else
 	extern int USER_TRACKING_SOCKET;
-	extern int SECOND_USER_TRACKING_SOCKET;
 #endif
 
-char * _primaryPlayer;
-char * _secondaryPlayer;
-
-int _primaryLength;
-int _secondaryLength;
+string _players;
 
 void renderSkeleton()
 {
@@ -24,14 +18,20 @@ void renderSkeleton()
 	
 	for (int i = 0; i < nUsers; ++i)
 	{
+		char * playerData;
+		int playerLength;
+		XnUserID player;
+		XnPoint3D com;
+		player = aUsers[i];
+		_userGenerator.GetCoM(player, com);
+		
+		// If a user is being tracked then do this.
 		if(_userGenerator.GetSkeletonCap().IsTracking(aUsers[i]))
 		{
-			XnUserID player;
 			XnSkeletonJointPosition head, neck, left_shoulder, left_elbow, left_hand, right_shoulder, right_elbow, right_hand;
 			XnSkeletonJointPosition torso, left_hip, left_knee, left_foot, right_hip, right_knee, right_foot;
 			XnSkeletonJointPosition left_big_hand, right_big_hand;
 			
-			player = aUsers[i];
 			_userGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_HEAD, head);
 			_userGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_NECK, neck);
 			_userGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_TORSO, torso);
@@ -54,273 +54,160 @@ void renderSkeleton()
 			_userGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_KNEE, right_knee);
 			_userGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_FOOT, right_foot);
 			
-			//------------------------------------------------------------------------------------------//
-			//------------------------- SEND DATA TO USER_TRACKING_SOCKET SERVER -----------------------//
-			//------------------------------------------------------------------------------------------//
-			
 			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-				if(player > 1)
-				{
-					_secondaryLength = _snprintf
-					(
-							NULL, 0, FORMAT2, player,
-							left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-							right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-							
-							head.position.X, head.position.Y, head.position.Z, 
-							neck.position.X, neck.position.Y, neck.position.Z,
-							torso.position.X, torso.position.Y, torso.position.Z,
-							
-							left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-							left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-							left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-							
-							right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-							right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-							right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-							
-							left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-							left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-							left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-							
-							right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-							right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-							right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-					);
-				}
-				else
-				{
-					_primaryLength = _snprintf
-					(
-							NULL, 0, FORMAT, player,
-							left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-							right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-							
-							head.position.X, head.position.Y, head.position.Z, 
-							neck.position.X, neck.position.Y, neck.position.Z,
-							torso.position.X, torso.position.Y, torso.position.Z,
-							
-							left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-							left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-							left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-							
-							right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-							right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-							right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-							
-							left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-							left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-							left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-							
-							right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-							right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-							right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-					);
-				}
+				playerLength = _snprintf
+				(
+					NULL, 0, SKEL_FORMAT, player,
+					left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
+					right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
+					
+					head.position.X, head.position.Y, head.position.Z, 
+					neck.position.X, neck.position.Y, neck.position.Z,
+					torso.position.X, torso.position.Y, torso.position.Z,
+					
+					left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
+					left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
+					left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
+					
+					right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
+					right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
+					right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
+					
+					left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
+					left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
+					left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
+					
+					right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
+					right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
+					right_foot.position.X, right_foot.position.Y, right_foot.position.Z
+				);
 			#else
-				if(player > 1)
-				{
-					_secondaryLength = snprintf
-					(
-							NULL, 0, FORMAT2, player,
-							left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-							right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-							
-							head.position.X, head.position.Y, head.position.Z, 
-							neck.position.X, neck.position.Y, neck.position.Z,
-							torso.position.X, torso.position.Y, torso.position.Z,
-							
-							left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-							left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-							left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-							
-							right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-							right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-							right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-							
-							left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-							left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-							left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-							
-							right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-							right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-							right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-					);
-				}
-				else
-				{
-					_primaryLength = snprintf
-					(
-							NULL, 0, FORMAT, player,
-							left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-							right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-							
-							head.position.X, head.position.Y, head.position.Z, 
-							neck.position.X, neck.position.Y, neck.position.Z,
-							torso.position.X, torso.position.Y, torso.position.Z,
-							
-							left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-							left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-							left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-							
-							right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-							right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-							right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-							
-							left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-							left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-							left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-							
-							right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-							right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-							right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-					);
-				}
+				playerLength = snprintf
+				(
+					NULL, 0, SKEL_FORMAT, player,
+					left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
+					right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
+					
+					head.position.X, head.position.Y, head.position.Z, 
+					neck.position.X, neck.position.Y, neck.position.Z,
+					torso.position.X, torso.position.Y, torso.position.Z,
+					
+					left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
+					left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
+					left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
+					
+					right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
+					right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
+					right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
+					
+					left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
+					left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
+					left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
+					
+					right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
+					right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
+					right_foot.position.X, right_foot.position.Y, right_foot.position.Z
+				);
 			#endif
 			
 			// Character object that will store the string.
-			_secondaryPlayer = (char*) malloc((_secondaryLength + 1) * sizeof(char));
-			_primaryPlayer = (char*) malloc((_primaryLength + 1) * sizeof(char));
+			playerData = (char*) malloc((playerLength + 1) * sizeof(char));
 			
 			// Print string in to format.
 			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-				if(player > 1)
-				{
-					_snprintf
-					(
-							_secondaryPlayer, _secondaryLength, FORMAT2, player,
-							left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-							right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-							
-							head.position.X, head.position.Y, head.position.Z, 
-							neck.position.X, neck.position.Y, neck.position.Z,
-							torso.position.X, torso.position.Y, torso.position.Z,
-							
-							left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-							left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-							left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-							
-							right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-							right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-							right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-							
-							left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-							left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-							left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-							
-							right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-							right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-							right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-					);
-				}
-				else
-				{
-					_snprintf
-					(
-							_primaryPlayer, _primaryLength, FORMAT, player,
-							left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-							right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-							
-							head.position.X, head.position.Y, head.position.Z, 
-							neck.position.X, neck.position.Y, neck.position.Z,
-							torso.position.X, torso.position.Y, torso.position.Z,
-							
-							left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-							left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-							left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-							
-							right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-							right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-							right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-							
-							left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-							left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-							left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-							
-							right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-							right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-							right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-					);
-				}
+				_snprintf
+				(
+					playerData, playerLength, SKEL_FORMAT, player,
+					left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
+					right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
+					
+					head.position.X, head.position.Y, head.position.Z, 
+					neck.position.X, neck.position.Y, neck.position.Z,
+					torso.position.X, torso.position.Y, torso.position.Z,
+					
+					left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
+					left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
+					left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
+					
+					right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
+					right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
+					right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
+					
+					left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
+					left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
+					left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
+					
+					right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
+					right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
+					right_foot.position.X, right_foot.position.Y, right_foot.position.Z
+				);
 			#else
-				if(player > 1)
-				{
-					snprintf
-					(
-							_secondaryPlayer, _secondaryLength, FORMAT2, player,
-							left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-							right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-							
-							head.position.X, head.position.Y, head.position.Z, 
-							neck.position.X, neck.position.Y, neck.position.Z,
-							torso.position.X, torso.position.Y, torso.position.Z,
-							
-							left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-							left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-							left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-							
-							right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-							right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-							right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-							
-							left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-							left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-							left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-							
-							right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-							right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-							right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-					);
-				}
-				else
-				{
-					snprintf
-					(
-							_primaryPlayer, _primaryLength, FORMAT, player,
-							left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-							right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-							
-							head.position.X, head.position.Y, head.position.Z, 
-							neck.position.X, neck.position.Y, neck.position.Z,
-							torso.position.X, torso.position.Y, torso.position.Z,
-							
-							left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-							left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-							left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-							
-							right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-							right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-							right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-							
-							left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-							left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-							left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-							
-							right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-							right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-							right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-					);
-				}
+				snprintf
+				(
+					playerData, playerLength, SKEL_FORMAT, player,
+					left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
+					right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
+					
+					head.position.X, head.position.Y, head.position.Z, 
+					neck.position.X, neck.position.Y, neck.position.Z,
+					torso.position.X, torso.position.Y, torso.position.Z,
+					
+					left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
+					left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
+					left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
+					
+					right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
+					right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
+					right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
+					
+					left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
+					left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
+					left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
+					
+					right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
+					right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
+					right_foot.position.X, right_foot.position.Y, right_foot.position.Z
+				);
+			#endif
+		}
+		// Else, just track the user's center point.
+		else
+		{
+			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
+				playerLength = _snprintf(NULL, 0, COM_FORMAT, player, com.X, com.Y, com.Z);
+			#else
+				playerLength = snprintf(NULL, 0, COM_FORMAT, player, com.X, com.Y, com.Z);
 			#endif
 			
-			if(_printUserTracking) 
-			{
-				printf("Primary Skeleton - %s\n", _primaryPlayer);
-				if(player > 1) printf("Secondary Skeleton - %s\n", _secondaryPlayer);
-			}
+			// Character object that will store the string.
+			playerData = (char*) malloc((playerLength + 1) * sizeof(char));
 			
-			if(_useSockets) 
-			{
-				sendToSocket(USER_TRACKING_SOCKET, _primaryPlayer);
-				if(player > 1) sendToSocket(SECOND_USER_TRACKING_SOCKET, _secondaryPlayer);
-			}
-			
-			free(_secondaryPlayer);
-			free(_primaryPlayer);
-			
-			//------------------------------------------------------------------------------------------//
-			//------------------------- SEND DATA TO USER_TRACKING_SOCKET SERVER -----------------------//
-			//------------------------------------------------------------------------------------------//
+			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
+				_snprintf(playerData, playerLength, COM_FORMAT, player, com.X, com.Y, com.Z);
+			#else
+				snprintf(playerData, playerLength, COM_FORMAT, player, com.X, com.Y, com.Z);
+			#endif
 		}
+		
+		// Copy each result over to the buffer.
+		_players.append(playerData);
+		
+		// Free each player's data memory block.
+		free(playerData);
 	}
+	
+	// Get the length.
+	int len = strlen(_players.c_str());
+	_players.reserve(MAX_USERS*len);
+	
+	// Pass along the player data.
+	if(len > 0)
+	{
+		if(_printUserTracking) cout<<"Players: "<< _players <<"\n";
+		const char * copyPlayers = _players.c_str();
+		if(_useSockets) sendToSocket(USER_TRACKING_SOCKET, copyPlayers);
+	}
+	
+	// Reset the players string.
+	_players.clear();
 }

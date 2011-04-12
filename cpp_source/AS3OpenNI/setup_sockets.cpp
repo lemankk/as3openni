@@ -6,7 +6,6 @@ int SLIDER_RESULT;
 int USER_TRACKING_RESULT;
 int DEPTH_MAP_RESULT;
 int RGB_RESULT;
-int SECOND_USER_TRACKING_RESULT;
 
 #define POINT_PORT "9500"
 #define SESSION_PORT "9501"
@@ -14,7 +13,6 @@ int SECOND_USER_TRACKING_RESULT;
 #define USER_TRACKING_PORT "9503"
 #define DEPTH_MAP_PORT "9504"
 #define RGB_PORT "9505"
-#define SECOND_USER_TRACKING_PORT "9506"
 
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	#include <windows.h>
@@ -33,10 +31,9 @@ int SECOND_USER_TRACKING_RESULT;
 	extern SOCKET USER_TRACKING_SOCKET;
 	extern SOCKET DEPTH_MAP_SOCKET;
 	extern SOCKET RGB_SOCKET;
-	extern SOCKET SECOND_USER_TRACKING_SOCKET;
 #else
 	#include <netdb.h>
-	extern int POINT_SOCKET, SESSION_SOCKET, SLIDER_SOCKET, USER_TRACKING_SOCKET, DEPTH_MAP_SOCKET, RGB_SOCKET, SECOND_USER_TRACKING_SOCKET;
+	extern int POINT_SOCKET, SESSION_SOCKET, SLIDER_SOCKET, USER_TRACKING_SOCKET, DEPTH_MAP_SOCKET, RGB_SOCKET;
 #endif
 	
 void setupSockets()
@@ -50,7 +47,6 @@ void setupSockets()
 		struct addrinfo sessionHints, pointHints,
 									sliderHints,
 									userTrackingHints,
-									secUserTrackingHints,
 									depthMapHints,
 									rgbHints,
 									
@@ -60,13 +56,11 @@ void setupSockets()
 									*userTrackingResult = NULL,
 									*depthMapResult = NULL,
 									*rgbResult = NULL,
-									*secUserTrackingResult = NULL,
 									
 									*pointObj = NULL, 
 									*sessionObj = NULL,
 									*sliderObj = NULL,
 									*userTrackingObj = NULL,
-									*secUserTrackingObj = NULL,
 									*depthMapObj = NULL,
 									*rgbObj = NULL;
 		
@@ -78,7 +72,6 @@ void setupSockets()
 			WSADATA userTrackingData;
 			WSADATA depthMapData;
 			WSADATA rgbData;
-			WSADATA secUserTrackingData;
 			
 			POINT_SOCKET = INVALID_SOCKET;
 			SESSION_SOCKET = INVALID_SOCKET;
@@ -86,7 +79,6 @@ void setupSockets()
 			USER_TRACKING_SOCKET = INVALID_SOCKET;
 			DEPTH_MAP_SOCKET = INVALID_SOCKET;
 			RGB_SOCKET = INVALID_SOCKET;
-			SECOND_USER_TRACKING_SOCKET = INVALID_SOCKET;
 	    	
 	    	//------------------------- SESSION SOCKET --------------------------//
 	    	//------------------------------------------------------------------//
@@ -300,57 +292,6 @@ void setupSockets()
 		        	printf("Unable to connect to user tracking server!\n");
 		        	return;
 		    	}
-		    	
-		    	//------------------------- SECOND USER TRACKING SOCKET --------------------------//
-		    	//--------------------------------------------------------------------------------//
-		    	SECOND_USER_TRACKING_RESULT = WSAStartup(MAKEWORD(2,2), &secUserTrackingData);
-		    	if(SECOND_USER_TRACKING_RESULT != 0) 
-		    	{
-		        	printf("WSAStartup second user tracking failed: %d\n", SECOND_USER_TRACKING_RESULT);
-		        	return;
-		    	}
-		    	
-		    	// Setup second user tracking hints.
-		    	ZeroMemory(&secUserTrackingHints, sizeof(secUserTrackingHints));
-		    	secUserTrackingHints.ai_family = AF_UNSPEC;
-		    	secUserTrackingHints.ai_socktype = SOCK_STREAM;
-		    	secUserTrackingHints.ai_protocol = IPPROTO_TCP;
-		    	
-		    	SECOND_USER_TRACKING_SOCKET = getaddrinfo("127.0.0.1", SECOND_USER_TRACKING_PORT, &secUserTrackingHints, &secUserTrackingResult);
-		    	if(SECOND_USER_TRACKING_RESULT != 0) 
-		    	{
-		        	printf("Getaddrinfo failed on second user tracking socket server: %d\n", SECOND_USER_TRACKING_SOCKET);
-		        	WSACleanup();
-		        	return;
-		        }
-				
-				// Attempt to connect to an address until one succeeds on the second user tracking server.
-		    	for(secUserTrackingObj=secUserTrackingResult; secUserTrackingObj != NULL; secUserTrackingObj=secUserTrackingObj->ai_next) 
-		    	{
-		        	// Create the session socket.
-		    		SECOND_USER_TRACKING_SOCKET = socket(secUserTrackingObj->ai_family, secUserTrackingObj->ai_socktype, secUserTrackingObj->ai_protocol);
-		        	if (SECOND_USER_TRACKING_SOCKET == INVALID_SOCKET)
-		        	{
-		            	printf("Error at second user tracking socket(): %ld\n", WSAGetLastError());
-		            	return;
-		        	}
-		        	
-		        	// Connect to the second user tracking server.
-		        	SECOND_USER_TRACKING_RESULT = connect(SECOND_USER_TRACKING_SOCKET, secUserTrackingObj->ai_addr, (int)secUserTrackingObj->ai_addrlen);
-		        	if(SECOND_USER_TRACKING_RESULT == SOCKET_ERROR) 
-		        	{
-		        		SECOND_USER_TRACKING_SOCKET = INVALID_SOCKET;
-		            	continue;
-		        	}
-		        	
-		        	break;
-		    	}
-		    	
-		    	if(SECOND_USER_TRACKING_SOCKET == INVALID_SOCKET) 
-		    	{
-		        	printf("Unable to connect to second user tracking server!\n");
-		        	return;
-		    	}
 	    	}
 	    	
 	    	if(_featureDepthMapCapture)
@@ -557,28 +498,6 @@ void setupSockets()
 		    		USER_TRACKING_RESULT = connect(USER_TRACKING_SOCKET, userTrackingObj->ai_addr, (int)userTrackingObj->ai_addrlen);
 		    		if (USER_TRACKING_RESULT < 0) 
 		    			error("ERROR connecting user tracking socket");
-		    	}
-	    		
-		    	//------------------------- SECOND USER TRACKING SOCKET --------------------------//
-		    	//--------------------------------------------------------------------------------//
-		        memset(&secUserTrackingHints, 0, sizeof(struct addrinfo));
-		    	secUserTrackingHints.ai_family = PF_UNSPEC;
-		    	secUserTrackingHints.ai_socktype = SOCK_STREAM;
-		    	secUserTrackingHints.ai_protocol = IPPROTO_TCP;
-		        
-		        SECOND_USER_TRACKING_RESULT = getaddrinfo("127.0.0.1", SECOND_USER_TRACKING_PORT, &secUserTrackingHints, &secUserTrackingResult);
-		        if(SECOND_USER_TRACKING_RESULT < 0)
-		        	error("ERROR opening second user tracking socket");
-		    	
-		        for(secUserTrackingObj=secUserTrackingResult; secUserTrackingObj != NULL; secUserTrackingObj=secUserTrackingObj->ai_next) 
-		    	{
-		    		SECOND_USER_TRACKING_SOCKET = socket(secUserTrackingObj->ai_family, secUserTrackingObj->ai_socktype, secUserTrackingObj->ai_protocol);
-		    		if (SECOND_USER_TRACKING_SOCKET < 0) 
-		    			error("ERROR setting up second user tracking socket");
-		    	
-		    		SECOND_USER_TRACKING_RESULT = connect(SECOND_USER_TRACKING_SOCKET, secUserTrackingObj->ai_addr, (int)secUserTrackingObj->ai_addrlen);
-		    		if (SECOND_USER_TRACKING_RESULT < 0) 
-		    			error("ERROR connecting second user tracking socket");
 		    	}
 	    	}
 	    	
