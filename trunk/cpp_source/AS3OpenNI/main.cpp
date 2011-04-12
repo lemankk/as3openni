@@ -57,9 +57,9 @@
 //-----------------------------------------------------------------------------
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	#include "socket.h"
-	SOCKET POINT_SOCKET, SESSION_SOCKET, SLIDER_SOCKET, USER_TRACKING_SOCKET, DEPTH_MAP_SOCKET, RGB_SOCKET, SECOND_USER_TRACKING_SOCKET;
+	SOCKET POINT_SOCKET, SESSION_SOCKET, SLIDER_SOCKET, USER_TRACKING_SOCKET, DEPTH_MAP_SOCKET, RGB_SOCKET;
 #else
-    int POINT_SOCKET, SESSION_SOCKET, SLIDER_SOCKET, USER_TRACKING_SOCKET, DEPTH_MAP_SOCKET, RGB_SOCKET, SECOND_USER_TRACKING_SOCKET;
+    int POINT_SOCKET, SESSION_SOCKET, SLIDER_SOCKET, USER_TRACKING_SOCKET, DEPTH_MAP_SOCKET, RGB_SOCKET;
 #endif
 
 //-----------------------------------------------------------------------------
@@ -267,13 +267,7 @@ void CleanupExit()
 	
 	if(_featureSinglePoint) close(POINT_SOCKET);
 	if(_featureSlider) close(SLIDER_SOCKET);
-	
-	if(_featureUserTracking) 
-	{
-		close(USER_TRACKING_SOCKET);
-		close(SECOND_USER_TRACKING_SOCKET);
-	}
-	
+	if(_featureUserTracking) close(USER_TRACKING_SOCKET);
 	if(_featureDepthMapCapture) close(DEPTH_MAP_SOCKET);
 	if(_featureRGBCapture) close(RGB_SOCKET);
 	

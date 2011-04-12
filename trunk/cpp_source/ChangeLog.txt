@@ -50,10 +50,13 @@ Author: Tony Birleffi
   * For the Steady Hand Detector the Velocity data will be available too
   * Second player detection and additional socket added
 
-===TODO LIST:===
+===Version: Alpha 1.0.9: Features:===
   * Cleaned up the socket connections support for Mac
   * Adding the FAAST action list to the AS3OpenNI code base
-  * Add player detection color coding option to the Depth Map capturing feature
   * Get single point data when a user is found, but not tracked
+  * Can now track up to 15 players, however max tested was up to three
+
+===TODO LIST:===
+  * Add player detection color coding option to the Depth Map capturing feature
   * Node.js/Pure ActionScript 3.0 project examples
   * Add Hand/Finger Tracking
