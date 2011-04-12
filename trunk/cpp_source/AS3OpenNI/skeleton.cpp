@@ -204,8 +204,7 @@ void renderSkeleton()
 	if(len > 0)
 	{
 		if(_printUserTracking) cout<<"Players: "<< _players <<"\n";
-		const char * copyPlayers = _players.c_str();
-		if(_useSockets) sendToSocket(USER_TRACKING_SOCKET, copyPlayers);
+		if(_useSockets) sendToSocket(USER_TRACKING_SOCKET, _players.c_str());
 	}
 	
 	// Reset the players string.

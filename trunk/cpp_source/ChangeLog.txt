@@ -55,6 +55,7 @@ Author: Tony Birleffi
   * Adding the FAAST action list to the AS3OpenNI code base
   * Get single point data when a user is found, but not tracked
   * Can now track up to 15 players, however max tested was up to three
+  * Turn off the mirror mode, so everything works opposite
 
 ===TODO LIST:===
   * Add player detection color coding option to the Depth Map capturing feature

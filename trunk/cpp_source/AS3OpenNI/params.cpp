@@ -23,6 +23,7 @@ void setupParams(int argc, char *argv[])
 				cout<<"-grey || RGBCapture render in grayscale, default is false\n";
 				cout<<"-rgbq 0 || RGBCapture quality, 0 = Low, 1 = Average, 2 = High, 3 = Super High, default is 0\n";
 				cout<<"-dmq 0 || DepthMapCapture quality, 0 = Low, 1 = Average, 2 = High, 3 = Super High, default is 0\n";
+				cout<<"-mrev || Mirror mode will be set to false, default is true\n";
 				cout<<"-aso || Turn off all sockets\n";
 				cout<<" \n";
 				cout<<"Turn On Features:\n";
@@ -84,6 +85,12 @@ void setupParams(int argc, char *argv[])
 			{
 				_useSockets = false;
 				cout<<"All sockets are off\n";
+			}
+			
+			if(param == "-mrev")
+			{
+				_mirror = false;
+				cout<<"Mirror mode is now false\n";
 			}
 			
 			// Turn on features.
