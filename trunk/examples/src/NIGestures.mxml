@@ -41,6 +41,9 @@
 				{
 					this._as3OpenNI = new AS3OpenNI();
 					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.0.9";
+					
+					// If on Windows use this instead for now.
+					//this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.0.9k";
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.gestures = true;
 					this._as3OpenNI.init();
