@@ -1,7 +1,7 @@
 /****************************************************************************
 *                                                                           *
 *   Project:	AS3OpenNI	                                        		*
-*   Version:	Alpha 1.0.8                                                 *
+*   Version:	Alpha 1.0.9                                                 *
 *   Author:     Tony Birleffi												*
 *   URL: 		http://code.google.com/p/as3openni/							*
 *                                                                           *
@@ -9,7 +9,7 @@
 
 /****************************************************************************
 *                                                                           *
-*   AS3OpenNI Alpha 1.0.8	                                                *
+*   AS3OpenNI Alpha 1.0.9	                                                *
 *   Copyright (C) 2011 Tony Birleffi. All Rights Reserved.                  *
 *                                                                           *
 *   This file has been provided pursuant to a License Agreement containing  *
@@ -389,7 +389,7 @@ void XN_CALLBACK_TYPE onPush(XnFloat fVelocity, XnFloat fAngle, void* cxt)
 	if(_useSockets) sendToSocket(SESSION_SOCKET, cPush);
 }
 
-void XN_CALLBACK_TYPE Steady_OnSteady(XnFloat fVelocity, void* cxt)
+void XN_CALLBACK_TYPE Steady_OnSteady(XnUInt32 nId, XnFloat fVelocity, void* cxt)
 {
 	if(_printGesture) printf("Steady Occured - Velocity:%f\n", fVelocity);
 	char cSteady[10];
