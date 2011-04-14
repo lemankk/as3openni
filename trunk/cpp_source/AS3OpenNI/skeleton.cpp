@@ -7,10 +7,18 @@
 	extern int USER_TRACKING_SOCKET;
 #endif
 
-string _players;
+struct NIPlayer
+{
+	std::string *players;
+};
+
+NIPlayer *_niPlayer;
 
 void renderSkeleton()
 {
+	_niPlayer = (NIPlayer*)malloc(sizeof(NIPlayer)*MAX_USERS*375);
+	_niPlayer->players = new std::string();
+	
 	_userGenerator.GetUserPixels(0, _sceneData);
 	XnUserID aUsers[MAX_USERS];
 	XnUInt16 nUsers = MAX_USERS;
@@ -178,23 +186,20 @@ void renderSkeleton()
 		}
 		
 		// Copy each result over to the buffer.
-		_players.append(playerData);
+		_niPlayer->players->append(playerData);
 		
 		// Free each player's data memory block.
 		free(playerData);
 	}
 	
-	// Get the length.
-	int len = strlen(_players.c_str());
-	_players.reserve(MAX_USERS*len);
-	
 	// Pass along the player data.
-	if(len > 0)
+	if(_niPlayer->players->length() > 0)
 	{
-		if(_printUserTracking) cout<<"Players: "<< _players <<"\n";
-		if(_useSockets) sendToSocket(USER_TRACKING_SOCKET, _players.c_str());
+		if(_printUserTracking) cout<<"Players: "<< _niPlayer->players->c_str() <<"\n";
+		if(_useSockets) sendToSocket(USER_TRACKING_SOCKET, _niPlayer->players->c_str());
 	}
 	
 	// Reset the players string.
-	_players.clear();
+	_niPlayer->players->clear();
+	free(_niPlayer);
 }
