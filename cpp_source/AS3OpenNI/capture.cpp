@@ -284,7 +284,7 @@ void captureRGB()
 	}
 	
 	captureRGBToMemory();
-	FreeImage_CloseMemory(depthMapMemory);
+	FreeImage_CloseMemory(rgbMemory);
 }
 
 void captureDepthMap()
@@ -317,5 +317,5 @@ void captureDepthMap()
 	}
 	
 	captureDepthMapToMemory();
-	FreeImage_CloseMemory(rgbMemory);
+	FreeImage_CloseMemory(depthMapMemory);
 }
