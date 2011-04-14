@@ -4,6 +4,7 @@
     <classEntry path="org.as3openni.nite.sockets.NitePointSocket"/>
     <classEntry path="org.as3openni.util.math.NiPoint3DUtil"/>
     <classEntry path="org.as3openni.objects.NiSkeleton"/>
+    <classEntry path="org.as3openni.util.UDPBasicSocket"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests>
