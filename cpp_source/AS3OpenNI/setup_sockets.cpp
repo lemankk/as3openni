@@ -44,25 +44,26 @@ void setupSockets()
 		//------------------------- SEND DATA TO SOCKET SERVER --------------------------//
 		//-------------------------------------------------------------------------------//
 		
-		struct addrinfo sessionHints, pointHints,
-									sliderHints,
-									userTrackingHints,
-									depthMapHints,
-									rgbHints,
-									
-									*pointResult = NULL, 
-									*sessionResult = NULL,
-									*sliderResult = NULL,
-									*userTrackingResult = NULL,
-									*depthMapResult = NULL,
-									*rgbResult = NULL,
-									
-									*pointObj = NULL, 
-									*sessionObj = NULL,
-									*sliderObj = NULL,
-									*userTrackingObj = NULL,
-									*depthMapObj = NULL,
-									*rgbObj = NULL;
+		struct addrinfo	sessionHints, 
+						pointHints,
+						sliderHints,
+						userTrackingHints,
+						depthMapHints,
+						rgbHints,
+						
+						*pointResult = NULL, 
+						*sessionResult = NULL,
+						*sliderResult = NULL,
+						*userTrackingResult = NULL,
+						*depthMapResult = NULL,
+						*rgbResult = NULL,
+						
+						*pointObj = NULL, 
+						*sessionObj = NULL,
+						*sliderObj = NULL,
+						*userTrackingObj = NULL,
+						*depthMapObj = NULL,
+						*rgbObj = NULL;
 		
 	    #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	    	
@@ -484,7 +485,7 @@ void setupSockets()
 		    	userTrackingHints.ai_family = PF_UNSPEC;
 		    	userTrackingHints.ai_socktype = SOCK_STREAM;
 		    	userTrackingHints.ai_protocol = IPPROTO_TCP;
-		        
+
 		        USER_TRACKING_RESULT = getaddrinfo("127.0.0.1", USER_TRACKING_PORT, &userTrackingHints, &userTrackingResult);
 		        if(USER_TRACKING_RESULT < 0)
 		        	error("ERROR opening user tracking socket");

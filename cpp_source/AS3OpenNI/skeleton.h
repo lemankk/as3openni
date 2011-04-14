@@ -17,8 +17,8 @@ extern DepthGenerator _depth;
 extern XnBool _printUserTracking;
 extern XnBool _useSockets;
 
-#define SKEL_FORMAT "user_tracking:%d,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f||"
-#define COM_FORMAT "user_found:%d,%6.2f,%6.2f,%6.2f||"
+#define SKEL_FORMAT "user_tracking:%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f||"
+#define COM_FORMAT "user_found:%d,%f,%f,%f||"
 #define MAX_USERS 15
 
 void renderSkeleton();
