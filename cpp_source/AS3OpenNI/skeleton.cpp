@@ -58,9 +58,6 @@ void renderSkeleton()
 				playerLength = _snprintf
 				(
 					NULL, 0, SKEL_FORMAT, player,
-					left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-					right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-					
 					head.position.X, head.position.Y, head.position.Z, 
 					neck.position.X, neck.position.Y, neck.position.Z,
 					torso.position.X, torso.position.Y, torso.position.Z,
@@ -85,9 +82,6 @@ void renderSkeleton()
 				playerLength = snprintf
 				(
 					NULL, 0, SKEL_FORMAT, player,
-					left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-					right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-					
 					head.position.X, head.position.Y, head.position.Z, 
 					neck.position.X, neck.position.Y, neck.position.Z,
 					torso.position.X, torso.position.Y, torso.position.Z,
@@ -118,9 +112,6 @@ void renderSkeleton()
 				_snprintf
 				(
 					playerData, playerLength, SKEL_FORMAT, player,
-					left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-					right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-					
 					head.position.X, head.position.Y, head.position.Z, 
 					neck.position.X, neck.position.Y, neck.position.Z,
 					torso.position.X, torso.position.Y, torso.position.Z,
@@ -145,9 +136,6 @@ void renderSkeleton()
 				snprintf
 				(
 					playerData, playerLength, SKEL_FORMAT, player,
-					left_big_hand.position.X, left_big_hand.position.Y, left_big_hand.position.Z,
-					right_big_hand.position.X, right_big_hand.position.Y, right_big_hand.position.Z,
-					
 					head.position.X, head.position.Y, head.position.Z, 
 					neck.position.X, neck.position.Y, neck.position.Z,
 					torso.position.X, torso.position.Y, torso.position.Z,
