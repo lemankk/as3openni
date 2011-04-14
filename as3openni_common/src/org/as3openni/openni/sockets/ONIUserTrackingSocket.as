@@ -73,6 +73,7 @@ package org.as3openni.openni.sockets
 					this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, userCalFailed));
 				}
 				
+				// Define the all players array.
 				var allPlayers:Array = this.socketMessage.split('|');
 				var len:Number = allPlayers.length;
 				
@@ -85,7 +86,7 @@ package org.as3openni.openni.sockets
 						var dataLbl:String = String(String(eachPlayerArr[0]) + ':');
 						var dataStr:String = String(eachPlayerArr[1]);
 						var points:Array = dataStr.split(',');
-						var user:Number = Number(points[1]);
+						var user:Number = Number(points[0]);
 						
 						// If a user has been found.
 						if(dataLbl == ONIUserTrackingEvent.USER_TRACKING_USER_FOUND)
@@ -93,9 +94,9 @@ package org.as3openni.openni.sockets
 							// Define.
 							var userSinglePoint:NiPoint3D = new NiPoint3D();
 							userSinglePoint.user = user;
-							userSinglePoint.pointX = Number(points[3]);
-							userSinglePoint.pointY = Number(points[4]);
-							userSinglePoint.pointZ = Number(points[5]);
+							userSinglePoint.pointX = Number(points[1]);
+							userSinglePoint.pointY = Number(points[2]);
+							userSinglePoint.pointZ = Number(points[3]);
 							
 							// Then dispatch the user tracking event out.
 							this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_USER_FOUND, user, userSinglePoint));
@@ -104,159 +105,111 @@ package org.as3openni.openni.sockets
 						// If a user is being tracked.
 						if(dataLbl == ONISkeletonEvent.USER_TRACKING)
 						{
-							// Define.
-							var skeleton:NiSkeleton = new NiSkeleton();
+							// Define the body parts.
 							var head:NiPoint3D = new NiPoint3D();
-							var neck:NiPoint3D = new NiPoint3D();
-							var torso:NiPoint3D = new NiPoint3D();
+							head.user = user;
+							head.pointX = Number(points[1]);
+							head.pointY = Number(points[2]);
+							head.pointZ = Number(points[3]);
 							
-							var leftBigHand:NiPoint3D = new NiPoint3D();
-							var rightBigHand:NiPoint3D = new NiPoint3D();
+							var neck:NiPoint3D = new NiPoint3D();
+							neck.user = user;
+							neck.pointX = Number(points[4]);
+							neck.pointY = Number(points[5]);
+							neck.pointZ = Number(points[6]);
+							
+							var torso:NiPoint3D = new NiPoint3D();
+							torso.user = user;
+							torso.pointX = Number(points[7]);
+							torso.pointY = Number(points[8]);
+							torso.pointZ = Number(points[9]);
 							
 							var leftShoulder:NiPoint3D = new NiPoint3D();
+							leftShoulder.user = user;
+							leftShoulder.pointX = Number(points[10]);
+							leftShoulder.pointY = Number(points[11]);
+							leftShoulder.pointZ = Number(points[12]);
+							
 							var leftElbow:NiPoint3D = new NiPoint3D();
+							leftElbow.user = user;
+							leftElbow.pointX = Number(points[13]);
+							leftElbow.pointY = Number(points[14]);
+							leftElbow.pointZ = Number(points[15]);
+							
 							var leftHand:NiPoint3D = new NiPoint3D();
+							leftHand.user = user;
+							leftHand.pointX = Number(points[16]);
+							leftHand.pointY = Number(points[17]);
+							leftHand.pointZ = Number(points[18]);
+							
+							var leftBigHand:NiPoint3D = new NiPoint3D();
+							leftBigHand.user = user;
+							leftBigHand.pointX = Number(points[16]);
+							leftBigHand.pointY = Number(points[17]);
+							leftBigHand.pointZ = Number(points[18]);
 							
 							var rightShoulder:NiPoint3D = new NiPoint3D();
+							rightShoulder.user = user;
+							rightShoulder.pointX = Number(points[19]);
+							rightShoulder.pointY = Number(points[20]);
+							rightShoulder.pointZ = Number(points[21]);
+							
 							var rightElbow:NiPoint3D = new NiPoint3D();
+							rightElbow.user = user;
+							rightElbow.pointX = Number(points[22]);
+							rightElbow.pointY = Number(points[23]);
+							rightElbow.pointZ = Number(points[24]);
+							
 							var rightHand:NiPoint3D = new NiPoint3D();
+							rightHand.user = user;
+							rightHand.pointX = Number(points[25]);
+							rightHand.pointY = Number(points[26]);
+							rightHand.pointZ = Number(points[27]);
+							
+							var rightBigHand:NiPoint3D = new NiPoint3D();
+							rightBigHand.user = user;
+							rightBigHand.pointX = Number(points[25]);
+							rightBigHand.pointY = Number(points[26]);
+							rightBigHand.pointZ = Number(points[27]);
 							
 							var leftHip:NiPoint3D = new NiPoint3D();
+							leftHip.user = user;
+							leftHip.pointX = Number(points[28]);
+							leftHip.pointY = Number(points[29]);
+							leftHip.pointZ = Number(points[30]);
+							
 							var leftKnee:NiPoint3D = new NiPoint3D();
+							leftKnee.user = user;
+							leftKnee.pointX = Number(points[31]);
+							leftKnee.pointY = Number(points[32]);
+							leftKnee.pointZ = Number(points[33]);
+							
 							var leftFoot:NiPoint3D = new NiPoint3D();
+							leftFoot.user = user;
+							leftFoot.pointX = Number(points[34]);
+							leftFoot.pointY = Number(points[35]);
+							leftFoot.pointZ = Number(points[36]);
 							
 							var rightHip:NiPoint3D = new NiPoint3D();
-							var rightKnee:NiPoint3D = new NiPoint3D();
-							var rightFoot:NiPoint3D = new NiPoint3D();
+							rightHip.user = user;
+							rightHip.pointX = Number(points[37]);
+							rightHip.pointY = Number(points[38]);
+							rightHip.pointZ = Number(points[39]);
 							
-							// Grab all data.
-							for(var i:Number = 0; i < points.length; i++)
-							{
-								var val:String = points[i] as String;
-								switch(val)
-								{
-									case 'head':
-										head.user = user;
-										head.pointX = Number(points[i+1]);
-										head.pointY = Number(points[i+2]);
-										head.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'neck':
-										neck.user = user;
-										neck.pointX = Number(points[i+1]);
-										neck.pointY = Number(points[i+2]);
-										neck.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'torso':
-										torso.user = user;
-										torso.pointX = Number(points[i+1]);
-										torso.pointY = Number(points[i+2]);
-										torso.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'left_big_hand':
-										leftBigHand.user = user;
-										leftBigHand.pointX = Number(points[i+1]);
-										leftBigHand.pointY = Number(points[i+2]);
-										leftBigHand.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'right_big_hand':
-										rightBigHand.user = user;
-										rightBigHand.pointX = Number(points[i+1]);
-										rightBigHand.pointY = Number(points[i+2]);
-										rightBigHand.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'left_shoulder':
-										leftShoulder.user = user;
-										leftShoulder.pointX = Number(points[i+1]);
-										leftShoulder.pointY = Number(points[i+2]);
-										leftShoulder.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'left_elbow':
-										leftElbow.user = user;
-										leftElbow.pointX = Number(points[i+1]);
-										leftElbow.pointY = Number(points[i+2]);
-										leftElbow.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'left_hand':
-										leftHand.user = user;
-										leftHand.pointX = Number(points[i+1]);
-										leftHand.pointY = Number(points[i+2]);
-										leftHand.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'right_shoulder':
-										rightShoulder.user = user;
-										rightShoulder.pointX = Number(points[i+1]);
-										rightShoulder.pointY = Number(points[i+2]);
-										rightShoulder.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'right_elbow':
-										rightElbow.user = user;
-										rightElbow.pointX = Number(points[i+1]);
-										rightElbow.pointY = Number(points[i+2]);
-										rightElbow.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'right_hand':
-										rightHand.user = user;
-										rightHand.pointX = Number(points[i+1]);
-										rightHand.pointY = Number(points[i+2]);
-										rightHand.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'left_hip':
-										leftHip.user = user;
-										leftHip.pointX = Number(points[i+1]);
-										leftHip.pointY = Number(points[i+2]);
-										leftHip.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'left_knee':
-										leftKnee.user = user;
-										leftKnee.pointX = Number(points[i+1]);
-										leftKnee.pointY = Number(points[i+2]);
-										leftKnee.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'left_foot':
-										leftFoot.user = user;
-										leftFoot.pointX = Number(points[i+1]);
-										leftFoot.pointY = Number(points[i+2]);
-										leftFoot.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'right_hip':
-										rightHip.user = user;
-										rightHip.pointX = Number(points[i+1]);
-										rightHip.pointY = Number(points[i+2]);
-										rightHip.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'right_knee':
-										rightKnee.user = user;
-										rightKnee.pointX = Number(points[i+1]);
-										rightKnee.pointY = Number(points[i+2]);
-										rightKnee.pointZ = Number(points[i+3]);
-										break;
-									
-									case 'right_foot':
-										rightFoot.user = user;
-										rightFoot.pointX = Number(points[i+1]);
-										rightFoot.pointY = Number(points[i+2]);
-										rightFoot.pointZ = Number(points[i+3]);
-										break;
-								}
-							}
+							var rightKnee:NiPoint3D = new NiPoint3D();
+							rightKnee.user = user;
+							rightKnee.pointX = Number(points[40]);
+							rightKnee.pointY = Number(points[41]);
+							rightKnee.pointZ = Number(points[42]);
+							
+							var rightFoot:NiPoint3D = new NiPoint3D();
+							rightFoot.user = user;
+							rightFoot.pointX = Number(points[43]);
+							rightFoot.pointY = Number(points[44]);
+							rightFoot.pointZ = Number(points[45]);
 							
 							// Populate the skeleton object.
+							var skeleton:NiSkeleton = new NiSkeleton();
 							skeleton.user = user;
 							skeleton.head = head;
 							skeleton.neck = neck;
