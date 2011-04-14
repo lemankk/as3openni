@@ -389,7 +389,9 @@ void XN_CALLBACK_TYPE onPush(XnFloat fVelocity, XnFloat fAngle, void* cxt)
 	if(_useSockets) sendToSocket(SESSION_SOCKET, cPush);
 }
 
-void XN_CALLBACK_TYPE Steady_OnSteady(XnUInt32 nId, XnFloat fVelocity, void* cxt)
+// This is the only change on the new frameworks, but I'll wait until the new Kinect drivers are available.
+//void XN_CALLBACK_TYPE Steady_OnSteady(XnUInt32 nId, XnFloat fVelocity, void* cxt)
+void XN_CALLBACK_TYPE Steady_OnSteady(XnFloat fVelocity, void* cxt)
 {
 	if(_printGesture) printf("Steady Occured - Velocity:%f\n", fVelocity);
 	char cSteady[10];
