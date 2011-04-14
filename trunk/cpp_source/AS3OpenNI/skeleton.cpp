@@ -19,7 +19,6 @@ void renderSkeleton()
 	_niPlayer = (NIPlayer*)malloc(sizeof(NIPlayer)*MAX_USERS*375);
 	_niPlayer->players = new std::string();
 	
-	_userGenerator.GetUserPixels(0, _sceneData);
 	XnUserID aUsers[MAX_USERS];
 	XnUInt16 nUsers = MAX_USERS;
 	_userGenerator.GetUsers(aUsers, nUsers);

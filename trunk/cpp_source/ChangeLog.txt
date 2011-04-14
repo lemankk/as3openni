@@ -54,8 +54,9 @@ Author: Tony Birleffi
   * Cleaned up the socket connections support for Mac
   * Adding the FAAST action list to the AS3OpenNI code base
   * Get single point data when a user is found, but not tracked
-  * Can now track up to 15 players, however max tested was up to three
-  * Turn off the mirror mode, so everything works opposite
+  * Can now track up to 15 players, however max tested was up to three on both Mac and PC
+  * Turn off the mirror mode, so everything looks opposite
+  * Fixing the RGB and DepthMap capture to work better, plus it will include Alpha on the DepthMap
   * Updated the build to OpenNI v1.1.0.39 framework to work on Mac
   * Updated the build to Prime Sense NITE v1.3.1.4 framework to work on Mac
 
