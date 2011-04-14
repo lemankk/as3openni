@@ -65,20 +65,6 @@ package
 			}
 		}
 		
-		/*override protected function onRenderTick(event:Event=null):void
-		{
-			for(var i:Number = 0; i < this._skeletonsCollection.length; i++)
-			{
-				var eachUser:Object = this._skeletonsCollection.getItemAt(i);
-				var skelBody:Lines3D = eachUser.skelBody as Lines3D;
-				var skel:NiSkeleton = eachUser.skel as NiSkeleton;
-				this.renderSkeleton(skelBody, skel);
-				this.renderer.renderScene(scene, camera, viewport);
-			}
-			
-			super.onRenderTick(event);
-		}*/
-		
 		private function renderSkeleton(skelBody:Lines3D, skeleton:NiSkeleton):void
 		{
 			if(skelBody && skeleton)
