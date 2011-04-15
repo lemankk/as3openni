@@ -29,16 +29,15 @@ extern XnBool _featureDepthMapCapture;
 extern XnBool _printRGBCapture;
 extern XnBool _printDepthMapCapture;
 extern XnBool _rgbGoGrey;
-extern XnBool _snapPixels;
+extern XnBool _depthMapBackground;
 extern XnFPSData xnFPS;
 
 //Define the JPEG quality on the DepthMap and RGB capturing.
-extern int depthmap_quality, rgb_quality;
+extern int rgb_quality, depthmap_quality;
 
 #define GL_WIN_SIZE_X 640
 #define GL_WIN_SIZE_Y 480
 
-void setupCapture();
 void captureDepthMap();
 void captureRGB();
 

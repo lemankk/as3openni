@@ -13,62 +13,44 @@
 #define MAX_DEPTH 10000
 
 // Define vars.
-XnRGB24Pixel* _depthMap = NULL;
-XnRGB24Pixel* _videoMap = NULL;
-unsigned int g_nTexMapX = 0;
-unsigned int g_nTexMapY = 0;
+unsigned char image_buffer[MAX_BUFFER];
 float g_pDepthHist[MAX_DEPTH];
 int _depthMapDelay = 0;
 int _rgbDelay = 0;
 
+XnFloat Colors[][3] =
+{
+	{0,1,1},
+	{0,0,1},
+	{0,1,0},
+	{1,1,0},
+	{1,0,0},
+	{1,.5,0},
+	{.5,1,0},
+	{0,.5,1},
+	{.5,0,1},
+	{1,1,.5},
+	{1,1,1}
+};
+XnUInt32 nColors = 10;
+
 FIMEMORY *depthMapMemory;
 FIMEMORY *rgbMemory;
 
-//INPLACESWAP adopted from codeguru.com 
-template <class T> void INPLACESWAP(T& a, T& b) 
+unsigned int getClosestPowerOfTwo(unsigned int n)
 {
-	a ^= b; b ^= a; a ^= b;
+	unsigned int m = 2;
+	while(m < n) m<<=1;
+	return m;
 }
 
-BOOL SwapRedBlue(FIBITMAP* dib) 
+unsigned int initTexture(void** buf, int& width, int& height)
 {
-	if(FreeImage_GetImageType(dib) != FIT_BITMAP) 
-	{
-		return FALSE;
-	}
-		
-	const unsigned bytesperpixel = FreeImage_GetBPP(dib) / 8;
-	if(bytesperpixel > 4 || bytesperpixel < 3) 
-	{
-		return FALSE;
-	}
-		
-	const unsigned height = FreeImage_GetHeight(dib);
-	const unsigned pitch = FreeImage_GetPitch(dib);
-	const unsigned lineSize = FreeImage_GetLine(dib);
-	
-	BYTE* line = FreeImage_GetBits(dib);
-	for(unsigned y = 0; y < height; ++y, line += pitch) 
-	{
-		for(BYTE* pixel = line; pixel < line + lineSize ; pixel += bytesperpixel) 
-		{
-			INPLACESWAP(pixel[0], pixel[2]);
-		}
-	}
-	
-	return TRUE;
-}
-
-void setupCapture()
-{	
-	// Maintain the same pointers.
-	if(_snapPixels) _depth.GetAlternativeViewPointCap().SetViewPoint(_image);
-	
-	// Texture map init.
-	g_nTexMapX = (((unsigned short)(_depthData.FullXRes()-1) / 92) + 1) * 92;
-	g_nTexMapY = (((unsigned short)(_depthData.FullYRes()-1) / 240) + 1) * 240;
-	_depthMap = (XnRGB24Pixel*)malloc(g_nTexMapX * g_nTexMapY * sizeof(XnRGB24Pixel));
-	_videoMap = (XnRGB24Pixel*)malloc(g_nTexMapX * g_nTexMapY * sizeof(XnRGB24Pixel));
+	unsigned int texID = 0;
+	width = getClosestPowerOfTwo(width);
+	height = getClosestPowerOfTwo(height); 
+	*buf = new unsigned char[width*height*4];
+	return texID;
 }
 
 void sendDepthMapToSocket(BYTE *data, int size)
@@ -101,37 +83,39 @@ void sendRGBToSocket(BYTE *data, int size)
 	}
 }
 
-void captureDepthMapToMemory()
+void captureDepthMapToMemory(unsigned char* buffer, int texWidth, int texHeight)
 {	
 	BYTE *mem_buffer = NULL;
 	DWORD size_in_bytes = 0;
 	
 	// Define the image.
-	FIBITMAP *img = FreeImage_ConvertFromRawBits((BYTE*)_depthMap, g_nTexMapX, g_nTexMapY, 3*g_nTexMapX, 24, 0, 0, 0, true);
+	FIBITMAP *img = FreeImage_ConvertFromRawBits(buffer, texWidth/1.6, ((texHeight/1.06666667)+1), 4*texWidth, 32, 0, 0, 0, true);
+	FIBITMAP *img2 = FreeImage_ConvertTo24Bits(img);
+	FreeImage_Unload(img);
 	
 	// Save to memory by quality type.
 	if(depthmap_quality == 0)
 	{
-		FreeImage_SaveToMemory(FIF_JPEG, img, depthMapMemory, JPEG_QUALITYBAD);
+		FreeImage_SaveToMemory(FIF_JPEG, img2, depthMapMemory, JPEG_QUALITYBAD);
 	}
 	
 	if(depthmap_quality == 1)
 	{
-		FreeImage_SaveToMemory(FIF_JPEG, img, depthMapMemory, JPEG_QUALITYAVERAGE);
+		FreeImage_SaveToMemory(FIF_JPEG, img2, depthMapMemory, JPEG_QUALITYAVERAGE);
 	}
 	
 	if(depthmap_quality == 2)
 	{
-		FreeImage_SaveToMemory(FIF_JPEG, img, depthMapMemory, JPEG_QUALITYNORMAL);
+		FreeImage_SaveToMemory(FIF_JPEG, img2, depthMapMemory, JPEG_QUALITYNORMAL);
 	}
 	
 	if(depthmap_quality == 3)
 	{
-		FreeImage_SaveToMemory(FIF_JPEG, img, depthMapMemory, JPEG_DEFAULT);
+		FreeImage_SaveToMemory(FIF_JPEG, img2, depthMapMemory, JPEG_DEFAULT);
 	}
 	
 	// Unload the file.
-	FreeImage_Unload(img);
+	FreeImage_Unload(img2);
 	
 	// Wait for delay.
 	while(_depthMapDelay > 1) 
@@ -147,6 +131,12 @@ void captureDepthMapToMemory()
 		if(_printDepthMapCapture) 
 		{
 			printf("DepthMap Size:%d\n", size_in_bytes);
+			FILE *stream = fopen("buffer.jpg", "wb"); 
+			if(stream) 
+			{
+				fwrite(mem_buffer, sizeof(BYTE), size_in_bytes, stream); 
+				fclose(stream);
+			}
 		}
 		
 		// Reset delay.
@@ -163,42 +153,41 @@ void captureRGBToMemory()
 	DWORD size_in_bytes = 0;
 	
 	// Define the image.
-	FIBITMAP *img = FreeImage_ConvertFromRawBits((BYTE*)_videoMap, g_nTexMapX, g_nTexMapY, 3*g_nTexMapX, 24, 0, 0, 0, true);
-	
-	// Swap the colors.
-	SwapRedBlue(img);
+	FIBITMAP *img = FreeImage_ConvertFromRawBits((BYTE*)image_buffer, GL_WIN_SIZE_X, GL_WIN_SIZE_Y, 4*GL_WIN_SIZE_X, 32, 0, 0, 0, true);
+	FIBITMAP *img2 = FreeImage_ConvertTo24Bits(img);
+	FreeImage_Unload(img);
 	
 	// Change to greyscale if requested.
 	if(_rgbGoGrey)
 	{
-		FIBITMAP *tmp = FreeImage_ConvertToGreyscale(img);
-		FreeImage_Unload(img);
-		img = tmp;
+		FIBITMAP *tmp = FreeImage_ConvertToGreyscale(img2);
+		FreeImage_Unload(img2);
+		img2 = tmp;
 	}
 	
 	// Save to memory by quality type.
 	if(rgb_quality == 0)
 	{
-		FreeImage_SaveToMemory(FIF_JPEG, img, rgbMemory, JPEG_QUALITYBAD);
+		FreeImage_SaveToMemory(FIF_JPEG, img2, rgbMemory, JPEG_QUALITYBAD);
 	}
 	
 	if(rgb_quality == 1)
 	{
-		FreeImage_SaveToMemory(FIF_JPEG, img, rgbMemory, JPEG_QUALITYAVERAGE);
+		FreeImage_SaveToMemory(FIF_JPEG, img2, rgbMemory, JPEG_QUALITYAVERAGE);
 	}
 	
 	if(rgb_quality == 2)
 	{
-		FreeImage_SaveToMemory(FIF_JPEG, img, rgbMemory, JPEG_QUALITYNORMAL);
+		FreeImage_SaveToMemory(FIF_JPEG, img2, rgbMemory, JPEG_QUALITYNORMAL);
 	}
 	
 	if(rgb_quality == 3)
 	{
-		FreeImage_SaveToMemory(FIF_JPEG, img, rgbMemory, JPEG_DEFAULT);
+		FreeImage_SaveToMemory(FIF_JPEG, img2, rgbMemory, JPEG_DEFAULT);
 	}
 	
 	// Unload the file.
-	FreeImage_Unload(img);
+	FreeImage_Unload(img2);
 	
 	// Wait for delay.
 	while(_rgbDelay > 1) 
@@ -211,7 +200,16 @@ void captureRGBToMemory()
 		sendRGBToSocket(mem_buffer, size_in_bytes);
 		
 		// For debugging.
-		if(_printRGBCapture) printf("RGB Size:%d\n", size_in_bytes);
+		if(_printRGBCapture) 
+		{
+			printf("RGB Size:%d\n", size_in_bytes);
+			FILE *stream = fopen("img_buffer.jpg", "wb"); 
+			if(stream) 
+			{
+				fwrite(mem_buffer, sizeof(BYTE), size_in_bytes, stream); 
+				fclose(stream);
+			}
+		}
 		
 		// Reset delay.
 		_rgbDelay = 0;
@@ -221,101 +219,137 @@ void captureRGBToMemory()
 	_rgbDelay++;
 }
 
-void definePixels()
-{
-	_depth.GetMetaData(_depthData);
-	_image.GetMetaData(_imageData);
-	
-	//printf("Frame %d Middle point is: %u. FPS: %f\n", _depthData.FrameID(), _depthData(_depthData.XRes() / 2, _depthData.YRes() / 2), xnFPSCalc(&xnFPS));
-	
-	const XnDepthPixel* pDepth = _depthData.Data();
-	const XnUInt8* pImage = _imageData.Data();
-	unsigned int nImageScale = GL_WIN_SIZE_X / _depthData.FullXRes();
-	xnOSMemSet(g_pDepthHist, 0, MAX_DEPTH*sizeof(float));
-	
-	unsigned int nNumberOfPoints = 0;
-	for (XnUInt y = 0; y < _depthData.YRes(); ++y)
-	{
-		for (XnUInt x = 0; x < _depthData.XRes(); ++x, ++pDepth)
-		{
-			if (*pDepth != 0)
-			{
-				g_pDepthHist[*pDepth]++;
-				nNumberOfPoints++;
-			}
-		}
-	}
-	
-	for (int nIndex=1; nIndex<MAX_DEPTH; nIndex++)
-	{
-		g_pDepthHist[nIndex] += g_pDepthHist[nIndex-1];
-	}
-	
-	if (nNumberOfPoints)
-	{
-		for (int nIndex=1; nIndex<MAX_DEPTH; nIndex++)
-		{
-			g_pDepthHist[nIndex] = (unsigned int)(256 * (1.0f - (g_pDepthHist[nIndex] / nNumberOfPoints)));
-		}
-	}
-}
-
 void captureRGB()
 {
-	rgbMemory = FreeImage_OpenMemory();
-	definePixels();
-	xnOSMemSet(_videoMap, 0, g_nTexMapX*g_nTexMapY*sizeof(XnRGB24Pixel));
+	unsigned int nX = 0;
+	unsigned int nY = 0;
+	XnUInt16 g_nXRes = _imageData.XRes();
+	XnUInt16 g_nYRes = _imageData.YRes();
 	
-	const XnRGB24Pixel* pImageRow = _imageData.RGB24Data();
-	XnRGB24Pixel* pTexRow = _videoMap + _imageData.YOffset() * g_nTexMapX;
-
-	for (XnUInt y = 0; y < _imageData.YRes(); ++y)
+	const XnRGB24Pixel * pImageMap = _image.GetRGB24ImageMap();
+	for (nY=0; nY<g_nYRes; nY++) 
 	{
-		const XnRGB24Pixel* pImage = pImageRow;
-		XnRGB24Pixel* pTex = pTexRow + _imageData.XOffset();
-
-		for (XnUInt x = 0; x < _imageData.XRes(); ++x, ++pImage, ++pTex)
+		for (nX=0; nX < g_nXRes; nX++) 
 		{
-			*pTex = *pImage;
+			((unsigned char*)image_buffer)[(nY*g_nXRes+nX)*4+0] = pImageMap[nY*g_nXRes+nX].nBlue;
+			((unsigned char*)image_buffer)[(nY*g_nXRes+nX)*4+1] = pImageMap[nY*g_nXRes+nX].nGreen;
+	        ((unsigned char*)image_buffer)[(nY*g_nXRes+nX)*4+2] = pImageMap[nY*g_nXRes+nX].nRed;
+			((unsigned char*)image_buffer)[(nY*g_nXRes+nX)*4+3] = 0x00;
 		}
-
-		pImageRow += _imageData.XRes();
-		pTexRow += g_nTexMapX;
 	}
 	
+	rgbMemory = FreeImage_OpenMemory();
 	captureRGBToMemory();
 	FreeImage_CloseMemory(rgbMemory);
 }
 
 void captureDepthMap()
 {
-	depthMapMemory = FreeImage_OpenMemory();
-	definePixels();
-	xnOSMemSet(_depthMap, 0, g_nTexMapX*g_nTexMapY*sizeof(XnRGB24Pixel));
+	_depth.GetMetaData(_depthData);
+	_userGenerator.GetUserPixels(0, _sceneData);
 	
-	const XnDepthPixel* pDepthRow = _depthData.Data();
-	XnRGB24Pixel* pTexRow = _depthMap + _depthData.YOffset() * g_nTexMapX;
-
-	for (XnUInt y = 0; y < _depthData.YRes(); ++y)
+	static unsigned int depthTexID;
+	static bool bInitialized = false;
+	static unsigned char* pDepthTexBuf;
+	static int texWidth, texHeight;
+	
+	if(!bInitialized)
 	{
-		const XnDepthPixel* pDepth = pDepthRow;
-		XnRGB24Pixel* pTex = pTexRow + _depthData.XOffset();
-
-		for (XnUInt x = 0; x < _depthData.XRes(); ++x, ++pDepth, ++pTex)
-		{
-			if (*pDepth != 0)
-			{
-				int nHistValue = g_pDepthHist[*pDepth];
-				pTex->nRed = 0; //nHistValue; - This makes it grey.
-				pTex->nGreen = nHistValue;
-				pTex->nBlue = nHistValue;
-			}
-		}
-
-		pDepthRow += _depthData.XRes();
-		pTexRow += g_nTexMapX;
+		texWidth = getClosestPowerOfTwo(_depthData.XRes());
+		texHeight = getClosestPowerOfTwo(_depthData.YRes());
+		//printf("Initializing depth texture: width = %d, height = %d\n", texWidth, texHeight);
+		depthTexID = initTexture((void**)&pDepthTexBuf,texWidth, texHeight);
+		bInitialized = true;
 	}
 	
-	captureDepthMapToMemory();
+	unsigned int nValue = 0;
+	unsigned int nHistValue = 0;
+	unsigned int nIndex = 0;
+	unsigned int nX = 0;
+	unsigned int nY = 0;
+	unsigned int nNumberOfPoints = 0;
+	XnUInt16 g_nXRes = _depthData.XRes();
+	XnUInt16 g_nYRes = _depthData.YRes();
+
+	unsigned char* pDestImage = pDepthTexBuf;
+	const XnDepthPixel* pDepth = _depthData.Data();
+	const XnLabel* pLabels = _sceneData.Data();
+	
+	// Calculate the accumulative histogram
+	memset(g_pDepthHist, 0, MAX_DEPTH*sizeof(float));
+	for (nY=0; nY<g_nYRes; nY++)
+	{
+		for (nX=0; nX<g_nXRes; nX++)
+		{
+			nValue = *pDepth;
+
+			if (nValue != 0)
+			{
+				g_pDepthHist[nValue]++;
+				nNumberOfPoints++;
+			}
+
+			pDepth++;
+		}
+	}
+
+	for (nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+	{
+		g_pDepthHist[nIndex] += g_pDepthHist[nIndex-1];
+	}
+	
+	if (nNumberOfPoints)
+	{
+		for (nIndex=1; nIndex<MAX_DEPTH; nIndex++)
+		{
+			g_pDepthHist[nIndex] = (unsigned int)(256 * (1.0f - (g_pDepthHist[nIndex] / nNumberOfPoints)));
+		}
+	}
+
+	pDepth = _depthData.Data();
+	{
+		XnUInt32 nIndex = 0;
+		
+		// Prepare the texture map.
+		for (nY=0; nY<g_nYRes; nY++)
+		{
+			for (nX=0; nX < g_nXRes; nX++, nIndex++)
+			{
+				pDestImage[0] = 0;
+				pDestImage[1] = 0;
+				pDestImage[2] = 0;
+				pDestImage[3] = 0x00;
+				
+				if (_depthMapBackground || *pLabels != 0)
+				{
+					nValue = *pDepth;
+					XnLabel label = *pLabels;
+					XnUInt32 nColorID = label % nColors;
+					if (label == 0)
+					{
+						nColorID = nColors;
+					}
+
+					if (nValue != 0)
+					{
+						nHistValue = g_pDepthHist[nValue];
+						pDestImage[0] = nHistValue * Colors[nColorID][0]; 
+						pDestImage[1] = nHistValue * Colors[nColorID][1];
+						pDestImage[2] = nHistValue * Colors[nColorID][2];
+						pDestImage[3] = 0xFF;
+					}
+				}
+
+				pDepth++;
+				pLabels++;
+				pDestImage+=4;
+			}
+
+			pDestImage += (texWidth - g_nXRes) *4;
+		}
+	}
+	
+	depthMapMemory = FreeImage_OpenMemory();
+	captureDepthMapToMemory(pDepthTexBuf, texWidth, texHeight);
 	FreeImage_CloseMemory(depthMapMemory);
 }

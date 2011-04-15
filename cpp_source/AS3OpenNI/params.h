@@ -29,6 +29,7 @@ extern XnBool _featureDepthMapCapture;
 extern XnBool _rgbGoGrey;
 extern XnBool _snapPixels;
 extern XnBool _mirror;
+extern XnBool _depthMapBackground;
 
 // Use sockets or not
 extern XnBool _useSockets;
