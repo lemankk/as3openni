@@ -68,8 +68,8 @@ package org.as3openni
 		public var outputMessage:String = "";
 		public var trackPadColumns:Number = 4;
 		public var trackPadRows:Number = 9;
-		public var depthMapQuality:Number = 0;
-		public var videoQuality:Number = 0;
+		public var depthMapQuality:Number = 1;
+		public var videoQuality:Number = 1;
 		
 		public var debug:Boolean = false;
 		public var traceLog:Boolean = false;
@@ -80,6 +80,7 @@ package org.as3openni
 		public var trackPad:Boolean = false;
 		public var userTracking:Boolean = false;
 		public var depthMap:Boolean = false;
+		public var depthMapBackground:Boolean = false;
 		public var depthMapSnap:Boolean = false;
 		public var video:Boolean = false;
 		public var videoGrayscale:Boolean = false;
@@ -246,6 +247,9 @@ package org.as3openni
 				// Set the DepthMapCapture quality, default is 0 = Low, 1 = Average, 2 = High, 3 = Super High.
 				processArgs.push("-dmq");
 				processArgs.push(String(this.depthMapQuality + ''));
+				
+				// Turn the DepthMaptCapture background on.
+				if(this.depthMapBackground) processArgs.push("-dmbg");
 				
 				// Snap the pixels of the DepthMap and RGB together or not, default is false.
 				if(this.depthMapSnap) processArgs.push("-snap");
