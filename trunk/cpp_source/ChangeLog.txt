@@ -56,13 +56,13 @@ Author: Tony Birleffi
   * Get single point data when a user is found, but not tracked
   * Can now track up to 15 players, however max tested was up to three on both Mac and PC
   * Turn off the mirror mode, so everything looks opposite
-  * Fixing the RGB and Depth Map capture to work better, plus it will include Alpha on the Depth Map
+  * Fixing the RGB and Depth Map capture to work better
+  * Plus, it will have the Depth Map from black feature
 
 ===TODO LIST:===
   * Update the build to OpenNI v1.1.0.39 framework to work on Mac and PC
   * Update the build to Prime Sense NITE v1.3.1.4 framework to work on Mac and PC
   * Add Hand/Finger Tracking
-  * Add player detection color coding option to the Depth Map capturing feature
   * Node.js/Pure ActionScript 3.0 project examples
   * Multiple camera support
   * Face detection

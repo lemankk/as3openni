@@ -19,10 +19,11 @@ void setupParams(int argc, char *argv[])
 				cout<<"Extra Functions:\n";
 				cout<<"-tpc 4 || # of TrackPad Columns, default is 4\n";
 				cout<<"-tpr 9 || # of TrackPad Rows, default is 9\n";
-				cout<<"-snap || Snap the RGBCapture pixels with the DepthMapCapture pixels, default is false\n";
 				cout<<"-grey || RGBCapture render in grayscale, default is false\n";
-				cout<<"-rgbq 0 || RGBCapture quality, 0 = Low, 1 = Average, 2 = High, 3 = Super High, default is 0\n";
-				cout<<"-dmq 0 || DepthMapCapture quality, 0 = Low, 1 = Average, 2 = High, 3 = Super High, default is 0\n";
+				cout<<"-rgbq 1 || RGBCapture quality, 0 = Low, 1 = Average, 2 = High, 3 = Super High, default is 1\n";
+				cout<<"-dmq 1 || DepthMapCapture quality, 0 = Low, 1 = Average, 2 = High, 3 = Super High, default is 1\n";
+				cout<<"-dmbg || Turn on the DepthMapCapture background, default is false\n";
+				cout<<"-snap || Snap the RGBCapture pixels with the DepthMapCapture pixels, default is false\n";
 				cout<<"-mrev || Mirror mode will be set to false, default is true\n";
 				cout<<"-aso || Turn off all sockets\n";
 				cout<<" \n";
@@ -91,6 +92,12 @@ void setupParams(int argc, char *argv[])
 			{
 				_mirror = false;
 				cout<<"Mirror mode is now false\n";
+			}
+			
+			if(param == "-dmbg")
+			{
+				_depthMapBackground = true;
+				cout<<"DepthMapCapture background is now on\n";
 			}
 			
 			// Turn on features.

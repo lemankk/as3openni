@@ -121,6 +121,7 @@ XnBool _featureDepthMapCapture = false;
 XnBool _rgbGoGrey = false;
 XnBool _snapPixels = false;
 XnBool _mirror = true;
+XnBool _depthMapBackground = false;
 
 // User tracking vars
 XnBool _needPose = false;
@@ -133,7 +134,7 @@ int trackpad_columns = NULL, trackpad_rows = NULL;
 XnFPSData xnFPS;
 
 // Define the JPEG quality on the DepthMap and RGB capturing.
-int depthmap_quality = 0, rgb_quality = 0;
+int rgb_quality = 1, depthmap_quality = 1;
 
 //-----------------------------------------------------------------------------
 // Define Events - Broadcast Out
@@ -892,8 +893,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	
-	// Setup capture if turned on.
-	if(_featureRGBCapture || _featureDepthMapCapture) setupCapture();
+	// Setup the view points to match between the depth and image maps.
+	if(_snapPixels) _depth.GetAlternativeViewPointCap().SetViewPoint(_image);
 	
 	//-------------------------------------------------------------//
 	//------------------------- MAIN LOOP ------------------------//
