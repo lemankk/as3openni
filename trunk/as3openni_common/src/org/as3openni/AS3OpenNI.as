@@ -55,6 +55,10 @@ package org.as3openni
 	{
 		public static const VGA_MAX_WIDTH:Number = 640;
 		public static const VGA_MAX_HEIGHT:Number = 480;
+		public static const JPEG_QUALITYBAD:Number = 0;
+		public static const JPEG_QUALITYAVERAGE:Number = 1;
+		public static const JPEG_QUALITYNORMAL:Number = 2;
+		public static const JPEG_QUALITYHIGH:Number = 3;
 		
 		public var singlePointSocket:NitePointSocket;
 		public var sessionSocket:NiteSessionSocket;
