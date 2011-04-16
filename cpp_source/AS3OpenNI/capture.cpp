@@ -109,7 +109,7 @@ void captureDepthMapToMemory(unsigned char* buffer, int texWidth, int texHeight)
 		FreeImage_SaveToMemory(FIF_JPEG, img2, depthMapMemory, JPEG_QUALITYNORMAL);
 	}
 	
-	if(depthmap_quality == 3)
+	if(depthmap_quality >= 3)
 	{
 		FreeImage_SaveToMemory(FIF_JPEG, img2, depthMapMemory, JPEG_DEFAULT);
 	}
@@ -181,7 +181,7 @@ void captureRGBToMemory()
 		FreeImage_SaveToMemory(FIF_JPEG, img2, rgbMemory, JPEG_QUALITYNORMAL);
 	}
 	
-	if(rgb_quality == 3)
+	if(rgb_quality >= 3)
 	{
 		FreeImage_SaveToMemory(FIF_JPEG, img2, rgbMemory, JPEG_DEFAULT);
 	}
