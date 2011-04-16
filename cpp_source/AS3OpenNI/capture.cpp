@@ -131,7 +131,7 @@ void captureDepthMapToMemory(unsigned char* buffer, int texWidth, int texHeight)
 		if(_printDepthMapCapture) 
 		{
 			printf("DepthMap Size:%d\n", size_in_bytes);
-			FILE *stream = fopen("buffer.jpg", "wb"); 
+			FILE *stream = fopen("depthmap_buffer.jpg", "wb"); 
 			if(stream) 
 			{
 				fwrite(mem_buffer, sizeof(BYTE), size_in_bytes, stream); 
