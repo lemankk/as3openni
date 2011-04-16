@@ -119,7 +119,7 @@ XnBool _featureUserTracking = false;
 XnBool _featureRGBCapture = false;
 XnBool _featureDepthMapCapture = false;
 XnBool _rgbGoGrey = false;
-XnBool _snapPixels = false;
+XnBool _snapPixels = true;
 XnBool _mirror = true;
 XnBool _depthMapBackground = false;
 
