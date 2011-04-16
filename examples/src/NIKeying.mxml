@@ -34,7 +34,7 @@
 			
 			// For the depth camera/rgb testing.
 			private var _depthMapCanvas:BitmapData = new BitmapData(AS3OpenNI.VGA_MAX_WIDTH, AS3OpenNI.VGA_MAX_HEIGHT, false, 0);
-			private var _rgbCanvas:BitmapData = new BitmapData(AS3OpenNI.VGA_MAX_WIDTH, AS3OpenNI.VGA_MAX_HEIGHT);
+			private var _rgbCanvas:BitmapData = new BitmapData(AS3OpenNI.VGA_MAX_WIDTH, AS3OpenNI.VGA_MAX_HEIGHT, false, 0);
 			private var _maskCanvas:BitmapData = new BitmapData(AS3OpenNI.VGA_MAX_WIDTH, AS3OpenNI.VGA_MAX_HEIGHT, true, 0x00000000);
 			
 			[Bindable]
@@ -42,6 +42,9 @@
 			
 			[Bindable]
 			private var _rgbBmp:Bitmap;
+			
+			[Bindable]
+			private var _rgbBmp2:Bitmap;
 			
 			[Bindable]
 			private var _thresholdBmp:Bitmap;
@@ -60,14 +63,15 @@
 				// Setup the DepthMap bitmap and the RGB bitmap.
 				this._depthMapBmp = new Bitmap(this._depthMapCanvas);
 				this._rgbBmp = new Bitmap(this._rgbCanvas);
+				this._rgbBmp2 = new Bitmap(this._rgbCanvas);
 				this._maskBmp = new Bitmap(this._maskCanvas);
 				
 				// Setup the threshold bitmap.
 				this._thresholdMap = new ThresholdBitmap(this._depthMapBmp.bitmapData);
 				this._thresholdMap.mode = ThresholdBitmap.ENTROPY;
-				this._thresholdMap.smooth = 6; //0-16.
+				this._thresholdMap.smooth = 5; //0-16.
 				this._thresholdMap.adaptiveTolerance = 50; //0-255.
-				this._thresholdMap.thresholdValue = 127; //0-255.
+				this._thresholdMap.thresholdValue = 170; //0-255.
 				this._thresholdMap.adaptiveRadius = 32; //0-255.
 				this._thresholdMap.applyDespeckle = true;
 				this._thresholdMap.applyEdges = false;
@@ -84,13 +88,13 @@
 					this._as3OpenNI.debug = true;
 					
 					this._as3OpenNI.depthMap = true;
-					this._as3OpenNI.depthMapQuality = 0;
+					this._as3OpenNI.depthMapQuality = AS3OpenNI.JPEG_QUALITYBAD;
 					this._as3OpenNI.depthMapBackground = false;
 					this._as3OpenNI.depthMapSnap = true;
 					
 					this._as3OpenNI.video = true;
-					this._as3OpenNI.videoQuality = 2;
-					this._as3OpenNI.videoGrayscale = true;
+					this._as3OpenNI.videoQuality = AS3OpenNI.JPEG_QUALITYNORMAL;
+					this._as3OpenNI.videoGrayscale = false;
 					this._as3OpenNI.init();
 					
 					this.addSessionListeners();
@@ -150,9 +154,8 @@
 			
 			protected function keying():void
 			{
-				var bf:BlurFilter = new BlurFilter(6, 6, 3);
+				var bf:BlurFilter = new BlurFilter(3, 3, 2);
 				var bmd:BitmapData = this._thresholdBmp.bitmapData;
-				
 				this._maskCanvas.fillRect(this._maskCanvas.rect, 0);
 				this._maskCanvas.threshold(bmd, bmd.rect, new Point(0,0), "==", 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false);
 				this._maskCanvas.applyFilter(this._maskCanvas, this._maskCanvas.rect, new Point(0,0), bf);
@@ -166,11 +169,10 @@
 
 			protected function resizingHandler():void
 			{
-				this._bgImg.width = this._rgbFeed.width = this.stage.stageWidth;
-				this._bgImg.height = this._rgbFeed.height = this.stage.stageHeight;
-				
-				this._maskFeed.width = this.stage.stageWidth - 18;
-				this._maskFeed.height = this.stage.stageHeight - 18;
+				this._bar.width = this._rgbFeed2.width = this._rgbFeed.width = this.stage.stageWidth;
+				this._rgbFeed2.height = this._rgbFeed.height = this.stage.stageHeight;
+				this._maskFeed.width = this.stage.stageWidth;
+				this._maskFeed.height = this.stage.stageHeight;
 			}
 			
 			protected function trackState(event:NativeWindowDisplayStateEvent):void
@@ -189,19 +191,26 @@
 		
 		<!-- RGB & Beach Image Display -->
 		<mx:Canvas clipContent="false" visible="true">
-			<!-- Background Image -->
+			<!-- Background Image 
 			<mx:Image id="_bgImg" width="800" height="600" smoothBitmapContent="true" 
 					  source="@Embed('../proj-assets/img/beach.jpg')" cacheAsBitmap="true"
-					  maintainAspectRatio="false"/>
+					  maintainAspectRatio="false"/>-->
+			
 			<!-- RGB Feed -->
+			<mx:Image id="_rgbFeed2" width="800" height="600" visible="true" cacheAsBitmap="true" 
+					  source="{this._rgbBmp}" maintainAspectRatio="false" />
+			
+			<mx:Box id="_bar" width="800" height="75" backgroundColor="#FF0000" y="300"/>
+			
+			<!-- RGB Feed - That is Masked! -->
 			<mx:Image id="_rgbFeed" width="800" height="600" visible="true" cacheAsBitmap="true" 
-					  source="{this._rgbBmp}" maintainAspectRatio="false" />	
+					  source="{this._rgbBmp2}" maintainAspectRatio="false" />	
 		</mx:Canvas>
 		
 		<!-- Mask Display -->
 		<mx:Canvas clipContent="false" visible="true">
 			<!-- The Mask Feed for the RGB Feed -->
-			<mx:Image id="_maskFeed" width="798" height="598" source="{this._maskBmp}"
+			<mx:Image id="_maskFeed" width="800" height="600" source="{this._maskBmp}"
 					  maintainAspectRatio="false" visible="true" cacheAsBitmap="true"/>
 		</mx:Canvas>
 	</mx:Canvas>
