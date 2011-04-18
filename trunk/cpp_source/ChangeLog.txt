@@ -62,7 +62,8 @@ Author: Tony Birleffi
   * Updated the build to unstable version Prime Sense NITE v1.3.1.5 framework to work on Mac and PC
 
 ===TODO LIST:===
-  * Need to improve RGB capture performance on PC
+  * Need to improve RGB capture performance on PC, still pretty slow
+  * Need to fix the RGB capture pixel data issue
   * Add multiple skeleton support with the Skeletons examples.
   * Add Hand/Finger Tracking
   * Node.js/Pure ActionScript 3.0 project examples
