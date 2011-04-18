@@ -90,12 +90,12 @@
 					this._as3OpenNI.trackPadRows = 4;
 					
 					this._as3OpenNI.depthMap = true;
-					this._as3OpenNI.depthMapQuality = 0;
+					this._as3OpenNI.depthMapQuality = 1;
 					this._as3OpenNI.depthMapBackground = false;
 					this._as3OpenNI.depthMapSnap = true;
 					
 					this._as3OpenNI.video = true;
-					this._as3OpenNI.videoQuality = 2;
+					this._as3OpenNI.videoQuality = 0;
 					this._as3OpenNI.videoGrayscale = false;
 					this._as3OpenNI.init();
 					
