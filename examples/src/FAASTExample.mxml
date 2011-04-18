@@ -189,7 +189,7 @@
 			protected function skeleton(event:ONISkeletonEvent):void
 			{
 				var skeleton:NiSkeleton = event.skeleton as NiSkeleton;
-				//this._skeletons3DWorld.skeleton = skeleton;
+				this._skeletons3DWorld.updateUserSkeleton(skeleton);
 				this._faast.configure(skeleton);
 			}
 			
