@@ -18,6 +18,6 @@ LIB_DIRS += /usr/local/lib
 
 BIN_DIR = ../Bin
 
-USED_LIBS += OpenNI XnVNite FreeImage XnVNite_1_3_1 FreeImage
+USED_LIBS += OpenNI XnVNite_1_3_1 FreeImage
 
 include ../CommonMakefile
