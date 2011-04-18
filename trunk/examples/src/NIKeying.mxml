@@ -93,8 +93,8 @@
 					this._as3OpenNI.depthMapSnap = true;
 					
 					this._as3OpenNI.video = true;
-					this._as3OpenNI.videoQuality = AS3OpenNI.JPEG_QUALITYNORMAL;
-					this._as3OpenNI.videoGrayscale = false;
+					this._as3OpenNI.videoQuality = AS3OpenNI.JPEG_QUALITYBAD;
+					this._as3OpenNI.videoGrayscale = true;
 					this._as3OpenNI.init();
 					
 					this.addSessionListeners();
