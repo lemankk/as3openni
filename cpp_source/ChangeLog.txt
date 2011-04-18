@@ -58,10 +58,12 @@ Author: Tony Birleffi
   * Turn off the mirror mode, so everything looks opposite
   * Fixing the RGB and Depth Map capture to work better
   * Plus, it will have the Depth Map from black feature
-  * Update the build to OpenNI v1.1.0.41 framework to work on Mac and PC
-  * Update the build to Prime Sense NITE v1.3.1.5 framework to work on Mac and PC
+  * Updated the build to unstable version OpenNI v1.1.0.41 framework to work on Mac and PC
+  * Updated the build to unstable version Prime Sense NITE v1.3.1.5 framework to work on Mac and PC
 
 ===TODO LIST:===
+  * Need to improve RGB capture performance on PC
+  * Add multiple skeleton support with the Skeletons examples.
   * Add Hand/Finger Tracking
   * Node.js/Pure ActionScript 3.0 project examples
   * Multiple camera support
