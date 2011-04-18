@@ -93,7 +93,7 @@
       </UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>OpenNI.lib;XnVNITE_1_3_1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenNI.lib;XnVNite_1_3_1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../Bin/Release/AS3OpenNI_Alpha_1.0.9.exe</OutputFile>
       <AdditionalLibraryDirectories>$(OPEN_NI_LIB);..\..\Lib;../../Lib/$(Configuration);../../Lib/;..\..\Samples\AS3OpenNI\Libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -102,7 +102,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <FixedBaseAddress>false</FixedBaseAddress>
-      <ImportLibrary>../../Lib/Release/AS3OpenNI_Alpha_1.0.9.lib</ImportLibrary>
+      <ImportLibrary>../../Lib/Release/AS3OpenNI_Alpha_1.0.6.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <ResourceCompile>
@@ -118,14 +118,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Res\mainicon.ico" />
-    <None Include="..\Res\NITE.APS" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Res\NITE.rc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Res\Resource-NITE.h" />
-    <ClInclude Include="..\Res\Resource-OpenNIModule.h" />
     <ClInclude Include="capture.h" />
     <ClInclude Include="FreeImage.h" />
     <ClInclude Include="kbhit.h" />
