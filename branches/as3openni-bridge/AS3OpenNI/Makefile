@@ -1,8 +1,5 @@
-OSTYPE := $(shell uname -s)
+name: main.cpp
+	g++ main.cpp -I/usr/include/nite -I/usr/include/ni -I/opt/local/include -L/opt/local/lib -o ../Bin/AS3OpenNI-Bridge -lboost_regex -lboost_regex-mt -lboost_system -lXnVNite_1_3_1 -lOpenNI
 
-SRC_FILES = *.cpp
-
-INC_DIRS = ../AS3OpenNI
-
-EXE_NAME = AS3OpenNI
-include ../NiteSampleMakefile
+clean:
+	rm -f name
