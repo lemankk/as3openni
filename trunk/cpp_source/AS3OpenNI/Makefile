@@ -1,13 +1,6 @@
 OSTYPE := $(shell uname -s)
 
-SRC_FILES = \
-	../AS3OpenNI/main.cpp \
-	../AS3OpenNI/kbhit.cpp \
-	../AS3OpenNI/signal_catch.cpp \
-	../AS3OpenNI/skeleton.cpp \
-	../AS3OpenNI/params.cpp \
-	../AS3OpenNI/setup_sockets.cpp \
-	../AS3OpenNI/capture.cpp
+SRC_FILES = *.cpp
 
 INC_DIRS = ../AS3OpenNI
 
