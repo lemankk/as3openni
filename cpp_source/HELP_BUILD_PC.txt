@@ -1,0 +1,12 @@
+SENSOR KINECT DRIVER:
+https://github.com/avin2/SensorKinect/archives/unstable
+
+MIDDLEWARE SUPPORT:
+http://www.openni.org/downloadfiles
+
+TO BUILD THIS PROJECT ON A PC:
+In order to build successfully in Microsoft Visual C++ 2010 Express, drop the AS3OpenNI folder into this path:
+C:\Program Files\Prime Sense\NITE\Samples\
+
+Then open up the AS3OpenNI project into Microsoft Visual C++ 2010 Express, 
+and you should be able to do both release and debug builds from there.
