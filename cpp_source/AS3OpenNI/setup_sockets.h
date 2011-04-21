@@ -19,7 +19,6 @@ extern XnBool _featureRGBCapture;
 extern XnBool _featureDepthMapCapture;
 extern XnBool _useSockets;
 
-void getDepthMap();
 void setupSockets();
 void sendToSocket(int socket, const char *data);
 
