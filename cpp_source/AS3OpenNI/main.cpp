@@ -718,7 +718,7 @@ void* runRGBCapture(void* arg)
 
 		// No, take a rest for a while.
 		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-			Sleep(1000);
+			Sleep(1);
 		#else
 			usleep(1000);
 		#endif
@@ -749,7 +749,7 @@ void* runDepthMapCapture(void* arg)
 
 		// No, take a rest for a while.
 		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-			Sleep(1000);
+			Sleep(1);
 		#else
 			usleep(1000);
 		#endif
