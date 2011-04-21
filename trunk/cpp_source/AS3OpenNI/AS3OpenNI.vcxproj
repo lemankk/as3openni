@@ -94,7 +94,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>OpenNI.lib;XnVNite_1_3_1.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>../Bin/Release/AS3OpenNI_Alpha_1.0.9.exe</OutputFile>
+      <OutputFile>../Bin/Release/AS3OpenNI_Alpha_1.1.0.exe</OutputFile>
       <AdditionalLibraryDirectories>$(OPEN_NI_LIB);..\..\Lib;../../Lib/$(Configuration);../../Lib/;..\..\Samples\AS3OpenNI\Libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile>../Bin/Release/AS3OpenNI.pdb</ProgramDatabaseFile>
@@ -128,12 +128,15 @@
     <ClInclude Include="FreeImage.h" />
     <ClInclude Include="kbhit.h" />
     <ClInclude Include="params.h" />
+    <ClInclude Include="pthread\pthread.h" />
+    <ClInclude Include="pthread\sched.h" />
     <ClInclude Include="setup_sockets.h" />
     <ClInclude Include="signal_catch.h" />
     <ClInclude Include="skeleton.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Libs\FreeImage.lib" />
+    <Library Include="Libs\pthreadVC2.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

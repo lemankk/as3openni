@@ -62,6 +62,7 @@ Author: Tony Birleffi
   * Updated the build to unstable version Prime Sense NITE v1.3.1.5 framework to work on Mac and PC
 
 ===TODO LIST:===
+  * Added pthread sockets support
   * Need to improve RGB capture performance on PC, still pretty slow
   * Need to fix the RGB capture pixel data issue
   * Add multiple skeleton support with the Skeletons examples.

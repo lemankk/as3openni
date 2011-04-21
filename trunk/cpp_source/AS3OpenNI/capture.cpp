@@ -18,6 +18,9 @@ float g_pDepthHist[MAX_DEPTH];
 int _depthMapDelay = 0;
 int _rgbDelay = 0;
 
+// Setup the threading.
+void* streamServer(void* arg);
+
 XnFloat Colors[][3] =
 {
 	{0,1,1},
@@ -37,8 +40,6 @@ XnUInt32 nColors = 10;
 FIMEMORY *depthMapMemory;
 FIMEMORY *rgbMemory;
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
 unsigned int getClosestPowerOfTwo(unsigned int n)
 {
 	unsigned int m = 2;
@@ -57,24 +58,20 @@ unsigned int initTexture(void** buf, int& width, int& height)
 
 void sendDepthMapToSocket(BYTE *data, int size)
 {
-	if(_useSockets)
-	{
-		if(_featureDepthMapCapture)
-		{
-			send(DEPTH_MAP_SOCKET, (char*)data, size, 0);
-		}
-	}
+	pthread_mutex_lock(&dmapMutex);
+	dmap_data_ready = 1;
+	dmap_data_size = size;
+	dmap_data = (char*)data;
+	pthread_mutex_unlock(&dmapMutex);
 }
 
 void sendRGBToSocket(BYTE *data, int size)
 {
-	if(_useSockets)
-	{
-		if(_featureRGBCapture)
-		{
-			send(RGB_SOCKET, (char*)data, size, 0);
-		}
-	}
+	pthread_mutex_lock(&rgbMutex);
+	rgb_data_ready = 1;
+	rgb_data_size = size;
+	rgb_data = (char*)data;
+	pthread_mutex_unlock(&rgbMutex);
 }
 
 void captureDepthMapToMemory(unsigned char* buffer, int texWidth, int texHeight)

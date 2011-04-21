@@ -42,6 +42,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <fstream>
 #include <iostream>
 #include <math.h>
 
@@ -56,9 +57,23 @@
 // Setup Platform Mac/Win Sockets
 //-----------------------------------------------------------------------------
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
+	#include <pthread/pthread.h>
+	#include <windows.h>
+	#include <winbase.h>
+	#include <winsock2.h>
+	#include <ws2tcpip.h>
 	#include "socket.h"
+	
+	// Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
+	#pragma comment (lib, "Ws2_32.lib")
+	#pragma comment (lib, "Mswsock.lib")
+	#pragma comment (lib, "AdvApi32.lib")
+	
+	// Define sockets.
 	SOCKET POINT_SOCKET, SESSION_SOCKET, SLIDER_SOCKET, USER_TRACKING_SOCKET, DEPTH_MAP_SOCKET, RGB_SOCKET;
 #else
+	#include <netdb.h>
+	#include <pthread.h>
     int POINT_SOCKET, SESSION_SOCKET, SLIDER_SOCKET, USER_TRACKING_SOCKET, DEPTH_MAP_SOCKET, RGB_SOCKET;
 #endif
 
@@ -78,7 +93,7 @@ HandsGenerator _hands;
 GestureGenerator _gesture;
 DepthMetaData _depthData;
 ImageMetaData _imageData;
-//XnMapOutputMode _depthMode;
+XnMapOutputMode _depthMode;
 //XnLicense _license;
 UserGenerator _userGenerator;
 SceneMetaData _sceneData;
@@ -135,6 +150,20 @@ XnFPSData xnFPS;
 
 // Define the JPEG quality on the DepthMap and RGB capturing.
 int rgb_quality = 1, depthmap_quality = 1;
+
+// Setup the RGB Capture threading.
+pthread_mutex_t rgbMutex = PTHREAD_MUTEX_INITIALIZER;
+void* runRGBCapture(void* arg);
+
+//Setup the DepthMap Capture threading.
+pthread_mutex_t dmapMutex = PTHREAD_MUTEX_INITIALIZER;
+void* runDepthMapCapture(void* arg);
+
+// Define the RGB and DepthMap values.
+int rgb_data_ready = 0, dmap_data_ready = 0;
+int rgb_data_size = 0, dmap_data_size = 0;
+char* rgb_data;
+char* dmap_data;
 
 //-----------------------------------------------------------------------------
 // Define Events - Broadcast Out
@@ -274,6 +303,7 @@ void CleanupExit()
 	if(_featureRGBCapture) close(RGB_SOCKET);
 	
 	close(SESSION_SOCKET);
+	pthread_mutex_destroy(&rgbMutex);
 	exit(1);
 }
 
@@ -662,9 +692,73 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationEnd(SkeletonCapability& capabil
 }
 
 //-----------------------------------------------------------------------------
+// Setup the sockets on different threads.
+//-----------------------------------------------------------------------------
+void* runRGBCapture(void* arg)
+{
+	// Make this thread cancellable using pthread_cancel().
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+	
+	// Send data through.
+	while(1) 
+	{
+		// Send thread safe.
+		pthread_mutex_lock(&rgbMutex);
+		if(rgb_data_ready)
+		{
+			int bytes = send(RGB_SOCKET, rgb_data, rgb_data_size, 0);
+			rgb_data_ready = 0;
+			memset(rgb_data, 0, sizeof(rgb_data));
+		}
+		pthread_mutex_unlock(&rgbMutex);
+		
+		// Have we terminated yet?
+		pthread_testcancel();
+
+		// No, take a rest for a while.
+		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
+			Sleep(1000);
+		#else
+			usleep(1000);
+		#endif
+	}
+}
+
+void* runDepthMapCapture(void* arg)
+{
+	// Make this thread cancellable using pthread_cancel().
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+	
+	// Send data through.
+	while(1) 
+	{
+		// Send thread safe.
+		pthread_mutex_lock(&dmapMutex);
+		if(dmap_data_ready)
+		{
+			int bytes = send(DEPTH_MAP_SOCKET, dmap_data, dmap_data_size, 0);
+			dmap_data_ready = 0;
+			memset(dmap_data, 0, sizeof(dmap_data));
+		}
+		pthread_mutex_unlock(&dmapMutex);
+		
+		// Have we terminated yet?
+		pthread_testcancel();
+
+		// No, take a rest for a while.
+		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
+			Sleep(1000);
+		#else
+			usleep(1000);
+		#endif
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Init Methods
 //-----------------------------------------------------------------------------
-
 int main(int argc, char *argv[])
 {	
 	//--------------------------------------------------------------------//
@@ -673,10 +767,10 @@ int main(int argc, char *argv[])
 	
 	// Setup the command line parameters.
 	setupParams(argc, argv);
-	
+    
 	// Setup all the sockets.
 	setupSockets();
-    
+	
 	// Setup the status.
     XnStatus _status = XN_STATUS_OK;
     EnumerationErrors _errors;
@@ -694,23 +788,23 @@ int main(int argc, char *argv[])
 	_license.strKey[XN_MAX_LICENSE_LENGTH] = strcmp(license, "0KOIk2JeIBYClPWVnMoRKn5cdY4=");
 		
 	_status = _context.AddLicense(_license);
-   	CHECK_RC(_status, "Added license");
+   	CHECK_RC(_status, "Added license");*/
    	
    	// Set it to VGA maps at 30 FPS
 	_depthMode.nXRes = 640;
 	_depthMode.nYRes = 480;
-	_depthMode.nFPS = 30;*/
+	_depthMode.nFPS = 30;
 	
 	// Depth map create.
 	_status = _depth.Create(_context);
 	CHECK_RC(_status, "Create depth generator");
-	//_status = _depth.SetMapOutputMode(_depthMode);
+	_status = _depth.SetMapOutputMode(_depthMode);
 	
 	// Depth map create.
 	_status = _image.Create(_context);
 	CHECK_RC(_status, "Create image generator");
-	//_status = _image.SetMapOutputMode(_depthMode);
-	//_status = _image.SetPixelFormat(XN_PIXEL_FORMAT_RGB24);
+	_status = _image.SetMapOutputMode(_depthMode);
+	_status = _image.SetPixelFormat(XN_PIXEL_FORMAT_RGB24);
 	
 	// Create the hands generator.
 	_status = _hands.Create(_context);
@@ -878,7 +972,7 @@ int main(int argc, char *argv[])
 	_depth.GetMetaData(_depthData);
 	_image.GetMetaData(_imageData);
 	
-	// Hybrid mode isn't supported in this sample
+	// Hybrid mode isn't supported in this sample.
 	if (_imageData.FullXRes() != _depthData.FullXRes() || _imageData.FullYRes() != _depthData.FullYRes())
 	{
 		printf ("The device depth and image resolution must be equal!\n");
@@ -895,6 +989,26 @@ int main(int argc, char *argv[])
 	// Setup the view points to match between the depth and image maps.
 	if(_snapPixels) _depth.GetAlternativeViewPointCap().SetViewPoint(_image);
 	
+	// Setup the RGB Capture thread.
+	pthread_t thread_rgb;
+	if(_featureRGBCapture)
+	{
+		if (pthread_create(&thread_rgb, NULL, runRGBCapture, NULL)) 
+		{
+			error("RGB Capture - pthread_create failed.");
+		}
+	}
+	
+	// Setup the DepthMap Capture thread.
+	pthread_t thread_dmap;
+	if(_featureDepthMapCapture)
+	{
+		if (pthread_create(&thread_dmap, NULL, runDepthMapCapture, NULL)) 
+		{
+			error("DepthMap Capture - pthread_create failed.");
+		}
+	}
+	
 	//-------------------------------------------------------------//
 	//------------------------- MAIN LOOP ------------------------//
 	//-----------------------------------------------------------//
@@ -905,9 +1019,26 @@ int main(int argc, char *argv[])
 		xnFPSMarkFrame(&xnFPS);
 		_context.WaitAndUpdateAll();
 		_sessionManager->Update(&_context);
+		
 		if(_featureUserTracking) renderSkeleton();
 		if(_featureDepthMapCapture) captureDepthMap();
 		if(_featureRGBCapture) captureRGB();
+	}
+	
+	if(_featureRGBCapture)
+	{
+		if (pthread_cancel(thread_rgb)) 
+		{
+			error("RGB Capture Capture - pthread_cancel failed.");
+		}
+	}
+	
+	if(_featureDepthMapCapture)
+	{
+		if (pthread_cancel(thread_dmap)) 
+		{
+			error("DepthMap Capture - pthread_cancel failed.");
+		}
 	}
 	
 	CleanupExit();
