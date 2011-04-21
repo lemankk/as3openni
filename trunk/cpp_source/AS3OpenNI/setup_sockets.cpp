@@ -35,7 +35,7 @@ int RGB_RESULT;
 	#include <netdb.h>
 	extern int POINT_SOCKET, SESSION_SOCKET, SLIDER_SOCKET, USER_TRACKING_SOCKET, DEPTH_MAP_SOCKET, RGB_SOCKET;
 #endif
-	
+
 void setupSockets()
 {
 	if(_useSockets)
@@ -562,9 +562,5 @@ void setupSockets()
 	
 void sendToSocket(int socket, const char *data)
 {
-	#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-		send(socket, data, (strlen(data) + 1), 0);
-	#else
-		write(socket, data, (strlen(data) + 1));
-	#endif
+	send(socket, data, (strlen(data) + 1), 0);
 }

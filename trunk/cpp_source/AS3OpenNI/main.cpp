@@ -1,7 +1,7 @@
 /****************************************************************************
 *                                                                           *
 *   Project:	AS3OpenNI	                                        		*
-*   Version:	Alpha 1.0.9                                                 *
+*   Version:	Alpha 1.1.0                                                 *
 *   Author:     Tony Birleffi												*
 *   URL: 		http://code.google.com/p/as3openni/							*
 *                                                                           *
@@ -9,7 +9,7 @@
 
 /****************************************************************************
 *                                                                           *
-*   AS3OpenNI Alpha 1.0.9	                                                *
+*   AS3OpenNI Alpha 1.1.0	                                                *
 *   Copyright (C) 2011 Tony Birleffi. All Rights Reserved.                  *
 *                                                                           *
 *   This file has been provided pursuant to a License Agreement containing  *
@@ -78,8 +78,8 @@ HandsGenerator _hands;
 GestureGenerator _gesture;
 DepthMetaData _depthData;
 ImageMetaData _imageData;
-XnMapOutputMode _depthMode;
-XnLicense _license;
+//XnMapOutputMode _depthMode;
+//XnLicense _license;
 UserGenerator _userGenerator;
 SceneMetaData _sceneData;
 
@@ -686,6 +686,7 @@ int main(int argc, char *argv[])
 	CHECK_RC(_status, "Initialize context");
 	_context.SetGlobalMirror(_mirror);
 	
+	/*
 	XnChar vendor[XN_MAX_NAME_LENGTH];
 	XnChar license[XN_MAX_LICENSE_LENGTH];
 
@@ -698,18 +699,18 @@ int main(int argc, char *argv[])
    	// Set it to VGA maps at 30 FPS
 	_depthMode.nXRes = 640;
 	_depthMode.nYRes = 480;
-	_depthMode.nFPS = 30;
+	_depthMode.nFPS = 30;*/
 	
 	// Depth map create.
 	_status = _depth.Create(_context);
 	CHECK_RC(_status, "Create depth generator");
-	_status = _depth.SetMapOutputMode(_depthMode);
+	//_status = _depth.SetMapOutputMode(_depthMode);
 	
 	// Depth map create.
 	_status = _image.Create(_context);
 	CHECK_RC(_status, "Create image generator");
-	_status = _image.SetMapOutputMode(_depthMode);
-	_status = _image.SetPixelFormat(XN_PIXEL_FORMAT_RGB24);
+	//_status = _image.SetMapOutputMode(_depthMode);
+	//_status = _image.SetPixelFormat(XN_PIXEL_FORMAT_RGB24);
 	
 	// Create the hands generator.
 	_status = _hands.Create(_context);
