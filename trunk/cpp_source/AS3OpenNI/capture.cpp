@@ -37,6 +37,8 @@ XnUInt32 nColors = 10;
 FIMEMORY *depthMapMemory;
 FIMEMORY *rgbMemory;
 
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 unsigned int getClosestPowerOfTwo(unsigned int n)
 {
 	unsigned int m = 2;
@@ -59,11 +61,7 @@ void sendDepthMapToSocket(BYTE *data, int size)
 	{
 		if(_featureDepthMapCapture)
 		{
-			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-				send(DEPTH_MAP_SOCKET, (char*)data, size, 0);
-			#else
-				write(DEPTH_MAP_SOCKET, (char*)data, size);
-			#endif
+			send(DEPTH_MAP_SOCKET, (char*)data, size, 0);
 		}
 	}
 }
@@ -74,11 +72,7 @@ void sendRGBToSocket(BYTE *data, int size)
 	{
 		if(_featureRGBCapture)
 		{
-			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-				send(RGB_SOCKET, (char*)data, size, 0);
-			#else
-				write(RGB_SOCKET, (char*)data, size);
-			#endif
+			send(RGB_SOCKET, (char*)data, size, 0);
 		}
 	}
 }
