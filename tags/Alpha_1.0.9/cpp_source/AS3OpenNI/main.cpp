@@ -402,7 +402,8 @@ void XN_CALLBACK_TYPE onPush(XnFloat fVelocity, XnFloat fAngle, void* cxt)
  * Know Mac error with the Avin2 - Sensor Kinect - Hacked Drivers.
  * 68585471	[ERROR]	XnUSBLinux-x86.cpp	1009	Endpoint 0x81, Buffer 13: Failed to cancel asynch I/O transfer (err=-4)!
  **/
-void XN_CALLBACK_TYPE Steady_OnSteady(XnUInt32 nId, XnFloat fVelocity, void* cxt)
+//void XN_CALLBACK_TYPE Steady_OnSteady(XnUInt32 nId, XnFloat fVelocity, void* cxt)
+void XN_CALLBACK_TYPE Steady_OnSteady(XnFloat fVelocity, void* cxt)
 {
 	if(_printGesture) printf("Steady Occured - Velocity:%f\n", fVelocity);
 	char cSteady[10];
