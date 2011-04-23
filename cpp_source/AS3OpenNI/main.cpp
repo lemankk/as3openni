@@ -390,6 +390,18 @@ void XN_CALLBACK_TYPE onPush(XnFloat fVelocity, XnFloat fAngle, void* cxt)
 	if(_useSockets) sendToSocket(SESSION_SOCKET, cPush);
 }
 
+/**
+ * This is the only change between OpenNI v1.1.0.41 vs. v1.1.0.25 on the Mac vs PC.
+ * It seems to run fine with the Avin2 - SensorKinect on the PC, but constantly crashes on the Mac.
+ * So I had to roll this tag back to this configuration on the Mac:
+ * ---------->
+ * OpenNI Framework 1.1.0.25
+ * Prime Sense NITE Framework 1.3.0.18
+ * Avin2 - Sensor Kinect v5.0.0
+ * ---------->
+ * Know Mac error with the Avin2 - Sensor Kinect - Hacked Drivers.
+ * 68585471	[ERROR]	XnUSBLinux-x86.cpp	1009	Endpoint 0x81, Buffer 13: Failed to cancel asynch I/O transfer (err=-4)!
+ **/
 void XN_CALLBACK_TYPE Steady_OnSteady(XnUInt32 nId, XnFloat fVelocity, void* cxt)
 {
 	if(_printGesture) printf("Steady Occured - Velocity:%f\n", fVelocity);
