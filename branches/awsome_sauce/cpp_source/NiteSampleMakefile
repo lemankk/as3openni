@@ -17,7 +17,7 @@ INC_DIRS += /usr/include/nite /usr/include/ni
 
 BIN_DIR = ../bin
 
-USED_LIBS += OpenNI XnVNite FreeImage
+USED_LIBS += OpenNI XnVNite
 # -The new version works on the Mac, but it crashes a lot.
 #XnVNite_1_3_1
 
