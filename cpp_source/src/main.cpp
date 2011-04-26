@@ -29,6 +29,7 @@
 #endif
 
 #include "network.h"
+#include "params.h"
 
 //---------------------------------------------------------------------------
 // Namespaces
@@ -54,6 +55,10 @@ XnBool g_bDrawBackground = FALSE;
 XnBool g_bDrawPixels = TRUE;
 XnBool g_bSnapPixels = TRUE;
 XnBool g_bMirror = TRUE;
+XnBool g_bUseSockets = TRUE;
+
+XnBool g_bFeatureRGBCapture = FALSE;
+XnBool g_bFeatureDepthMapCapture = FALSE;
 
 unsigned char g_ucDepthBuffer[4*640*480];
 unsigned char g_ucImageBuffer[4*640*480];
@@ -84,6 +89,7 @@ XnFloat Colors[][3] =
 };
 
 XnUInt32 nColors = 10;
+int g_intTrackpadColumns = NULL, g_intTrackpadRows = NULL;
 
 //-----------------------------------------------------------------------------
 // Utility Methods
@@ -229,7 +235,6 @@ void getRGB(unsigned char* g_ucImageBuffer)
 	XnUInt16 g_nYRes = imd.YRes();
 
 	const XnRGB24Pixel * pImageMap = g_ImageGenerator.GetRGB24ImageMap();
-
 	for (nY=0; nY<g_nYRes; nY++) 
 	{
 		for (nX=0; nX < g_nXRes; nX++) 
@@ -244,9 +249,46 @@ void getRGB(unsigned char* g_ucImageBuffer)
 
 void *serverData(void *arg) 
 {
+	//printf("AS3OpenNI-Bridge :: Server Running\n");
 	while(g_Connected && !g_Exit && g_Char != 'q')
 	{
-		printf("AS3OpenNI-Bridge :: Thread Running\n");
+		int len = 8*10;
+		unsigned char *buff = (unsigned char*)malloc(len); // Command buffer
+		while(g_Connected)
+		{
+			len = g_AS3Network.getData(buff, 1024);
+			if(len > 0 && len % 6 == 0)
+			{
+				// Get the number of commands received.
+				int max = len / 6;
+				int i;
+				
+				// For each command received.
+				for(i = 0; i < max; i++)
+				{
+					int code = buff[0 + (i*6)];
+					switch(code)
+					{
+						case 1: // OPENNI
+							switch(buff[1 + (i*6)])
+							{
+								case 0: // GET DEPTH
+									g_AS3Network.sendMessage(1,0,g_ucDepthBuffer,sizeof(g_ucDepthBuffer));
+								break;
+								
+								case 1: // GET RGB
+									g_AS3Network.sendMessage(1,1,g_ucImageBuffer,sizeof(g_ucImageBuffer));
+								break;
+								
+								case 2: // GET SKEL
+									// Abstract for now.
+								break;
+							}
+						break;
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -258,12 +300,15 @@ void setupServer()
 	{
 		fprintf(stderr, "AS3OpenNI-Bridge :: Error on pthread_create() for the server\n");
 	}
-	g_AS3Network.sendMessage("AS3OpenNI-Bridge :: Server Connected\n");
+	g_AS3Network.sendMessage(0,0,0);
 }
 
 int main(int argc, char **argv)
 {
-	// Setup the status.
+	// Setup the command line parameters.
+	setupParams(argc, argv);
+	
+	/*// Setup the status.
     XnStatus g_Status = XN_STATUS_OK;
     
     // Context Init and Add license.
@@ -304,11 +349,14 @@ int main(int argc, char **argv)
 	CHECK_RC(g_Status, "FPS Init");
 	
 	// Setup the view points to match between the depth and image maps.
-	g_DepthGenerator.GetAlternativeViewPointCap().SetViewPoint(g_ImageGenerator);
+	g_DepthGenerator.GetAlternativeViewPointCap().SetViewPoint(g_ImageGenerator);*/
 	
 	// Setup the socket server.
-	g_AS3Network = network();
-	g_AS3Network.init(setupServer);
+	if(g_bUseSockets)
+	{
+		g_AS3Network = network();
+		g_AS3Network.init(setupServer);
+	}
 	
 	// Print out any messages for the user.
 	printf("AS3OpenNI-Bridge :: Press 'q' to quit this application\n");
@@ -316,10 +364,10 @@ int main(int argc, char **argv)
 	while(!g_Exit && g_Char != 'q')
 	{
 		g_Char = mygetch();
-		g_Context.WaitAndUpdateAll();
+		/*g_Context.WaitAndUpdateAll();
 		xnFPSMarkFrame(&xnFPS);
-		getDepthMap(g_ucDepthBuffer);
-		getRGB(g_ucImageBuffer);
+		if(g_bFeatureDepthMapCapture) getDepthMap(g_ucDepthBuffer);
+		if(g_bFeatureRGBCapture) getRGB(g_ucImageBuffer);*/
 	}
 	
 	CleanupExit();

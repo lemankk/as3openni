@@ -39,7 +39,7 @@ struct addrinfo siData;
 void network::sendMessage(const char *data) 
 {
 	string _msg = data;
-	int len = sizeof(_msg);
+	int len = strlen(data) + 1;
 	int first = 3;
 	int second = 0;
 	int m_len = 1 + 1 + sizeof(int);
@@ -144,7 +144,7 @@ int network::initServer(addrinfo si_type, const char *conf_port, const char *lab
 	si_type.ai_flags = AI_PASSIVE;
 	struct addrinfo *result = NULL;	
 	
-	int iResult = getaddrinfo(NULL, conf_port, &si_type, &result);
+	int iResult = getaddrinfo("127.0.0.1", conf_port, &si_type, &result);
 	if (iResult < 0) 
 	{
 		printf("AS3OpenNI-Bridge :: %s: getaddrinfo failed: %d\n", label, iResult);
@@ -190,7 +190,7 @@ int network::initServer(addrinfo si_type, PCSTR conf_port, SOCKET *the_socket, P
 	si_type.ai_flags = AI_PASSIVE;
 	struct addrinfo *result = NULL;	
 
-	int iResult = getaddrinfo(NULL, conf_port, &si_type, &result);
+	int iResult = getaddrinfo("127.0.0.1", conf_port, &si_type, &result);
 	if (iResult != 0) 
 	{
 		printf("AS3OpenNI-Bridge :: %s: getaddrinfo failed: %d\n", label, iResult);
