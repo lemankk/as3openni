@@ -69,7 +69,6 @@ network g_AS3Network;
 
 int g_Exit = 0;
 int g_Connected = 0;
-int g_Char = 0;
 
 XnFPSData xnFPS;
 
@@ -118,15 +117,22 @@ if (g_Status != XN_STATUS_OK)										\
 	return g_Status;												\
 }
 
+#define CHECK_ERRORS(_status, _errors, what)		\
+if (_status == XN_STATUS_NO_NODE_PRESENT)	\
+{										\
+	XnChar strError[1024];				\
+	_errors.ToString(strError, 1024);	\
+	printf("%s\n", strError);			\
+	return (_status);						\
+}
+
 //---------------------------------------------------------------------------
 // Private Methods
 //---------------------------------------------------------------------------
 void CleanupExit()
 {
-	//g_Context.Shutdown();
+	g_Context.Shutdown();
 	g_AS3Network.closeConnection();
-	g_Char = 0;
-	g_Exit = 1;
 	g_Connected = 0;
 	exit(1);
 }
@@ -249,8 +255,8 @@ void getRGB(unsigned char* g_ucImageBuffer)
 
 void *serverData(void *arg) 
 {
-	//printf("AS3OpenNI-Bridge :: Server Running\n");
-	while(g_Connected && !g_Exit && g_Char != 'q')
+	printf("AS3OpenNI-Bridge :: Server Running\n");
+	while(g_Connected)
 	{
 		int len = 8*10;
 		unsigned char *buff = (unsigned char*)malloc(len); // Command buffer
@@ -303,13 +309,22 @@ void setupServer()
 	g_AS3Network.sendMessage(0,0,0);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
 	// Setup the command line parameters.
 	setupParams(argc, argv);
 	
-	/*// Setup the status.
+	// Setup the socket server.
+	if(g_bUseSockets)
+	{
+		g_AS3Network = network();
+		printf("AS3OpenNI-Bridge :: Waiting for client.\n");
+		g_AS3Network.init(setupServer);
+	}
+	
+	// Setup the status.
     XnStatus g_Status = XN_STATUS_OK;
+    EnumerationErrors _errors;
     
     // Context Init and Add license.
     g_Status = g_Context.Init();
@@ -321,7 +336,7 @@ int main(int argc, char **argv)
 	XnChar license[XN_MAX_LICENSE_LENGTH];
 	g_License.strVendor[XN_MAX_NAME_LENGTH] = strcmp(vendor, "PrimeSense");
 	g_License.strKey[XN_MAX_LICENSE_LENGTH] = strcmp(license, "0KOIk2JeIBYClPWVnMoRKn5cdY4=");
-		
+	
 	g_Status = g_Context.AddLicense(g_License);
    	CHECK_RC(g_Status, "Added license");
    	
@@ -341,6 +356,13 @@ int main(int argc, char **argv)
 	g_Status = g_ImageGenerator.SetMapOutputMode(g_DepthMode);
 	g_Status = g_ImageGenerator.SetPixelFormat(XN_PIXEL_FORMAT_RGB24);
 	
+	// Setup the view points to match between the depth and image maps.
+	g_DepthGenerator.GetAlternativeViewPointCap().SetViewPoint(g_ImageGenerator);
+	
+	// Create user generator.
+	g_Status = g_UserGenerator.Create(g_Context);
+	CHECK_RC(g_Status, "Find user generator");
+	
 	// Start generating all.
 	g_Context.StartGeneratingAll();
 	
@@ -348,26 +370,16 @@ int main(int argc, char **argv)
 	g_Status = xnFPSInit(&xnFPS, 180);
 	CHECK_RC(g_Status, "FPS Init");
 	
-	// Setup the view points to match between the depth and image maps.
-	g_DepthGenerator.GetAlternativeViewPointCap().SetViewPoint(g_ImageGenerator);*/
+	// Let Flash know the server is ready.
+	g_AS3Network.sendMessage(0,1,0);
 	
-	// Setup the socket server.
-	if(g_bUseSockets)
+	while(!g_Exit)
 	{
-		g_AS3Network = network();
-		g_AS3Network.init(setupServer);
-	}
-	
-	// Print out any messages for the user.
-	printf("AS3OpenNI-Bridge :: Press 'q' to quit this application\n");
-	
-	while(!g_Exit && g_Char != 'q')
-	{
-		g_Char = mygetch();
-		/*g_Context.WaitAndUpdateAll();
+		//printf("Running.\n");
+		g_Context.WaitAndUpdateAll();
 		xnFPSMarkFrame(&xnFPS);
 		if(g_bFeatureDepthMapCapture) getDepthMap(g_ucDepthBuffer);
-		if(g_bFeatureRGBCapture) getRGB(g_ucImageBuffer);*/
+		if(g_bFeatureRGBCapture) getRGB(g_ucImageBuffer);
 	}
 	
 	CleanupExit();
