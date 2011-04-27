@@ -15,8 +15,8 @@
 			import org.as3openni.global.Definitions;
 			import org.as3openni.util.BitmapUtil;
 			
-			private var _as3OpenNI:AS3OpenNI
-			
+			private var _flexUIOnly:Boolean = false;
+			private var _as3OpenNI:AS3OpenNI;
 			private var _videoCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
 			private var _depthCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0x00FF00);
 			
@@ -31,15 +31,18 @@
 				this._videoBmp = new Bitmap(this._videoCanvas);
 				this._depthBmp = new Bitmap(this._depthCanvas);
 				
-				this._as3OpenNI = new AS3OpenNI();
-				this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
-				this._as3OpenNI.binaryPath = 'bin/AS3OpenNI-Bridge-v1.0.0b';
-				this._as3OpenNI.debug = true;
-				this._as3OpenNI.video = true;
-				this._as3OpenNI.depthMap = true;
-				this._as3OpenNI.depthMapBackground = false;
-				this._as3OpenNI.mirrorModeOff = false;
-				this._as3OpenNI.init();
+				if(!this._flexUIOnly)
+				{
+					this._as3OpenNI = new AS3OpenNI();
+					this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
+					this._as3OpenNI.binaryPath = 'bin/AS3OpenNI-Bridge-v1.0.0b';
+					this._as3OpenNI.debug = true;
+					this._as3OpenNI.video = true;
+					this._as3OpenNI.depthMap = true;
+					this._as3OpenNI.depthMapBackground = false;
+					this._as3OpenNI.mirrorModeOff = false;
+					this._as3OpenNI.init();
+				}
 			}
 			
 			protected function onReady(event:AS3OpenNIEvent):void
