@@ -78,13 +78,12 @@
 				var buff:ByteArray = event.data as ByteArray;
 				BitmapUtil.byteArrayToBitmapData(buff, this._depthCanvas);
 			}
-			
 		]]>
 	</fx:Script>
 	
 	<mx:HBox>
-		<mx:Image source="{this._videoBmp}" width="320" height="240"/>
-		<mx:Image source="{this._depthBmp}" width="320" height="240"/>
+		<mx:Image source="{this._videoBmp}" width="640" height="480"/>
+		<mx:Image source="{this._depthBmp}" width="640" height="480"/>
 	</mx:HBox>
 	
 </mx:WindowedApplication>
