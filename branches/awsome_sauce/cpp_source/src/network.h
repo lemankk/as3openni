@@ -4,6 +4,7 @@
 
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	#include <pthread/pthread.h>
+	#include <windows.h>
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
 	
@@ -29,7 +30,7 @@ class network
 		void waitForClient();
 	private:
 		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-			int initServer(addrinfo si_type, PCSTR conf_port, SOCKET *the_socket, PCSTR label);
+			int initServer(addrinfo si_type, PCSTR conf_port, PCSTR label);
 		#else
 			int initServer(addrinfo si_type, const char *conf_port, const char *label);
 		#endif

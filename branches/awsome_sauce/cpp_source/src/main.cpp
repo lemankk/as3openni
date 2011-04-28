@@ -19,8 +19,6 @@
 #include <XnOS.h>
 
 #include <stdio.h>
-#include <termios.h>
-#include <unistd.h>
 
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	#include <pthread/pthread.h>
@@ -89,22 +87,6 @@ XnFloat Colors[][3] =
 
 XnUInt32 nColors = 10;
 int g_intTrackpadColumns = NULL, g_intTrackpadRows = NULL;
-
-//-----------------------------------------------------------------------------
-// Utility Methods
-//-----------------------------------------------------------------------------
-int mygetch() 
-{
-	struct termios oldt, newt;
-	int ch;
-	tcgetattr(STDIN_FILENO, &oldt);
-	newt = oldt;
-	newt.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-	ch = getchar();
-	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-	return ch;
-}
 
 //-----------------------------------------------------------------------------
 // Error Handling
@@ -296,6 +278,8 @@ void *serverData(void *arg)
 			}
 		}
 	}
+
+	return 0;
 }
 
 void setupServer() 
@@ -318,7 +302,6 @@ int main(int argc, char *argv[])
 	if(g_bUseSockets)
 	{
 		g_AS3Network = network();
-		printf("AS3OpenNI-Bridge :: Waiting for client.\n");
 		g_AS3Network.init(setupServer);
 	}
 	
