@@ -7,9 +7,15 @@
 						verticalAlign="top"
 						addedToStage="init(event)"
 						minWidth="800" minHeight="600"
-						frameRate="210">
+						frameRate="210"
+						backgroundGradientColors="[#CCCCCC,#333333]"
+						horizontalScrollPolicy="off"
+						verticalScrollPolicy="off">
 	<fx:Script>
 		<![CDATA[
+			
+			import flash.filters.BlurFilter;
+			
 			import org.as3openni.AS3OpenNI;
 			import org.as3openni.events.AS3OpenNIEvent;
 			import org.as3openni.events.OpenNIEvent;
@@ -19,10 +25,14 @@
 			private var _flexUIOnly:Boolean = false;
 			private var _as3OpenNI:AS3OpenNI;
 			private var _videoCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
-			private var _depthCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0x00FF00);
+			private var _videoCanvas2:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
+			private var _depthCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, true, 0xFF0000);
 			
 			[Bindable]
 			private var _videoBmp:Bitmap;
+			
+			[Bindable]
+			private var _videoBmp2:Bitmap;
 			
 			[Bindable]
 			private var _depthBmp:Bitmap;
@@ -31,6 +41,7 @@
 			{
 				// Define bitmaps to draw on to.
 				this._videoBmp = new Bitmap(this._videoCanvas);
+				this._videoBmp2 = new Bitmap(this._videoCanvas2);
 				this._depthBmp = new Bitmap(this._depthCanvas);
 				
 				// Run AS3OpenNI.
@@ -46,6 +57,10 @@
 					this._as3OpenNI.mirrorModeOff = false;
 					this._as3OpenNI.init();
 				}
+				
+				var bf:BlurFilter = new BlurFilter(4, 4, 3);
+				this._depthBox.filters = [bf];
+				this._videoBox.mask = this._depthBox;
 			}
 			
 			protected function onReady(event:AS3OpenNIEvent):void
@@ -69,8 +84,13 @@
 			protected function onVideo(event:OpenNIEvent):void
 			{
 				var buff:ByteArray = event.data as ByteArray;
+				var buff2:ByteArray = new ByteArray();
+				buff2.writeObject(buff);
+				buff2.position = 0;
+				
 				BitmapUtil.byteArrayToBitmapData(buff, this._videoCanvas);
-				//BitmapUtil.setBlackWhiteFilter(this._videoCanvas);
+				BitmapUtil.byteArrayToBitmapData(buff2, this._videoCanvas2);
+				BitmapUtil.setBlackWhiteFilter(this._videoCanvas2);
 			}
 			
 			protected function onDepth(event:OpenNIEvent):void
@@ -81,9 +101,9 @@
 		]]>
 	</fx:Script>
 	
-	<mx:HBox>
-		<mx:Image source="{this._videoBmp}" width="640" height="480"/>
-		<mx:Image source="{this._depthBmp}" width="640" height="480"/>
-	</mx:HBox>
+	<mx:Image id="_videoBox2" source="{this._videoBmp2}" width="800" height="600" cacheAsBitmap="true" />
+	<mx:Box id="_depthLine" y="300" width="800" height="50" backgroundColor="#FF0000" visible="false"/>
+	<mx:Image id="_videoBox" source="{this._videoBmp}" width="800" height="600" cacheAsBitmap="true"/>
+	<mx:Image id="_depthBox" source="{this._depthBmp}" width="800" height="600" cacheAsBitmap="true"/>
 	
 </mx:WindowedApplication>
