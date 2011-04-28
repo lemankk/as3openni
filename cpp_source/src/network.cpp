@@ -246,6 +246,8 @@ int network::init(callback cb)
 				close(dataSocket);
 				return 1;
 			}
+			
+			break;
 		}
 	
 		return 0;

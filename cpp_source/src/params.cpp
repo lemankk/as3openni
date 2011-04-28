@@ -53,13 +53,13 @@ void setupParams(int argc, char *argv[])
 				if(param == "-tpc")
 				{
 					g_intTrackpadColumns = atoi(argv[i + 1]);
-					cout<<"TrackPad Columns: "<< g_intTrackpadColumns <<"\n";
+					cout<<"AS3OpenNI-Bridge :: TrackPad Columns: "<< g_intTrackpadColumns <<"\n";
 				}
 			
 				if(param == "-tpr")
 				{
 					g_intTrackpadRows = atoi(argv[i + 1]);
-					cout<<"TrackPad Rows: "<< g_intTrackpadRows <<"\n";
+					cout<<"AS3OpenNI-Bridge :: TrackPad Rows: "<< g_intTrackpadRows <<"\n";
 				}
 			}
 			
@@ -67,19 +67,19 @@ void setupParams(int argc, char *argv[])
 			if(param == "-aso")
 			{
 				g_bUseSockets = false;
-				cout<<"The socket server is off\n";
+				cout<<"AS3OpenNI-Bridge :: The socket server is off\n";
 			}
 			
 			if(param == "-mrev")
 			{
 				g_bMirror = false;
-				cout<<"Mirror mode is now false\n";
+				cout<<"AS3OpenNI-Bridge :: Mirror mode is now false\n";
 			}
 			
 			if(param == "-dmbg")
 			{
 				g_bDrawBackground = true;
-				cout<<"DepthMapCapture background is now on\n";
+				cout<<"AS3OpenNI-Bridge :: DepthMapCapture background is now on\n";
 			}
 			
 			/*// Turn on features.
@@ -122,13 +122,13 @@ void setupParams(int argc, char *argv[])
 			if(param == "-orgbc")
 			{
 				g_bFeatureRGBCapture = true;
-				cout<<"RGBCapture feature turned on\n";
+				cout<<"AS3OpenNI-Bridge :: RGBCapture feature turned on\n";
 			}
 			
 			if(param == "-odmc")
 			{
 				g_bFeatureDepthMapCapture = true;
-				cout<<"DepthMapCapture feature turned on\n";
+				cout<<"AS3OpenNI-Bridge :: DepthMapCapture feature turned on\n";
 			}
 			
 			/*// Print out feature events.
