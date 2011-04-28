@@ -295,6 +295,8 @@ void setupServer()
 
 int main(int argc, char *argv[])
 {
+	printf("AS3OpenNI-Bridge :: Version: Beta v1.0.0\n");
+	
 	// Setup the command line parameters.
 	setupParams(argc, argv);
 	

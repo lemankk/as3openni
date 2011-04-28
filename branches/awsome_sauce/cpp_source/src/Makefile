@@ -4,5 +4,5 @@ SRC_FILES = *.cpp
 
 INC_DIRS = ../src
 
-EXE_NAME = AS3OpenNI-Bridge-v1.0.0b
+EXE_NAME = AS3OpenNI-Bridge
 include ../NiteSampleMakefile
