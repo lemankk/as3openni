@@ -50,30 +50,26 @@ package org.as3openni
 	public class AS3OpenNI extends EventDispatcher
 	{
 		public var binaryPath:String = "";
-		public var bridge:NativeProcess;
-		public var clientSocket:ClientSocket;
-		public var videoBuffer:VideoBuffer;
-		public var depthBuffer:DepthBuffer;
-		
-		/*public var trackPadColumns:Number = 4;
-		public var trackPadRows:Number = 9;*/
+		public var trackPadColumns:Number = 4;
+		public var trackPadRows:Number = 9;
 		
 		public var debug:Boolean = false;
 		public var video:Boolean = false;
 		public var depthMap:Boolean = false;
 		public var depthMapBackground:Boolean = false;
 		public var mirrorModeOff:Boolean = false;
-		public var bridgeReady:Boolean = false;
-		public var clientReady:Boolean = false;
 		
-		/*
-		public var userTracking:Boolean = false;
-		public var singlePoint:Boolean = false;
-		public var gestures:Boolean = false;
-		public var circle:Boolean = false;
-		public var slider:Boolean = false;
-		public var trackPad:Boolean = false;*/
+		private var bridgeReady:Boolean = false;
+		private var clientReady:Boolean = false;
+		private var bridge:NativeProcess;
+		private var clientSocket:ClientSocket;
+		private var videoBuffer:VideoBuffer;
+		private var depthBuffer:DepthBuffer;
 		
+		/**
+		 * AS3OpenNI - Constructor.
+		 * @target	IEventDispatcher
+		 */
 		public function AS3OpenNI(target:IEventDispatcher=null)
 		{
 			super(target);
@@ -104,6 +100,10 @@ package org.as3openni
 			{
 				this.videoBuffer.getBuffer();
 			}
+			else
+			{
+				throw new Error(Definitions.AS3OPENNI_LABEL + 'Video feature not available.');
+			}
 		}
 		
 		public function getDepthBuffer():void
@@ -111,6 +111,10 @@ package org.as3openni
 			if(this.isReady() && this.depthMap)
 			{
 				this.depthBuffer.getBuffer();
+			}
+			else
+			{
+				throw new Error(Definitions.AS3OPENNI_LABEL + 'DepthMap feature not available.');
 			}
 		}
 		

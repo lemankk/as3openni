@@ -63,7 +63,7 @@ package org.as3openni.util
 			} 
 			else 
 			{
-				throw new Error('Incorrect data size (' + data.length + '). Expected: ' + Definitions.COMMAND_SIZE);
+				throw new Error(Definitions.AS3OPENNI_LABEL + 'Incorrect data size (' + data.length + '). Expected: ' + Definitions.COMMAND_SIZE);
 				return Definitions.ERROR;
 			}
 		}
