@@ -5,8 +5,7 @@
 						horizontalAlign="left"
 						verticalAlign="top"
 						addedToStage="init(event)"
-						minWidth="800" minHeight="600"
-						frameRate="180">
+						minWidth="800" minHeight="600">
 	<fx:Script>
 		<![CDATA[
 			import org.as3openni.AS3OpenNI;
@@ -28,8 +27,12 @@
 			
 			protected function init(event:Event):void
 			{
+				// Define bitmaps to draw on to.
 				this._videoBmp = new Bitmap(this._videoCanvas);
 				this._depthBmp = new Bitmap(this._depthCanvas);
+				
+				// On Mac set this to 180.
+				this.frameRate = 30;
 				
 				if(!this._flexUIOnly)
 				{
