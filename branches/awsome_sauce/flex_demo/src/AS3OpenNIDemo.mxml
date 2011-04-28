@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- REMEMBER ON THE PC, SET THE FRAMERATE TO 30. ON THE MAC SET IT TO 210. -->
 <mx:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
 						xmlns:mx="library://ns.adobe.com/flex/mx" 
 						layout="absolute"
 						horizontalAlign="left"
 						verticalAlign="top"
 						addedToStage="init(event)"
-						minWidth="800" minHeight="600">
+						minWidth="800" minHeight="600"
+						frameRate="210">
 	<fx:Script>
 		<![CDATA[
 			import org.as3openni.AS3OpenNI;
@@ -31,14 +33,12 @@
 				this._videoBmp = new Bitmap(this._videoCanvas);
 				this._depthBmp = new Bitmap(this._depthCanvas);
 				
-				// On Mac set this to 180.
-				this.frameRate = 30;
-				
+				// Run AS3OpenNI.
 				if(!this._flexUIOnly)
 				{
 					this._as3OpenNI = new AS3OpenNI();
 					this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
-					this._as3OpenNI.binaryPath = 'bin/AS3OpenNI-Bridge-v1.0.0b';
+					this._as3OpenNI.binaryPath = 'bin/AS3OpenNI-Bridge';
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.video = true;
 					this._as3OpenNI.depthMap = true;
