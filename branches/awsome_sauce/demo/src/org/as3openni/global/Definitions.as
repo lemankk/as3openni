@@ -32,9 +32,6 @@ package org.as3openni.global
 		public static const VGA_MAX_WIDTH:int = 640;
 		public static const VGA_MAX_HEIGHT:int = 480;
 		
-		//public static const RAW_IMG_SIZE:int = VGA_MAX_WIDTH * VGA_MAX_HEIGHT * 4;
-		//public static const DATA_IN_SIZE:int = 3 * 2 + 3 * 8;
-		
 		public function Definitions(){}
 	}
 }
