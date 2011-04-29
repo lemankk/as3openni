@@ -28,6 +28,7 @@
 
 #include "network.h"
 #include "params.h"
+#include "capture.h"
 
 //---------------------------------------------------------------------------
 // Namespaces
@@ -48,8 +49,9 @@ ImageGenerator g_ImageGenerator;
 UserGenerator g_UserGenerator;
 XnLicense g_License;
 XnMapOutputMode g_DepthMode;
+DepthMetaData g_DepthData;
+ImageMetaData g_ImageData;
 
-XnBool g_bPause = FALSE;
 XnBool g_bDrawBackground = FALSE;
 XnBool g_bDrawPixels = TRUE;
 XnBool g_bSnapPixels = TRUE;
@@ -66,32 +68,21 @@ XnChar g_sPose[20] = "";
 unsigned char g_ucDepthBuffer[4*640*480];
 unsigned char g_ucImageBuffer[4*640*480];
 
-float g_pDepthHist[MAX_DEPTH];
 pthread_t g_ServerThread;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+
 network g_AS3Network;
+capture g_Capture;
 
 int g_Exit = 0;
 int g_Connected = 0;
 
 XnFPSData xnFPS;
-
-XnFloat Colors[][3] =
-{
-	{0,1,1},
-	{0,0,1},
-	{0,1,0},
-	{1,1,0},
-	{1,0,0},
-	{1,.5,0},
-	{.5,1,0},
-	{0,.5,1},
-	{.5,0,1},
-	{1,1,.5},
-	{1,1,1}
-};
-
-XnUInt32 nColors = 10;
 int g_intTrackpadColumns = NULL, g_intTrackpadRows = NULL;
+
+void playServerThread();
+void pauseServerThread();
 
 //-----------------------------------------------------------------------------
 // Error Handling
@@ -119,7 +110,7 @@ if (_status == XN_STATUS_NO_NODE_PRESENT)	\
 
 void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
-	//printf("AS3OpenNI-Bridge :: New User: %d\n", nId);
+	printf("AS3OpenNI-Bridge :: New User: %d\n", nId);
 	//if(g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
 	//else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
 	g_AS3Network.sendMessage(1,3,nId);
@@ -127,7 +118,7 @@ void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void*
 
 void XN_CALLBACK_TYPE User_LostUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
-	//printf("AS3OpenNI-Bridge :: Lost user: %d\n", nId);
+	printf("AS3OpenNI-Bridge :: Lost user: %d\n", nId);
 	g_AS3Network.sendMessage(1,4,nId);
 }
 
@@ -136,184 +127,83 @@ void XN_CALLBACK_TYPE User_LostUser(UserGenerator& generator, XnUserID nId, void
 //---------------------------------------------------------------------------
 void CleanupExit()
 {
+	pthread_mutex_destroy(&mutex);
 	g_Context.Shutdown();
 	g_AS3Network.closeConnection();
 	g_Connected = 0;
 	exit(1);
 }
 
-void getDepthMap(unsigned char* g_ucDepthBuffer)
+void pauseServerThread()
 {
-	SceneMetaData smd;
-	DepthMetaData dmd;
-	g_DepthGenerator.GetMetaData(dmd);
-
-	//printf("AS3OpenNI-Bridge :: Frame %d Middle point is: %u. FPS: %f\n", dmd.FrameID(), dmd(dmd.XRes() / 2, dmd.YRes() / 2), xnFPSCalc(&xnFPS));
-
-	g_DepthGenerator.GetMetaData(dmd);
-	g_UserGenerator.GetUserPixels(0, smd);
-	unsigned int nValue = 0;
-	unsigned int nHistValue = 0;
-	unsigned int nIndex = 0;
-	unsigned int nX = 0;
-	unsigned int nY = 0;
-	unsigned int nNumberOfPoints = 0;
-	XnUInt16 g_nXRes = dmd.XRes();
-	XnUInt16 g_nYRes = dmd.YRes();
-
-	const XnDepthPixel* pDepth = dmd.Data();
-	const XnLabel* pLabels = smd.Data();
-
-	// Calculate the accumulative histogram
-	memset(g_pDepthHist, 0, MAX_DEPTH*sizeof(float));
-	for (nY=0; nY<g_nYRes; nY++)
-	{
-		for (nX=0; nX<g_nXRes; nX++)
-		{
-			nValue = *pDepth;
-
-			if (nValue != 0)
-			{
-				g_pDepthHist[nValue]++;
-				nNumberOfPoints++;
-			}
-
-			pDepth++;
-		}
-	}
-
-	for (nIndex=1; nIndex<MAX_DEPTH; nIndex++)
-	{
-		g_pDepthHist[nIndex] += g_pDepthHist[nIndex-1];
-	}
-
-	if (nNumberOfPoints)
-	{
-		for (nIndex=1; nIndex<MAX_DEPTH; nIndex++)
-		{
-			g_pDepthHist[nIndex] = (unsigned int)(256 * (1.0f - (g_pDepthHist[nIndex] / nNumberOfPoints)));
-		}
-	}
-	
-	pDepth = dmd.Data();
-	if (g_bDrawPixels)
-	{
-		XnUInt32 nIndex = 0;
-		for (nY=0; nY<g_nYRes; nY++)
-		{
-			for (nX=0; nX < g_nXRes; nX++, nIndex++)
-			{
-				g_ucDepthBuffer[0] = 0;
-				g_ucDepthBuffer[1] = 0;
-				g_ucDepthBuffer[2] = 0;
-				g_ucDepthBuffer[3] = 0x00;
-				if (g_bDrawBackground || *pLabels != 0)
-				{
-					nValue = *pDepth;
-					XnLabel label = *pLabels;
-					XnUInt32 nColorID = label % nColors;
-					if (label == 0)
-					{
-						nColorID = nColors;
-					}
-
-					if (nValue != 0)
-					{
-						nHistValue = g_pDepthHist[nValue];
-						g_ucDepthBuffer[0] = nHistValue * Colors[nColorID][0]; 
-						g_ucDepthBuffer[1] = nHistValue * Colors[nColorID][1];
-						g_ucDepthBuffer[2] = nHistValue * Colors[nColorID][2];
-						g_ucDepthBuffer[3] = 0xFF;
-					}
-				}
-				pDepth++;
-				pLabels++;
-				g_ucDepthBuffer+=4;
-			}
-		}
-	}
+	pthread_mutex_lock(&mutex);
+	g_Connected = 0;
+	pthread_mutex_unlock(&mutex);
 }
 
-void getRGB(unsigned char* g_ucImageBuffer)
+void playServerThread()
 {
-	ImageMetaData imd;
-	g_ImageGenerator.GetMetaData(imd);
-
-	unsigned int nValue = 0;
-	unsigned int nX = 0;
-	unsigned int nY = 0;
-	XnUInt16 g_nXRes = imd.XRes();
-	XnUInt16 g_nYRes = imd.YRes();
-
-	const XnRGB24Pixel * pImageMap = g_ImageGenerator.GetRGB24ImageMap();
-	for (nY=0; nY<g_nYRes; nY++) 
-	{
-		for (nX=0; nX < g_nXRes; nX++) 
-		{
-			((unsigned char*)g_ucImageBuffer)[(nY*g_nXRes+nX)*4+0] = pImageMap[nY*g_nXRes+nX].nBlue;
-			((unsigned char*)g_ucImageBuffer)[(nY*g_nXRes+nX)*4+1] = pImageMap[nY*g_nXRes+nX].nGreen;
-	        ((unsigned char*)g_ucImageBuffer)[(nY*g_nXRes+nX)*4+2] = pImageMap[nY*g_nXRes+nX].nRed;
-			((unsigned char*)g_ucImageBuffer)[(nY*g_nXRes+nX)*4+3] = 0x00;
-		}
-	}
+	pthread_mutex_lock(&mutex);
+	g_Connected = 1;
+	pthread_cond_signal(&cond);
+	pthread_mutex_unlock(&mutex);
 }
 
 void *serverData(void *arg) 
 {
-	printf("AS3OpenNI-Bridge :: Server Running\n");
+	pthread_mutex_lock(&mutex);
+	int len = 8*10;
+	unsigned char *buff = (unsigned char*)malloc(len); // Command buffer
 	while(g_Connected)
 	{
-		int len = 8*10;
-		unsigned char *buff = (unsigned char*)malloc(len); // Command buffer
-		while(g_Connected)
+		len = g_AS3Network.getData(buff, 1024);
+		if(len > 0 && len % 6 == 0)
 		{
-			len = g_AS3Network.getData(buff, 1024);
-			if(len > 0 && len % 6 == 0)
-			{
-				// Get the number of commands received.
-				int max = len / 6;
-				int i;
+			// Get the number of commands received.
+			int max = len / 6;
+			int i;
 				
-				// For each command received.
-				for(i = 0; i < max; i++)
+			// For each command received.
+			for(i = 0; i < max; i++)
+			{
+				int code = buff[0 + (i*6)];
+				switch(code)
 				{
-					int code = buff[0 + (i*6)];
-					switch(code)
-					{
-						case 1: // OPENNI
-							switch(buff[1 + (i*6)])
-							{
-								case 0: // GET DEPTH
-									g_AS3Network.sendMessage(1,0,g_ucDepthBuffer,sizeof(g_ucDepthBuffer));
-								break;
+					case 1: // OPENNI
+						switch(buff[1 + (i*6)])
+						{
+							case 0: // GET DEPTH
+								g_AS3Network.sendMessage(1,0,g_ucDepthBuffer,sizeof(g_ucDepthBuffer));
+							break;
 								
-								case 1: // GET RGB
-									g_AS3Network.sendMessage(1,1,g_ucImageBuffer,sizeof(g_ucImageBuffer));
-								break;
+							case 1: // GET RGB
+								g_AS3Network.sendMessage(1,1,g_ucImageBuffer,sizeof(g_ucImageBuffer));
+							break;
 								
-								case 2: // GET SKEL
-									// Abstract for now.
-								break;
-							}
-						break;
-					}
+							case 2: // GET SKEL
+								// Abstract for now.
+							break;
+						}
+					break;
 				}
 			}
 		}
 	}
-
+	pthread_mutex_unlock(&mutex);
 	return 0;
 }
 
 void setupServer() 
 {
 	printf("AS3OpenNI-Bridge :: Server Connected\n");
-	g_Connected = 1;
 	if (pthread_create(&g_ServerThread, NULL, &serverData, NULL)) 
 	{
 		fprintf(stderr, "AS3OpenNI-Bridge :: Error on pthread_create() for the server\n");
 	}
 	g_AS3Network.sendMessage(0,0,0);
+
+	// Start thread.
+	playServerThread();
 }
 
 int main(int argc, char *argv[])
@@ -381,23 +271,20 @@ int main(int argc, char *argv[])
 	
 	// Start generating all.
 	g_Context.StartGeneratingAll();
-	
+
 	// Set the frame rate.
 	g_Status = xnFPSInit(&xnFPS, 180);
 	CHECK_RC(g_Status, "FPS Init");
-	
+
 	// Let Flash know the server is ready.
-	g_AS3Network.sendMessage(0,1,0);
+	if(g_bUseSockets) g_AS3Network.sendMessage(0,1,0);
 	
 	while(!g_Exit)
 	{
-		if(!g_bPause) 
-		{
-			g_Context.WaitAndUpdateAll();
-			xnFPSMarkFrame(&xnFPS);
-			if(g_bFeatureDepthMapCapture) getDepthMap(g_ucDepthBuffer);
-			if(g_bFeatureRGBCapture) getRGB(g_ucImageBuffer);
-		}
+		g_Context.WaitAndUpdateAll();
+		xnFPSMarkFrame(&xnFPS);
+		if(g_bFeatureDepthMapCapture) g_Capture.getDepthMap(g_ucDepthBuffer);
+		if(g_bFeatureRGBCapture) g_Capture.getRGB(g_ucImageBuffer);
 	}
 	
 	CleanupExit();
