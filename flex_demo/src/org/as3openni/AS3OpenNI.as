@@ -143,9 +143,8 @@ package org.as3openni
 				var second:Number = event.data.second as Number;
 				var buffer:ByteArray = event.data.buffer as ByteArray;
 				
-				/*trace('First: ' + event.data.first);
+				trace('First: ' + event.data.first);
 				trace('Second: ' + event.data.second);
-				trace('Buffer: ' + event.data.buffer);*/
 				
 				switch(first)
 				{
