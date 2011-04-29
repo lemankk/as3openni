@@ -188,14 +188,14 @@ package org.as3openni
 									this.pauseBuffers = true;
 									var userId:Number = buffer.readInt();
 									trace('New User Found: ' + userId);
-									setTimeout(this.resumeBuffers, 500);
+									setTimeout(this.resumeBuffers, 100);
 									break;
 								
 								case Definitions.OPENNI_USER_LOST:
 									this.pauseBuffers = true;
 									var lostUserId:Number = buffer.readInt();
 									trace('User Lost: ' + lostUserId);
-									setTimeout(this.resumeBuffers, 500);
+									setTimeout(this.resumeBuffers, 100);
 									break;
 								
 								case Definitions.OPENNI_GET_SKEL:
