@@ -62,6 +62,7 @@ package org.as3openni
 		
 		private var bridgeReady:Boolean = false;
 		private var clientReady:Boolean = false;
+		private var pauseBuffers:Boolean = false;
 		private var bridge:NativeProcess;
 		private var clientSocket:ClientSocket;
 		private var videoBuffer:VideoBuffer;
@@ -97,14 +98,12 @@ package org.as3openni
 		
 		public function getVideoBuffer():void
 		{
-			if(this.isReady() && this.video) this.videoBuffer.getBuffer();
-			else throw new Error(Definitions.AS3OPENNI_LABEL + 'Video feature not available.');
+			if(this.isReady() && this.video && !this.pauseBuffers) this.videoBuffer.getBuffer();
 		}
 		
 		public function getDepthBuffer():void
 		{
-			if(this.isReady() && this.depthMap) this.depthBuffer.getBuffer();
-			else throw new Error(Definitions.AS3OPENNI_LABEL + 'DepthMap feature not available.');
+			if(this.isReady() && this.depthMap && !this.pauseBuffers) this.depthBuffer.getBuffer();
 		}
 		
 		public function isReady():Boolean
@@ -186,13 +185,17 @@ package org.as3openni
 									break;
 								
 								case Definitions.OPENNI_NEW_USER:
+									this.pauseBuffers = true;
 									var userId:Number = buffer.readInt();
 									trace('New User Found: ' + userId);
+									setTimeout(this.resumeBuffers, 500);
 									break;
 								
 								case Definitions.OPENNI_USER_LOST:
+									this.pauseBuffers = true;
 									var lostUserId:Number = buffer.readInt();
 									trace('User Lost: ' + lostUserId);
+									setTimeout(this.resumeBuffers, 500);
 									break;
 								
 								case Definitions.OPENNI_GET_SKEL:
@@ -204,6 +207,11 @@ package org.as3openni
 						break;
 				}
 			}
+		}
+		
+		protected function resumeBuffers():void
+		{
+			this.pauseBuffers = false;
 		}
 		
 		protected function onClientSocketConnected(event:ClientSocketEvent):void

@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- REMEMBER ON THE PC, SET THE FRAMERATE TO 30. ON THE MAC SET IT TO 210. -->
 <mx:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
 						xmlns:mx="library://ns.adobe.com/flex/mx" 
 						layout="absolute"
@@ -7,7 +6,7 @@
 						verticalAlign="top"
 						addedToStage="init(event)"
 						minWidth="800" minHeight="600"
-						frameRate="30"
+						frameRate="210"
 						backgroundGradientColors="[#CCCCCC,#333333]"
 						horizontalScrollPolicy="off"
 						verticalScrollPolicy="off">
@@ -83,6 +82,8 @@
 			
 			protected function onVideo(event:OpenNIEvent):void
 			{
+				this._videoCanvas2.fillRect(this._videoCanvas2.rect, 0);
+				this._videoCanvas.fillRect(this._videoCanvas.rect, 0);
 				var buff:ByteArray = event.data as ByteArray;
 				var buff2:ByteArray = new ByteArray();
 				buff2.writeBytes(buff, 0, buff.bytesAvailable);
@@ -95,6 +96,7 @@
 			
 			protected function onDepth(event:OpenNIEvent):void
 			{
+				this._depthCanvas.fillRect(this._depthCanvas.rect, 0);
 				var buff:ByteArray = event.data as ByteArray;
 				BitmapUtil.byteArrayToBitmapData(buff, this._depthCanvas);
 			}
