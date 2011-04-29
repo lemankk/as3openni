@@ -58,6 +58,7 @@ package org.as3openni
 		public var depthMap:Boolean = false;
 		public var depthMapBackground:Boolean = false;
 		public var mirrorModeOff:Boolean = false;
+		public var userTracking:Boolean = false;
 		
 		private var bridgeReady:Boolean = false;
 		private var clientReady:Boolean = false;
@@ -96,26 +97,14 @@ package org.as3openni
 		
 		public function getVideoBuffer():void
 		{
-			if(this.isReady() && this.video)
-			{
-				this.videoBuffer.getBuffer();
-			}
-			else
-			{
-				throw new Error(Definitions.AS3OPENNI_LABEL + 'Video feature not available.');
-			}
+			if(this.isReady() && this.video) this.videoBuffer.getBuffer();
+			else throw new Error(Definitions.AS3OPENNI_LABEL + 'Video feature not available.');
 		}
 		
 		public function getDepthBuffer():void
 		{
-			if(this.isReady() && this.depthMap)
-			{
-				this.depthBuffer.getBuffer();
-			}
-			else
-			{
-				throw new Error(Definitions.AS3OPENNI_LABEL + 'DepthMap feature not available.');
-			}
+			if(this.isReady() && this.depthMap) this.depthBuffer.getBuffer();
+			else throw new Error(Definitions.AS3OPENNI_LABEL + 'DepthMap feature not available.');
 		}
 		
 		public function isReady():Boolean
@@ -156,7 +145,8 @@ package org.as3openni
 				var buffer:ByteArray = event.data.buffer as ByteArray;
 				
 				/*trace('First: ' + event.data.first);
-				trace('Second: ' + event.data.second);*/
+				trace('Second: ' + event.data.second);
+				trace('Buffer: ' + event.data.buffer);*/
 				
 				switch(first)
 				{
@@ -193,6 +183,16 @@ package org.as3openni
 										this.dispatchEvent(new OpenNIEvent(OpenNIEvent.ON_VIDEO, buffer));
 										this.videoBuffer.busy = false;
 									}
+									break;
+								
+								case Definitions.OPENNI_NEW_USER:
+									var userId:Number = buffer.readInt();
+									trace('New User Found: ' + userId);
+									break;
+								
+								case Definitions.OPENNI_USER_LOST:
+									var lostUserId:Number = buffer.readInt();
+									trace('User Lost: ' + lostUserId);
 									break;
 								
 								case Definitions.OPENNI_GET_SKEL:
@@ -237,6 +237,9 @@ package org.as3openni
 			
 			// Continue...
 			var processArgs:Vector.<String> = new Vector.<String>();
+			
+			// Turn on the UserTracking feature.
+			if(this.userTracking) processArgs.push("-outf");
 			
 			// Turn off the mirror mode.
 			if(this.mirrorModeOff) processArgs.push("-mrev");
