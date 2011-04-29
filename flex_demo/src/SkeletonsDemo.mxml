@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- REMEMBER ON THE PC, SET THE FRAMERATE TO 30. ON THE MAC SET IT TO 210. -->
 <mx:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
 						xmlns:mx="library://ns.adobe.com/flex/mx" 
 						layout="absolute"
@@ -7,7 +6,7 @@
 						verticalAlign="top"
 						addedToStage="init(event)"
 						minWidth="800" minHeight="600"
-						frameRate="210"
+						frameRate="180"
 						backgroundGradientColors="[#CCCCCC,#333333]"
 						horizontalScrollPolicy="off"
 						verticalScrollPolicy="off">
@@ -44,10 +43,11 @@
 				{
 					this._as3OpenNI = new AS3OpenNI();
 					this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
-					this._as3OpenNI.binaryPath = '/flexworkspace/AS3OpenNI-Bridge-C++/bin/AS3OpenNI-Bridge';
+					this._as3OpenNI.binaryPath = 'bin/AS3OpenNI-Bridge';
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.video = true;
-					this._as3OpenNI.depthMap = false;
+					this._as3OpenNI.depthMap = true;
+					this._as3OpenNI.depthMapBackground = true;
 					this._as3OpenNI.userTracking = true;
 					this._as3OpenNI.init();
 				}
@@ -67,18 +67,20 @@
 				if(this._as3OpenNI.isReady())
 				{
 					this._as3OpenNI.getVideoBuffer();
-					//this._as3OpenNI.getDepthBuffer();
+					this._as3OpenNI.getDepthBuffer();
 				}
 			}
 			
 			protected function onVideo(event:OpenNIEvent):void
 			{
+				this._videoCanvas.fillRect(this._videoCanvas.rect, 0);
 				var buff:ByteArray = event.data as ByteArray;
 				BitmapUtil.byteArrayToBitmapData(buff, this._videoCanvas);
 			}
 			
 			protected function onDepth(event:OpenNIEvent):void
 			{
+				this._depthCanvas.fillRect(this._depthCanvas.rect, 0);
 				var buff:ByteArray = event.data as ByteArray;
 				BitmapUtil.byteArrayToBitmapData(buff, this._depthCanvas);
 			}
