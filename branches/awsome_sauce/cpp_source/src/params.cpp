@@ -33,14 +33,6 @@ void setupParams(int argc, char *argv[])
 				cout<<"-orgbc || Turn on the RGBCapture feature\n";
 				cout<<"-odmc || Turn on the DepthMapCapture feature\n";
 				cout<<" \n";
-				cout<<"Print Functions:\n";
-				cout<<"-pspf || Print out the SinglePoint events\n";
-				cout<<"-pgf || Print out the Gesture events\n";
-				cout<<"-pcf || Print out the Circle events\n";
-				cout<<"-psldf || Print out the Slider events\n";
-				cout<<"-ptpf || Print out the TrackPad events\n";
-				cout<<"-putf || Print out the UserTracking events\n";
-				cout<<" \n";
 				cout<<"===============================================================\n";
 				cout<<" \n";
 				
@@ -111,13 +103,13 @@ void setupParams(int argc, char *argv[])
 			{
 				_featureTrackPad = true;
 				cout<<"TrackPad feature turned on\n";
-			}
+			}*/
 			
 			if(param == "-outf")
 			{
-				_featureUserTracking = true;
-				cout<<"UserTracking feature turned on\n";
-			}*/
+				g_bFeatureUserTracking = true;
+				cout<<"AS3OpenNI-Bridge :: UserTracking feature turned on\n";
+			}
 			
 			if(param == "-orgbc")
 			{
@@ -130,44 +122,6 @@ void setupParams(int argc, char *argv[])
 				g_bFeatureDepthMapCapture = true;
 				cout<<"AS3OpenNI-Bridge :: DepthMapCapture feature turned on\n";
 			}
-			
-			/*// Print out feature events.
-			if(param == "-pspf")
-			{
-				_printSinglePoint = true;
-				cout<<"SinglePoint events will print out\n";
-			}
-			
-			if(param == "-pgf")
-			{
-				_printGesture = true;
-				cout<<"Gesture events will print out\n";
-			}
-			
-			if(param == "-pcf")
-			{
-				_printCircle = true;
-				cout<<"Circle events will print out\n";
-			}
-			
-			if(param == "-psldf")
-			{
-				_printSlider = true;
-				cout<<"Slider events will print out\n";
-			}
-			
-			if(param == "-ptpf")
-			{
-				_printTrackPad = true;
-				cout<<"TrackPad events will print out\n";
-			}
-			
-			if(param == "-putf")
-			{
-				_printUserTracking = true;
-				cout<<"UserTracking events will print out\n";
-			}
-			*/
 		}
 	}
 }
