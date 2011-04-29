@@ -15,11 +15,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="capture.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="network.cpp" />
     <ClCompile Include="params.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="capture.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="params.h" />
   </ItemGroup>
