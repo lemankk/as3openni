@@ -49,7 +49,7 @@ UserGenerator g_UserGenerator;
 XnLicense g_License;
 XnMapOutputMode g_DepthMode;
 
-
+XnBool g_bPause = FALSE;
 XnBool g_bDrawBackground = FALSE;
 XnBool g_bDrawPixels = TRUE;
 XnBool g_bSnapPixels = TRUE;
@@ -119,7 +119,7 @@ if (_status == XN_STATUS_NO_NODE_PRESENT)	\
 
 void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
-	printf("AS3OpenNI-Bridge :: New User: %d\n", nId);
+	//printf("AS3OpenNI-Bridge :: New User: %d\n", nId);
 	//if(g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
 	//else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
 	g_AS3Network.sendMessage(1,3,nId);
@@ -127,7 +127,7 @@ void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void*
 
 void XN_CALLBACK_TYPE User_LostUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
-	printf("AS3OpenNI-Bridge :: Lost user: %d\n", nId);
+	//printf("AS3OpenNI-Bridge :: Lost user: %d\n", nId);
 	g_AS3Network.sendMessage(1,4,nId);
 }
 
@@ -376,11 +376,6 @@ int main(int argc, char *argv[])
 	{
 		// Setup user generator callbacks.
 		XnCallbackHandle hUserCallbacks, hCalibrationCallbacks, hPoseCallbacks;
-		if (!g_UserGenerator.IsCapabilitySupported(XN_CAPABILITY_SKELETON))
-		{
-			printf("AS3OpenNI-Bridge :: Supplied user generator doesn't support skeleton\n");
-			return 1;
-		}
 		g_UserGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks);
 	}
 	
@@ -396,11 +391,13 @@ int main(int argc, char *argv[])
 	
 	while(!g_Exit)
 	{
-		//printf("Running.\n");
-		g_Context.WaitAndUpdateAll();
-		xnFPSMarkFrame(&xnFPS);
-		if(g_bFeatureDepthMapCapture) getDepthMap(g_ucDepthBuffer);
-		if(g_bFeatureRGBCapture) getRGB(g_ucImageBuffer);
+		if(!g_bPause) 
+		{
+			g_Context.WaitAndUpdateAll();
+			xnFPSMarkFrame(&xnFPS);
+			if(g_bFeatureDepthMapCapture) getDepthMap(g_ucDepthBuffer);
+			if(g_bFeatureRGBCapture) getRGB(g_ucImageBuffer);
+		}
 	}
 	
 	CleanupExit();
