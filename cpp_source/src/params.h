@@ -10,16 +10,8 @@
 //---------------------------------------------------------------------------
 using namespace std;
 
-/*
-// For debugging purposes.
-extern XnBool _printGesture;
-extern XnBool _printCircle;
-extern XnBool _printSlider;
-extern XnBool _printTrackPad;
-extern XnBool _printSinglePoint;
-extern XnBool _printUserTracking;*/
-
 // Toggle on/off features.
+extern XnBool g_bFeatureUserTracking;
 extern XnBool g_bFeatureRGBCapture;
 extern XnBool g_bFeatureDepthMapCapture;
 
