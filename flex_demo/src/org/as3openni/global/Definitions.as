@@ -25,6 +25,8 @@ package org.as3openni.global
 		public static const OPENNI_GET_DEPTH:int = 0;
 		public static const OPENNI_GET_VIDEO:int = 1;
 		public static const OPENNI_GET_SKEL:int = 2;
+		public static const OPENNI_NEW_USER:int = 3;
+		public static const OPENNI_USER_LOST:int = 4;
 		
 		public static const AS3OPENNI_SERVER_INIT:int = 0;
 		public static const AS3OPENNI_SERVER_READY:int = 1;
