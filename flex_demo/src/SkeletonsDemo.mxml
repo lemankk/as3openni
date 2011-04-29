@@ -6,7 +6,7 @@
 						verticalAlign="top"
 						addedToStage="init(event)"
 						minWidth="800" minHeight="600"
-						frameRate="210"
+						frameRate="180"
 						backgroundGradientColors="[#CCCCCC,#333333]"
 						horizontalScrollPolicy="off"
 						verticalScrollPolicy="off">
