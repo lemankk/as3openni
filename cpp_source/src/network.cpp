@@ -1,6 +1,5 @@
 #include "network.h"
 #include <iostream>
-using namespace std;
 
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	SOCKET dataSocket = INVALID_SOCKET;
@@ -259,7 +258,7 @@ void network::closeConnection()
 	g_Exit = 1;	
 	#if (XN_PLATFORM == XN_PLATFORM_WIN32)
 		delete [] msg;
-		if (dataSocket != INVALID_SOCKET) closesocket(dataSocket);
+		if(dataSocket != INVALID_SOCKET) closesocket(dataSocket);
 	#else
 		if(dataSocket != 0) close(dataSocket);
 	#endif
