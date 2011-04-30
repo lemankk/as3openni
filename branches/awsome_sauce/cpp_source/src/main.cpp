@@ -329,9 +329,6 @@ void renderSkeleton()
 		free(playerData);
 	}
 	
-	cout<<"Players: "<< g_niPlayers->data->c_str() <<"\n";
-	cout<<"S: "<< sizeof(NIPlayers) <<"\n";
-	
 	int len = sizeof(NIPlayers)*MAX_USERS*375;
 	memcpy(g_ucUsersBuffer, (unsigned char*)g_niPlayers->data->c_str(), len);
 	g_niPlayers->data->clear();
