@@ -71,7 +71,7 @@ XnChar g_sPose[20] = "";
 
 unsigned char g_ucDepthBuffer[4*640*480];
 unsigned char g_ucImageBuffer[4*640*480];
-unsigned char g_ucUsersBuffer[8*MAX_USERS*375];
+unsigned char g_ucUsersBuffer[MAX_USERS*375];
 
 float g_pDepthHist[MAX_DEPTH];
 pthread_t g_ServerThread;
@@ -329,7 +329,8 @@ void renderSkeleton()
 		free(playerData);
 	}
 	
-	int len = sizeof(NIPlayers)*MAX_USERS*375;
+	//cout<<"Players: "<< g_niPlayers->data->c_str() <<"\n";
+	int len = strlen(g_niPlayers->data->c_str()) + 1;
 	memcpy(g_ucUsersBuffer, (unsigned char*)g_niPlayers->data->c_str(), len);
 	g_niPlayers->data->clear();
 	free(g_niPlayers);
