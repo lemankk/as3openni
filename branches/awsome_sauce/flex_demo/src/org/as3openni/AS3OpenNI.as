@@ -40,6 +40,7 @@ package org.as3openni
 	import flash.utils.setTimeout;
 	
 	import org.as3openni.buffers.DepthBuffer;
+	import org.as3openni.buffers.UserTrackingBuffer;
 	import org.as3openni.buffers.VideoBuffer;
 	import org.as3openni.events.AS3OpenNIEvent;
 	import org.as3openni.events.ClientSocketEvent;
@@ -60,13 +61,13 @@ package org.as3openni
 		public var mirrorModeOff:Boolean = false;
 		public var userTracking:Boolean = false;
 		
-		private var bridgeReady:Boolean = false;
-		private var clientReady:Boolean = false;
-		private var pauseBuffers:Boolean = false;
-		private var bridge:NativeProcess;
-		private var clientSocket:ClientSocket;
-		private var videoBuffer:VideoBuffer;
-		private var depthBuffer:DepthBuffer;
+		private var _bridgeReady:Boolean = false;
+		private var _clientReady:Boolean = false;
+		private var _bridge:NativeProcess;
+		private var _clientSocket:ClientSocket;
+		private var _videoBuffer:VideoBuffer;
+		private var _depthBuffer:DepthBuffer;
+		private var _userTrackingBuffer:UserTrackingBuffer;
 		
 		/**
 		 * AS3OpenNI - Constructor.
@@ -84,7 +85,7 @@ package org.as3openni
 			{
 				if(this.binaryPath.length > 0)
 				{
-					// Startup the AS3OpenNI bridge.
+					// Startup the AS3OpenNI _bridge.
 					this.startupBridge();
 					
 					// Add required listeners.
@@ -98,17 +99,22 @@ package org.as3openni
 		
 		public function getVideoBuffer():void
 		{
-			if(this.isReady() && this.video && !this.pauseBuffers) this.videoBuffer.getBuffer();
+			if(this.isReady() && this.video) this._videoBuffer.getBuffer();
 		}
 		
 		public function getDepthBuffer():void
 		{
-			if(this.isReady() && this.depthMap && !this.pauseBuffers) this.depthBuffer.getBuffer();
+			if(this.isReady() && this.depthMap) this._depthBuffer.getBuffer();
+		}
+		
+		public function getUserTrackingBuffer():void
+		{
+			if(this.isReady() && this.userTracking) this._userTrackingBuffer.getBuffer();
 		}
 		
 		public function isReady():Boolean
 		{
-			return (this.clientReady && this.bridgeReady) ? true : false;
+			return (this._clientReady && this._bridgeReady) ? true : false;
 		}
 		
 		/**
@@ -116,35 +122,35 @@ package org.as3openni
 		 */
 		protected function setupFeatures():void
 		{
-			if(this.clientReady && this.bridgeReady)
+			if(this._clientReady && this._bridgeReady)
 			{
 				// Setup the video buffer.
-				if(this.video) this.videoBuffer = new VideoBuffer(this.clientSocket);
+				if(this.video) this._videoBuffer = new VideoBuffer(this._clientSocket);
 				
 				// Setup the depth map buffer.
-				if(this.depthMap) this.depthBuffer = new DepthBuffer(this.clientSocket);
+				if(this.depthMap) this._depthBuffer = new DepthBuffer(this._clientSocket);
+				
+				// Setup the user tracking buffer.
+				if(this.userTracking) this._userTrackingBuffer = new UserTrackingBuffer(this._clientSocket);
 			}
 		}
 		
 		protected function setupClientSocket():void
 		{
-			this.clientSocket = new ClientSocket();
-			this.clientSocket.addEventListener(ClientSocketEvent.ON_DATA, onDataReceived);
-			this.clientSocket.addEventListener(ClientSocketEvent.ON_ERROR, onClientSocketError);
-			this.clientSocket.addEventListener(ClientSocketEvent.ON_CONNECT, onClientSocketConnected);
-			this.clientSocket.connect();
+			this._clientSocket = new ClientSocket();
+			this._clientSocket.addEventListener(ClientSocketEvent.ON_DATA, onDataReceived);
+			this._clientSocket.addEventListener(ClientSocketEvent.ON_ERROR, onClientSocketError);
+			this._clientSocket.addEventListener(ClientSocketEvent.ON_CONNECT, onClientSocketConnected);
+			this._clientSocket.connect();
 		}
 		
 		protected function onDataReceived(event:ClientSocketEvent):void
 		{
-			if(this.clientReady)
+			if(this._clientReady)
 			{
 				var first:Number = event.data.first as Number;
 				var second:Number = event.data.second as Number;
 				var buffer:ByteArray = event.data.buffer as ByteArray;
-				
-				/*trace('First: ' + event.data.first);
-				trace('Second: ' + event.data.second);*/
 				
 				switch(first)
 				{
@@ -156,7 +162,7 @@ package org.as3openni
 									break;
 								
 								case Definitions.AS3OPENNI_SERVER_READY:
-									this.bridgeReady = true;
+									this._bridgeReady = true;
 									this.setupFeatures();
 									this.log(Definitions.BRIDGE_READY);
 									this.dispatchEvent(new AS3OpenNIEvent(AS3OpenNIEvent.READY));
@@ -168,36 +174,18 @@ package org.as3openni
 							switch(second)
 							{
 								case Definitions.OPENNI_GET_DEPTH:
-									if(this.depthMap) 
-									{
-										this.dispatchEvent(new OpenNIEvent(OpenNIEvent.ON_DEPTH, buffer));
-										this.depthBuffer.busy = false;
-									}
+									this.dispatchEvent(new OpenNIEvent(OpenNIEvent.ON_DEPTH, buffer));
+									this._depthBuffer.busy = false;
 									break;
 								
 								case Definitions.OPENNI_GET_VIDEO:
-									if(this.video) 
-									{
-										this.dispatchEvent(new OpenNIEvent(OpenNIEvent.ON_VIDEO, buffer));
-										this.videoBuffer.busy = false;
-									}
+									this.dispatchEvent(new OpenNIEvent(OpenNIEvent.ON_VIDEO, buffer));
+									this._videoBuffer.busy = false;
 									break;
 								
-								case Definitions.OPENNI_NEW_USER:
-									this.pauseBuffers = true;
-									var userId:Number = buffer.readInt();
-									trace('New User Found: ' + userId);
-									setTimeout(this.resumeBuffers, 100);
-									break;
-								
-								case Definitions.OPENNI_USER_LOST:
-									this.pauseBuffers = true;
-									var lostUserId:Number = buffer.readInt();
-									trace('User Lost: ' + lostUserId);
-									setTimeout(this.resumeBuffers, 100);
-									break;
-								
-								case Definitions.OPENNI_GET_SKEL:
+								case Definitions.OPENNI_GET_USERS:
+									this.dispatchEvent(new OpenNIEvent(OpenNIEvent.ON_USERS, buffer));
+									this._userTrackingBuffer.busy = false;
 									break;
 							}
 						break;
@@ -208,14 +196,9 @@ package org.as3openni
 			}
 		}
 		
-		protected function resumeBuffers():void
-		{
-			this.pauseBuffers = false;
-		}
-		
 		protected function onClientSocketConnected(event:ClientSocketEvent):void
 		{
-			this.clientReady = true;
+			this._clientReady = true;
 			this.log(Definitions.CLIENT_SOCKET_CONNECTED);
 			this.dispatchEvent(new ClientSocketEvent(event.type, event.data));
 		}
@@ -267,10 +250,10 @@ package org.as3openni
 			startupInfo.arguments = processArgs;
 			startupInfo.executable = file;
 			
-			// Startup the bridge.
-			this.bridge = new NativeProcess();
-			this.bridge.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onOutputData);
-			this.bridge.start(startupInfo);
+			// Startup the _bridge.
+			this._bridge = new NativeProcess();
+			this._bridge.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onOutputData);
+			this._bridge.start(startupInfo);
 		}
 		
 		/**
@@ -279,45 +262,45 @@ package org.as3openni
 		protected function addListeners():void
 		{
 			NativeApplication.nativeApplication.addEventListener(Event.EXITING, this.onClose);
-			this.bridge.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onOutputData);
-			this.bridge.addEventListener(ProgressEvent.STANDARD_ERROR_DATA, this.onErrorData);
-			this.bridge.addEventListener(NativeProcessExitEvent.EXIT, this.onExit);
+			this._bridge.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onOutputData);
+			this._bridge.addEventListener(ProgressEvent.STANDARD_ERROR_DATA, this.onErrorData);
+			this._bridge.addEventListener(NativeProcessExitEvent.EXIT, this.onExit);
 		}
 		
 		protected function onClose(event:Event):void
 		{
 			this.dispatchEvent(new Event(event.type, event.bubbles, event.cancelable));
-			if(this.bridge) this.bridge.exit(true);
+			if(this._bridge) this._bridge.exit(true);
 		}
 		
 		protected function onOutputData(event:ProgressEvent):void
 		{
 			this.dispatchEvent(new ProgressEvent(event.type, event.bubbles, event.cancelable, event.bytesLoaded, event.bytesTotal));
-			var msg:String = this.bridge.standardOutput.readMultiByte(this.bridge.standardOutput.bytesAvailable, File.systemCharset);
+			var msg:String = this._bridge.standardOutput.readMultiByte(this._bridge.standardOutput.bytesAvailable, File.systemCharset);
 			this.log(msg);
 		}
 		
 		protected function onErrorData(event:ProgressEvent):void
 		{
 			this.dispatchEvent(new ProgressEvent(event.type, event.bubbles, event.cancelable, event.bytesLoaded, event.bytesTotal));
-			if(this.bridge)
+			if(this._bridge)
 			{
-				var ba:Number = this.bridge.standardOutput.bytesAvailable;
+				var ba:Number = this._bridge.standardOutput.bytesAvailable;
 				if(ba > 0) 
 				{
-					var msg:String = this.bridge.standardError.readMultiByte(ba, File.systemCharset);
+					var msg:String = this._bridge.standardError.readMultiByte(ba, File.systemCharset);
 					this.log(msg);
 				}
-				this.bridge.closeInput();
+				this._bridge.closeInput();
 			}
 		}
 		
 		protected function onExit(event:NativeProcessExitEvent):void
 		{
-			this.bridgeReady = false;
-			this.clientReady = false;
+			this._bridgeReady = false;
+			this._clientReady = false;
 			this.dispatchEvent(new NativeProcessExitEvent(event.type, event.bubbles, event.cancelable, event.exitCode));
-			if(this.clientSocket && this.clientSocket.connected) this.clientSocket.close();
+			if(this._clientSocket && this._clientSocket.connected) this._clientSocket.close();
 		}
 		
 		protected function log(msg:String):void

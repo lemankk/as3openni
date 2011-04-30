@@ -47,7 +47,7 @@
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.video = true;
 					this._as3OpenNI.depthMap = true;
-					this._as3OpenNI.depthMapBackground = true;
+					this._as3OpenNI.depthMapBackground = false;
 					this._as3OpenNI.userTracking = true;
 					this._as3OpenNI.init();
 				}
@@ -60,6 +60,7 @@
 				
 				this._as3OpenNI.addEventListener(OpenNIEvent.ON_VIDEO, onVideo);
 				this._as3OpenNI.addEventListener(OpenNIEvent.ON_DEPTH, onDepth);
+				this._as3OpenNI.addEventListener(OpenNIEvent.ON_USERS, onUsers);
 			}
 			
 			protected function onRender(event:Event):void
@@ -68,6 +69,7 @@
 				{
 					this._as3OpenNI.getVideoBuffer();
 					this._as3OpenNI.getDepthBuffer();
+					this._as3OpenNI.getUserTrackingBuffer();
 				}
 			}
 			
@@ -83,6 +85,13 @@
 				this._depthCanvas.fillRect(this._depthCanvas.rect, 0);
 				var buff:ByteArray = event.data as ByteArray;
 				BitmapUtil.byteArrayToBitmapData(buff, this._depthCanvas);
+			}
+			
+			protected function onUsers(event:OpenNIEvent):void
+			{
+				var buff:ByteArray = event.data as ByteArray;
+				var usersData:String = buff.readUTFBytes(buff.bytesAvailable);
+				trace('Users: ' + usersData);
 			}
 		]]>
 	</fx:Script>
