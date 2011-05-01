@@ -6,19 +6,20 @@
 						verticalAlign="top"
 						addedToStage="init(event)"
 						minWidth="800" minHeight="600"
-						frameRate="180"
+						frameRate="60"
 						backgroundGradientColors="[#CCCCCC,#333333]"
 						horizontalScrollPolicy="off"
 						verticalScrollPolicy="off">
 	<fx:Script>
 		<![CDATA[
-			
 			import flash.filters.BlurFilter;
 			
 			import org.as3openni.AS3OpenNI;
 			import org.as3openni.events.AS3OpenNIEvent;
 			import org.as3openni.events.OpenNIEvent;
+			import org.as3openni.events.UserTrackingEvent;
 			import org.as3openni.global.Definitions;
+			import org.as3openni.objects.NiPoint3D;
 			import org.as3openni.util.BitmapUtil;
 			
 			private var _flexUIOnly:Boolean = false;
@@ -60,16 +61,16 @@
 				
 				this._as3OpenNI.addEventListener(OpenNIEvent.ON_VIDEO, onVideo);
 				this._as3OpenNI.addEventListener(OpenNIEvent.ON_DEPTH, onDepth);
-				this._as3OpenNI.addEventListener(OpenNIEvent.ON_USERS, onUsers);
+				this._as3OpenNI.addEventListener(UserTrackingEvent.USER_FOUND, onUsers);
 			}
 			
 			protected function onRender(event:Event):void
 			{
 				if(this._as3OpenNI.isReady())
 				{
+					this._as3OpenNI.getUserTrackingBuffer();
 					this._as3OpenNI.getVideoBuffer();
 					this._as3OpenNI.getDepthBuffer();
-					this._as3OpenNI.getUserTrackingBuffer();
 				}
 			}
 			
@@ -87,11 +88,11 @@
 				BitmapUtil.byteArrayToBitmapData(buff, this._depthCanvas);
 			}
 			
-			protected function onUsers(event:OpenNIEvent):void
+			protected function onUsers(event:UserTrackingEvent):void
 			{
-				var buff:ByteArray = event.data as ByteArray;
-				var usersData:String = buff.readUTFBytes(buff.bytesAvailable);
-				trace('Users: ' + usersData);
+				var userId:uint = event.userId;
+				var point3D:NiPoint3D = event.point3d;
+				//trace('User: ' + userId + ', ' + point3D.toString());
 			}
 		]]>
 	</fx:Script>
