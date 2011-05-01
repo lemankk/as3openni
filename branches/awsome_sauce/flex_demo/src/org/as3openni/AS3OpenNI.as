@@ -45,7 +45,9 @@ package org.as3openni
 	import org.as3openni.events.AS3OpenNIEvent;
 	import org.as3openni.events.ClientSocketEvent;
 	import org.as3openni.events.OpenNIEvent;
+	import org.as3openni.events.UserTrackingEvent;
 	import org.as3openni.global.Definitions;
+	import org.as3openni.objects.NiPoint3D;
 	import org.as3openni.util.ClientSocket;
 	
 	public class AS3OpenNI extends EventDispatcher
@@ -152,6 +154,9 @@ package org.as3openni
 				var second:Number = event.data.second as Number;
 				var buffer:ByteArray = event.data.buffer as ByteArray;
 				
+				//trace('f: ' + first);
+				//trace('s: ' + second);
+				
 				switch(first)
 				{
 					case Definitions.AS3OPENNI_ID:
@@ -184,7 +189,27 @@ package org.as3openni
 									break;
 								
 								case Definitions.OPENNI_GET_USERS:
-									this.dispatchEvent(new OpenNIEvent(OpenNIEvent.ON_USERS, buffer));
+									var userId:uint = buffer.readInt();
+									var flag:uint = buffer.readInt();
+									var flag2:uint = buffer.readInt();
+									var flag3:uint = buffer.readInt();
+									
+									// If a user has been found.
+									if(flag == Definitions.OPENNI_USER_FOUND)
+									{
+										var point3d:NiPoint3D = new NiPoint3D();
+										point3d.x = buffer.readFloat();
+										point3d.y = buffer.readFloat();
+										point3d.z = buffer.readFloat();
+										this.dispatchEvent(new UserTrackingEvent(UserTrackingEvent.USER_FOUND, userId, point3d));
+									}
+									
+									// If a user is being tracked.
+									/*if(flag == Definitions.OPENNI_USER_TRACKED)
+									{
+										// Abstract.
+									}*/
+									
 									this._userTrackingBuffer.busy = false;
 									break;
 							}

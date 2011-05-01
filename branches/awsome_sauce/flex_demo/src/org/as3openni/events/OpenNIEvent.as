@@ -6,8 +6,6 @@ package org.as3openni.events
 	{
 		public static const ON_VIDEO:String = "onVideo";
 		public static const ON_DEPTH:String = "onDepth";
-		public static const ON_USERS:String = "onUsers";
-		public static const ON_SKELETON:String = "onSkeleton";
 		
 		public var data:*;
 		public function OpenNIEvent(type:String, data:*)
