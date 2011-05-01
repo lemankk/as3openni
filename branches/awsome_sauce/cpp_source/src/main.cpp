@@ -16,6 +16,7 @@
 #include <XnCodecIDs.h>
 #include <XnCppWrapper.h>
 #include <XnFPSCalculator.h>
+#include <XnVSessionManager.h>
 #include <XnOS.h>
 
 #include <stdio.h>
@@ -30,6 +31,7 @@
 
 #include "network.h"
 #include "params.h"
+#include "skeleton.h"
 
 //---------------------------------------------------------------------------
 // Namespaces
@@ -41,20 +43,23 @@ using namespace std;
 // Definitions
 //---------------------------------------------------------------------------
 #define MAX_DEPTH 10000
-#define SKEL_FORMAT "user_tracking:%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f||"
-#define COM_FORMAT "user_found:%d,%f,%f,%f||"
+#define SKEL_FORMAT "user_tracking:%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f"
+#define COM_FORMAT "user_found:%d,%f,%f,%f"
 #define MAX_USERS 15
 
 //---------------------------------------------------------------------------
 // Globals
 //---------------------------------------------------------------------------
 Context g_Context;
+HandsGenerator g_Hands;
+GestureGenerator g_Gesture;
 DepthGenerator g_DepthGenerator;
 ImageGenerator g_ImageGenerator;
 UserGenerator g_UserGenerator;
 SceneMetaData g_SceneData;
 XnLicense g_License;
 XnMapOutputMode g_DepthMode;
+XnVSessionManager* g_SessionManager;
 
 XnBool g_bDrawBackground = FALSE;
 XnBool g_bDrawPixels = TRUE;
@@ -71,11 +76,10 @@ XnChar g_sPose[20] = "";
 
 unsigned char g_ucDepthBuffer[4*640*480];
 unsigned char g_ucImageBuffer[4*640*480];
-unsigned char g_ucUsersBuffer[MAX_USERS*375];
+skeleton g_ucUsersBuffer[MAX_USERS];
 
 float g_pDepthHist[MAX_DEPTH];
 pthread_t g_ServerThread;
-pthread_t g_FeaturesThread;
 network g_AS3Network;
 
 int g_Exit = 0;
@@ -98,12 +102,6 @@ XnFloat Colors[][3] =
 };
 XnUInt32 nColors = 10;
 int g_intTrackpadColumns = NULL, g_intTrackpadRows = NULL;
-
-struct NIPlayers
-{
-	string *data;
-};
-NIPlayers *g_niPlayers;
 
 //-----------------------------------------------------------------------------
 // Error Handling
@@ -132,6 +130,8 @@ if (_status == XN_STATUS_NO_NODE_PRESENT)	\
 void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
 	printf("AS3OpenNI-Bridge :: New User: %d\n", nId);
+	g_ucUsersBuffer[nId-1] = skeleton();
+
 	//if(g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
 	//else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
 }
@@ -139,6 +139,7 @@ void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void*
 void XN_CALLBACK_TYPE User_LostUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
 	printf("AS3OpenNI-Bridge :: Lost user: %d\n", nId);
+	//g_ucUsersBuffer[nId-1].~skeleton(); // Causes it to crash, not sure why yet.
 }
 
 //---------------------------------------------------------------------------
@@ -146,6 +147,12 @@ void XN_CALLBACK_TYPE User_LostUser(UserGenerator& generator, XnUserID nId, void
 //---------------------------------------------------------------------------
 void CleanupExit()
 {
+	if (NULL != g_SessionManager)
+	{
+		delete g_SessionManager;
+		g_SessionManager = NULL;
+	}
+
 	g_Context.Shutdown();
 	g_AS3Network.closeConnection();
 	g_Connected = 0;
@@ -154,186 +161,40 @@ void CleanupExit()
 
 void renderSkeleton()
 {	
-	g_niPlayers = (NIPlayers*)malloc(sizeof(NIPlayers)*MAX_USERS*375);
-	g_niPlayers->data = new string();
-	
 	XnUserID aUsers[MAX_USERS];
 	XnUInt16 nUsers = MAX_USERS;
 	g_UserGenerator.GetUsers(aUsers, nUsers);
 	
 	for (int i = 0; i < nUsers; ++i)
 	{
-		char * playerData;
-		int playerLength;
-		XnUserID player;
 		XnPoint3D com;
-		player = aUsers[i];
+		int player = aUsers[i];
+		int index = player-1;
 		g_UserGenerator.GetCoM(player, com);
+		memcpy(g_ucUsersBuffer[index].user_id, &player, 4);
 		
 		// If a user is being tracked then do this.
-		if(g_UserGenerator.GetSkeletonCap().IsTracking(aUsers[i]))
+		if(g_UserGenerator.GetSkeletonCap().IsTracking(player))
 		{
-			XnSkeletonJointPosition head, neck, left_shoulder, left_elbow, left_hand, right_shoulder, right_elbow, right_hand;
-			XnSkeletonJointPosition torso, left_hip, left_knee, left_foot, right_hip, right_knee, right_foot;
-			XnSkeletonJointPosition left_big_hand, right_big_hand;
-			
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_HEAD, head);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_NECK, neck);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_TORSO, torso);
-			
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_SHOULDER, left_shoulder);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_ELBOW, left_elbow);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_HAND, left_hand);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_HAND, left_big_hand);
-			
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_SHOULDER, right_shoulder);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_ELBOW, right_elbow);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_HAND, right_hand);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_HAND, right_big_hand);
-		
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_HIP, left_hip);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_KNEE, left_knee);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_FOOT, left_foot);
-			
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_HIP, right_hip);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_KNEE, right_knee);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_FOOT, right_foot);
-			
-			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-				playerLength = _snprintf
-				(
-					NULL, 0, SKEL_FORMAT, player,
-					head.position.X, head.position.Y, head.position.Z, 
-					neck.position.X, neck.position.Y, neck.position.Z,
-					torso.position.X, torso.position.Y, torso.position.Z,
-					
-					left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-					left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-					left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-					
-					right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-					right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-					right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-					
-					left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-					left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-					left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-					
-					right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-					right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-					right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-				);
-			#else
-				playerLength = snprintf
-				(
-					NULL, 0, SKEL_FORMAT, player,
-					head.position.X, head.position.Y, head.position.Z, 
-					neck.position.X, neck.position.Y, neck.position.Z,
-					torso.position.X, torso.position.Y, torso.position.Z,
-					
-					left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-					left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-					left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-					
-					right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-					right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-					right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-					
-					left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-					left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-					left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-					
-					right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-					right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-					right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-				);
-			#endif
-			
-			// Character object that will store the string.
-			playerData = (char*) malloc((playerLength + 1) * sizeof(char));
-			
-			// Print string in to format.
-			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-				_snprintf
-				(
-					playerData, playerLength, SKEL_FORMAT, player,
-					head.position.X, head.position.Y, head.position.Z, 
-					neck.position.X, neck.position.Y, neck.position.Z,
-					torso.position.X, torso.position.Y, torso.position.Z,
-					
-					left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-					left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-					left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-					
-					right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-					right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-					right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-					
-					left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-					left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-					left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-					
-					right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-					right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-					right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-				);
-			#else
-				snprintf
-				(
-					playerData, playerLength, SKEL_FORMAT, player,
-					head.position.X, head.position.Y, head.position.Z, 
-					neck.position.X, neck.position.Y, neck.position.Z,
-					torso.position.X, torso.position.Y, torso.position.Z,
-					
-					left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z,
-					left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z,
-					left_hand.position.X, left_hand.position.Y, left_hand.position.Z,
-					
-					right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z,
-					right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z,
-					right_hand.position.X, right_hand.position.Y, right_hand.position.Z,
-					
-					left_hip.position.X, left_hip.position.Y, left_hip.position.Z,
-					left_knee.position.X, left_knee.position.Y, left_knee.position.Z,
-					left_foot.position.X, left_foot.position.Y, left_foot.position.Z,
-					
-					right_hip.position.X, right_hip.position.Y, right_hip.position.Z,
-					right_knee.position.X, right_knee.position.Y, right_knee.position.Z,
-					right_foot.position.X, right_foot.position.Y, right_foot.position.Z
-				);
-			#endif
+
 		}
 		// Else, just track the user's center point.
 		else
 		{
-			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-				playerLength = _snprintf(NULL, 0, COM_FORMAT, player, com.X, com.Y, com.Z);
-			#else
-				playerLength = snprintf(NULL, 0, COM_FORMAT, player, com.X, com.Y, com.Z);
-			#endif
-			
-			// Character object that will store the string.
-			playerData = (char*) malloc((playerLength + 1) * sizeof(char));
-			
-			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-				_snprintf(playerData, playerLength, COM_FORMAT, player, com.X, com.Y, com.Z);
-			#else
-				snprintf(playerData, playerLength, COM_FORMAT, player, com.X, com.Y, com.Z);
-			#endif
+			int _flagId = 33;
+			memcpy(g_ucUsersBuffer[index].flag, &_flagId, 4);
+
+			float _x, _y, _z;
+			unsigned char* dest = g_ucUsersBuffer[index].cpoint;
+			_x = com.X;
+			_y = com.Y;
+			_z = com.Z;
+
+			memcpy(dest, &_x, 4);
+			memcpy(dest+4, &_y, 4);
+			memcpy(dest+8, &_z, 4);
 		}
-		
-		// Copy each result over to the buffer.
-		g_niPlayers->data->append(playerData);
-		
-		// Free each player's data memory block.
-		free(playerData);
 	}
-	
-	//cout<<"Players: "<< g_niPlayers->data->c_str() <<"\n";
-	int len = strlen(g_niPlayers->data->c_str()) + 1;
-	memcpy(g_ucUsersBuffer, (unsigned char*)g_niPlayers->data->c_str(), len);
-	g_niPlayers->data->clear();
-	free(g_niPlayers);
 }
 
 void getDepthMap(unsigned char* g_ucDepthBuffer)
@@ -482,9 +343,12 @@ void *serverData(void *arg)
 							break;
 							
 							case 2: // GET USERS
-								if(g_bFeatureUserTracking)
+								if(g_bFeatureUserTracking) 
 								{
-									g_AS3Network.sendMessage(1,2,g_ucUsersBuffer,sizeof(g_ucUsersBuffer));
+									for (int i = 0; i < MAX_USERS; ++i)
+									{
+										g_AS3Network.sendMessage(1,2,g_ucUsersBuffer[i].data,g_ucUsersBuffer[i].size);
+									}
 								}
 							break;
 						}
@@ -570,10 +434,34 @@ int main(int argc, char *argv[])
 		XnCallbackHandle hUserCallbacks, hCalibrationCallbacks, hPoseCallbacks;
 		g_UserGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks);
 	}
-	
+
+	// Create the hands generator.
+	g_Status = g_Hands.Create(g_Context);
+	CHECK_RC(g_Status, "Create hands generator");
+	g_Hands.SetSmoothing(0.1);
+
+	// Create the gesture generator.
+	g_Status = g_Gesture.Create(g_Context);
+	CHECK_RC(g_Status, "Create gesture generator");
+
+	// Create and initialize point tracker
+	g_SessionManager = new XnVSessionManager();
+	g_Status = g_SessionManager->Initialize(&g_Context, "Wave", "RaiseHand");
+	if (g_Status != XN_STATUS_OK)
+	{
+		printf("Couldn't initialize the Session Manager: %s\n", xnGetStatusString(g_Status));
+		CleanupExit();
+	}
+
 	// Start generating all.
 	g_Context.StartGeneratingAll();
 	
+	// Define the image and depth data.
+	DepthMetaData dmd;
+	ImageMetaData imd;
+	g_DepthGenerator.GetMetaData(dmd);
+	g_ImageGenerator.GetMetaData(imd);
+
 	// Set the frame rate.
 	g_Status = xnFPSInit(&xnFPS, 180);
 	CHECK_RC(g_Status, "FPS Init");
@@ -583,8 +471,9 @@ int main(int argc, char *argv[])
 	
 	while(!g_Exit)
 	{
-		g_Context.WaitAndUpdateAll();
 		xnFPSMarkFrame(&xnFPS);
+		g_Context.WaitAndUpdateAll();
+		g_SessionManager->Update(&g_Context);
 		if(g_bFeatureDepthMapCapture) getDepthMap(g_ucDepthBuffer);
 		if(g_bFeatureRGBCapture) getRGB(g_ucImageBuffer);
 		if(g_bFeatureUserTracking) renderSkeleton();
