@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- HEADS UP, ON MAC SET THE FRAME RATE HIGHER FOR BETTER PERFORMANCE -->
 <mx:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
 						xmlns:mx="library://ns.adobe.com/flex/mx" 
 						layout="absolute"
@@ -6,7 +7,7 @@
 						verticalAlign="top"
 						addedToStage="init(event)"
 						minWidth="800" minHeight="600"
-						frameRate="60"
+						frameRate="210"
 						backgroundGradientColors="[#CCCCCC,#333333]"
 						horizontalScrollPolicy="off"
 						verticalScrollPolicy="off">
@@ -48,7 +49,7 @@
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.video = true;
 					this._as3OpenNI.depthMap = true;
-					this._as3OpenNI.depthMapBackground = false;
+					this._as3OpenNI.depthMapBackground = true;
 					this._as3OpenNI.userTracking = true;
 					this._as3OpenNI.init();
 				}
@@ -92,7 +93,7 @@
 			{
 				var userId:uint = event.userId;
 				var point3D:NiPoint3D = event.point3d;
-				//trace('User: ' + userId + ', ' + point3D.toString());
+				trace('User: ' + userId + ', ' + point3D.toString());
 			}
 		]]>
 	</fx:Script>
