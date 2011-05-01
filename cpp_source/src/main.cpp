@@ -132,7 +132,9 @@ if (_status == XN_STATUS_NO_NODE_PRESENT)	\
 void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
 	printf("AS3OpenNI-Bridge :: New User: %d\n", nId);
-	//g_ucUsersBuffer[nId-1] = skeleton();
+	#if (XN_PLATFORM == XN_PLATFORM_WIN32)
+		g_ucUsersBuffer[nId-1] = skeleton();
+	#endif
 
 	//if(g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
 	//else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
@@ -349,7 +351,7 @@ void *serverData(void *arg)
 							case 2: // GET USERS
 								if(g_bFeatureUserTracking) 
 								{
-									g_AS3Network.sendMessage(1,2,g_ucUsersBuffer[0].data,g_ucUsersBuffer[0].size);
+									g_AS3Network.sendMessage(1,2,g_ucUsersBuffer[g_UserSendCnt].data,g_ucUsersBuffer[g_UserSendCnt].size);
 									if(g_UserSendCnt < g_TotalUsers) g_UserSendCnt++;
 									else g_UserSendCnt = 0;
 								}
