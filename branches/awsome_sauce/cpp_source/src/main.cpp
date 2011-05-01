@@ -136,6 +136,8 @@ void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void*
 		g_ucUsersBuffer[nId-1] = skeleton();
 	#endif
 
+	g_AS3Network.sendMessage(0,5,0);
+
 	//if(g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
 	//else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
 	g_TotalUsers++;
@@ -144,7 +146,9 @@ void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void*
 void XN_CALLBACK_TYPE User_LostUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
 	printf("AS3OpenNI-Bridge :: Lost user: %d\n", nId);
-	//g_ucUsersBuffer[nId-1].~skeleton(); // Causes it to crash, not sure why yet.
+	/*#if (XN_PLATFORM == XN_PLATFORM_WIN32)
+		g_ucUsersBuffer[nId-1].~skeleton(); // Causes it to crash, not sure why yet.
+	#endif*/
 	g_TotalUsers--;
 }
 
@@ -352,8 +356,14 @@ void *serverData(void *arg)
 								if(g_bFeatureUserTracking) 
 								{
 									g_AS3Network.sendMessage(1,2,g_ucUsersBuffer[g_UserSendCnt].data,g_ucUsersBuffer[g_UserSendCnt].size);
-									if(g_UserSendCnt < g_TotalUsers) g_UserSendCnt++;
-									else g_UserSendCnt = 0;
+									if(g_UserSendCnt == g_TotalUsers) 
+									{
+										g_UserSendCnt = 0;
+									}
+									else
+									{
+										g_UserSendCnt++;
+									}
 								}
 							break;
 						}
@@ -383,13 +393,6 @@ int main(int argc, char *argv[])
 	
 	// Setup the command line parameters.
 	setupParams(argc, argv);
-	
-	// Setup the socket server.
-	if(g_bUseSockets)
-	{
-		g_AS3Network = network();
-		g_AS3Network.init(setupServer);
-	}
 	
 	// Setup the status.
     XnStatus g_Status = XN_STATUS_OK;
@@ -471,9 +474,13 @@ int main(int argc, char *argv[])
 	g_Status = xnFPSInit(&xnFPS, 180);
 	CHECK_RC(g_Status, "FPS Init");
 	
-	// Let Flash know the server is ready.
-	g_AS3Network.sendMessage(0,1,0);
-	
+	// Setup the socket server.
+	if(g_bUseSockets)
+	{
+		g_AS3Network = network();
+		g_AS3Network.init(setupServer);
+	}
+
 	while(!g_Exit)
 	{
 		xnFPSMarkFrame(&xnFPS);
