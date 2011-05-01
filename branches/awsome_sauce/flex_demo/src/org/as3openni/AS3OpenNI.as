@@ -154,9 +154,6 @@ package org.as3openni
 				var second:Number = event.data.second as Number;
 				var buffer:ByteArray = event.data.buffer as ByteArray;
 				
-				//trace('f: ' + first);
-				//trace('s: ' + second);
-				
 				switch(first)
 				{
 					case Definitions.AS3OPENNI_ID:
