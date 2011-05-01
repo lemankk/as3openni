@@ -94,7 +94,7 @@ package org.as3openni
 					this.addListeners();
 					
 					// Setup the client socket.
-					setTimeout(this.setupClientSocket, 2000);
+					setTimeout(this.setupClientSocket, 6000);
 				}
 			}
 		}
@@ -160,13 +160,9 @@ package org.as3openni
 							switch(second)
 							{
 								case Definitions.AS3OPENNI_SERVER_INIT:
-									this.log(Definitions.BRIDGE_CONNECTED);
-									break;
-								
-								case Definitions.AS3OPENNI_SERVER_READY:
 									this._bridgeReady = true;
 									this.setupFeatures();
-									this.log(Definitions.BRIDGE_READY);
+									this.log(Definitions.BRIDGE_CONNECTED);
 									this.dispatchEvent(new AS3OpenNIEvent(AS3OpenNIEvent.READY));
 									break;
 							}
