@@ -70,7 +70,7 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug2|Win32'">bin\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug2|Win32'">false</LinkIncremental>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(XN_NITE_INCLUDE);$(OPEN_NI_INCLUDE);Deps/include;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Program Files (x86)\Prime Sense\NITE\Include;C:\Program Files (x86)\OpenNI\Include;Deps/include;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug2|Win32'">openni/Include;deps/include;$(IncludePath)</IncludePath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Deps/lib;$(LibraryPath)</LibraryPath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug2|Win32'">$(OPEN_NI_LIB);Deps/lib;$(LibraryPath);</LibraryPath>
@@ -123,7 +123,7 @@
       <AdditionalIncludeDirectories>..\..\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>OpenNI.lib;XnVNITE_1_3_1.lib;pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenNI.lib;XnVNITE.lib;pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>bin/$(Configuration)/$(ProjectName).exe</OutputFile>
       <AdditionalLibraryDirectories>$(OPEN_NI_LIB);$(XN_NITE_LIB);Deps/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
