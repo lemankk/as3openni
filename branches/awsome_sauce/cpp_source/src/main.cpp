@@ -84,6 +84,8 @@ network g_AS3Network;
 
 int g_Exit = 0;
 int g_Connected = 0;
+int g_TotalUsers = 0;
+int g_UserSendCnt = 0;
 
 XnFPSData xnFPS;
 XnFloat Colors[][3] =
@@ -130,16 +132,18 @@ if (_status == XN_STATUS_NO_NODE_PRESENT)	\
 void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
 	printf("AS3OpenNI-Bridge :: New User: %d\n", nId);
-	g_ucUsersBuffer[nId-1] = skeleton();
+	//g_ucUsersBuffer[nId-1] = skeleton();
 
 	//if(g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
 	//else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
+	g_TotalUsers++;
 }
 
 void XN_CALLBACK_TYPE User_LostUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
 	printf("AS3OpenNI-Bridge :: Lost user: %d\n", nId);
 	//g_ucUsersBuffer[nId-1].~skeleton(); // Causes it to crash, not sure why yet.
+	g_TotalUsers--;
 }
 
 //---------------------------------------------------------------------------
@@ -345,10 +349,9 @@ void *serverData(void *arg)
 							case 2: // GET USERS
 								if(g_bFeatureUserTracking) 
 								{
-									for (int i = 0; i < MAX_USERS; ++i)
-									{
-										g_AS3Network.sendMessage(1,2,g_ucUsersBuffer[i].data,g_ucUsersBuffer[i].size);
-									}
+									g_AS3Network.sendMessage(1,2,g_ucUsersBuffer[0].data,g_ucUsersBuffer[0].size);
+									if(g_UserSendCnt < g_TotalUsers) g_UserSendCnt++;
+									else g_UserSendCnt = 0;
 								}
 							break;
 						}
