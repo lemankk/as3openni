@@ -39,15 +39,20 @@ package org.as3openni
 	import flash.utils.ByteArray;
 	import flash.utils.setTimeout;
 	
+	import mx.core.UIComponent;
+	
 	import org.as3openni.buffers.DepthBuffer;
+	import org.as3openni.buffers.SkeletonsBuffer;
 	import org.as3openni.buffers.UserTrackingBuffer;
 	import org.as3openni.buffers.VideoBuffer;
 	import org.as3openni.events.AS3OpenNIEvent;
 	import org.as3openni.events.ClientSocketEvent;
-	import org.as3openni.events.OpenNIEvent;
-	import org.as3openni.events.UserTrackingEvent;
+	import org.as3openni.events.openni.OpenNIEvent;
+	import org.as3openni.events.openni.SkeletonEvent;
+	import org.as3openni.events.openni.UserTrackingEvent;
 	import org.as3openni.global.Definitions;
 	import org.as3openni.objects.NiPoint3D;
+	import org.as3openni.objects.NiSkeleton;
 	import org.as3openni.util.ClientSocket;
 	
 	public class AS3OpenNI extends EventDispatcher
@@ -55,6 +60,7 @@ package org.as3openni
 		public var binaryPath:String = "";
 		public var trackPadColumns:Number = 4;
 		public var trackPadRows:Number = 9;
+		public var waitTime:Number = 8;
 		
 		public var debug:Boolean = false;
 		public var video:Boolean = false;
@@ -70,6 +76,7 @@ package org.as3openni
 		private var _videoBuffer:VideoBuffer;
 		private var _depthBuffer:DepthBuffer;
 		private var _userTrackingBuffer:UserTrackingBuffer;
+		private var _skeletonsBuffer:SkeletonsBuffer;
 		
 		/**
 		 * AS3OpenNI - Constructor.
@@ -94,7 +101,7 @@ package org.as3openni
 					this.addListeners();
 					
 					// Setup the client socket.
-					setTimeout(this.setupClientSocket, 6000);
+					setTimeout(this.setupClientSocket, (this.waitTime*1000));
 				}
 			}
 		}
@@ -112,6 +119,11 @@ package org.as3openni
 		public function getUserTrackingBuffer():void
 		{
 			if(this.isReady() && this.userTracking) this._userTrackingBuffer.getBuffer();
+		}
+		
+		public function getSkeletonsBuffer():void
+		{
+			if(this.isReady() && this.userTracking) this._skeletonsBuffer.getBuffer();
 		}
 		
 		public function isReady():Boolean
@@ -133,7 +145,11 @@ package org.as3openni
 				if(this.depthMap) this._depthBuffer = new DepthBuffer(this._clientSocket);
 				
 				// Setup the user tracking buffer.
-				if(this.userTracking) this._userTrackingBuffer = new UserTrackingBuffer(this._clientSocket);
+				if(this.userTracking) 
+				{
+					this._userTrackingBuffer = new UserTrackingBuffer(this._clientSocket);
+					this._skeletonsBuffer = new SkeletonsBuffer(this._clientSocket);
+				}
 			}
 		}
 		
@@ -181,29 +197,52 @@ package org.as3openni
 									this._videoBuffer.busy = false;
 									break;
 								
+								case Definitions.OPENNI_USER_FOUND:
+									this.dispatchEvent(new OpenNIEvent(OpenNIEvent.USER_FOUND, buffer.readInt()));
+									break;
+								
+								case Definitions.OPENNI_USER_LOST:
+									this.dispatchEvent(new OpenNIEvent(OpenNIEvent.USER_LOST, buffer.readInt()));
+									break;
+								
 								case Definitions.OPENNI_GET_USERS:
 									var userId:uint = buffer.readInt();
-									var flag:uint = buffer.readInt();
-									var flag2:uint = buffer.readInt();
-									var flag3:uint = buffer.readInt();
-									
-									// If a user has been found.
-									if(flag == Definitions.OPENNI_USER_FOUND)
+									if(userId.toString().length < 2 && userId > 0)
 									{
-										var point3d:NiPoint3D = new NiPoint3D();
-										point3d.x = buffer.readFloat();
-										point3d.y = buffer.readFloat();
-										point3d.z = buffer.readFloat();
-										this.dispatchEvent(new UserTrackingEvent(UserTrackingEvent.USER_FOUND, userId, point3d));
+										var userData:NiPoint3D = new NiPoint3D();
+										userData.x = buffer.readFloat();
+										userData.y = buffer.readFloat();
+										userData.z = buffer.readFloat();
+										this.dispatchEvent(new UserTrackingEvent(UserTrackingEvent.USER_TRACKED, userId, userData));
 									}
-									
-									// If a user is being tracked.
-									/*if(flag == Definitions.OPENNI_USER_TRACKED)
-									{
-										// Abstract.
-									}*/
-									
 									this._userTrackingBuffer.busy = false;
+									break;
+								
+								case Definitions.OPENNI_GET_SKELETONS:
+									var skelId:uint = buffer.readInt();
+									if(skelId.toString().length < 2 && skelId > 0)
+									{
+										var skel:NiSkeleton = new NiSkeleton();
+										skel.update(buffer);
+										this.dispatchEvent(new SkeletonEvent(SkeletonEvent.SKELETONS, skelId, skel));
+									}
+									this._skeletonsBuffer.busy = false;
+									break;
+								
+								case Definitions.OPENNI_POSE_DETECTED:
+									this.dispatchEvent(new OpenNIEvent(OpenNIEvent.POSE_DETECTED, buffer.readInt()));
+									break;
+								
+								case Definitions.OPENNI_CALIBRATION_STARTED:
+									this.dispatchEvent(new OpenNIEvent(OpenNIEvent.CALIBRATION_STARTED, buffer.readInt()));
+									break;
+								
+								case Definitions.OPENNI_CALIBRATION_COMPLETE:
+									this.dispatchEvent(new OpenNIEvent(OpenNIEvent.CALIBRATION_COMPLETE, buffer.readInt()));
+									break;
+								
+								case Definitions.OPENNI_CALIBRATION_FAILED:
+									this.dispatchEvent(new OpenNIEvent(OpenNIEvent.CALIBRATION_FAILED, buffer.readInt()));
 									break;
 							}
 						break;
