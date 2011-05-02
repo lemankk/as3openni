@@ -55,7 +55,7 @@ package org.as3openni.objects
 			
 			this.neck.x = bytes.readFloat();
 			this.neck.y = bytes.readFloat();
-			this.head.z = bytes.readFloat();
+			this.neck.z = bytes.readFloat();
 			
 			this.torso.x = bytes.readFloat();
 			this.torso.y = bytes.readFloat();
