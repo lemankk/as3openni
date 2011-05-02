@@ -93,7 +93,7 @@
       </UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>OpenNI.lib;XnVNite_1_3_1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenNI.lib;XnVNite.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../Bin/Release/AS3OpenNI_Alpha_1.0.9.exe</OutputFile>
       <AdditionalLibraryDirectories>$(OPEN_NI_LIB);..\..\Lib;../../Lib/$(Configuration);../../Lib/;..\..\Samples\AS3OpenNI\Libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
