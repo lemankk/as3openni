@@ -16,10 +16,12 @@
 			
 			import org.as3openni.AS3OpenNI;
 			import org.as3openni.events.AS3OpenNIEvent;
-			import org.as3openni.events.OpenNIEvent;
-			import org.as3openni.events.UserTrackingEvent;
+			import org.as3openni.events.openni.OpenNIEvent;
+			import org.as3openni.events.openni.SkeletonEvent;
+			import org.as3openni.events.openni.UserTrackingEvent;
 			import org.as3openni.global.Definitions;
 			import org.as3openni.objects.NiPoint3D;
+			import org.as3openni.objects.NiSkeleton;
 			import org.as3openni.util.BitmapUtil;
 			
 			private var _flexUIOnly:Boolean = false;
@@ -61,13 +63,21 @@
 				
 				this._as3OpenNI.addEventListener(OpenNIEvent.ON_VIDEO, onVideo);
 				this._as3OpenNI.addEventListener(OpenNIEvent.ON_DEPTH, onDepth);
-				this._as3OpenNI.addEventListener(UserTrackingEvent.USER_FOUND, onUsers);
+				this._as3OpenNI.addEventListener(OpenNIEvent.USER_FOUND, onUserFound);
+				this._as3OpenNI.addEventListener(OpenNIEvent.USER_LOST, onUserLost);
+				this._as3OpenNI.addEventListener(OpenNIEvent.POSE_DETECTED, onPoseDetected);
+				this._as3OpenNI.addEventListener(OpenNIEvent.CALIBRATION_STARTED, onCalibStart);
+				this._as3OpenNI.addEventListener(OpenNIEvent.CALIBRATION_COMPLETE, onCalibComplete);
+				this._as3OpenNI.addEventListener(OpenNIEvent.CALIBRATION_FAILED, onCalibFailed);
+				this._as3OpenNI.addEventListener(UserTrackingEvent.USER_TRACKED, onUsersTracked);
+				this._as3OpenNI.addEventListener(SkeletonEvent.SKELETONS, onSkeletons);
 			}
 			
 			protected function onRender(event:Event):void
 			{
 				if(this._as3OpenNI.isReady())
 				{
+					this._as3OpenNI.getSkeletonsBuffer();
 					this._as3OpenNI.getUserTrackingBuffer();
 					this._as3OpenNI.getVideoBuffer();
 					this._as3OpenNI.getDepthBuffer();
@@ -88,11 +98,62 @@
 				BitmapUtil.byteArrayToBitmapData(buff, this._depthCanvas);
 			}
 			
-			protected function onUsers(event:UserTrackingEvent):void
+			protected function onUserFound(event:OpenNIEvent):void
+			{
+				var userId:Number = event.data as Number;
+				trace('User Found: ' + userId);
+			}
+			
+			protected function onUserLost(event:OpenNIEvent):void
+			{
+				var userId:Number = event.data as Number;
+				trace('User Lost: ' + userId);
+			}
+			
+			protected function onPoseDetected(event:OpenNIEvent):void
+			{
+				var userId:Number = event.data as Number;
+				trace('Pose Detected: ' + userId);
+			}
+			
+			protected function onCalibStart(event:OpenNIEvent):void
+			{
+				var userId:Number = event.data as Number;
+				trace('Calibration Started: ' + userId);
+			}
+			
+			protected function onCalibComplete(event:OpenNIEvent):void
+			{
+				var userId:Number = event.data as Number;
+				trace('Calibration Complete: ' + userId);
+			}
+			
+			protected function onCalibFailed(event:OpenNIEvent):void
+			{
+				var userId:Number = event.data as Number;
+				trace('Calibration Failed: ' + userId);
+			}
+			
+			protected function onUsersTracked(event:UserTrackingEvent):void
 			{
 				var userId:uint = event.userId;
 				var point3D:NiPoint3D = event.point3d;
-				trace('User: ' + userId + ', ' + point3D.toString());
+				//trace('User: ' + userId + ', ' + point3D.toString());
+			}
+			
+			protected function onSkeletons(event:SkeletonEvent):void
+			{
+				var userId:uint = event.userId;
+				var skeleton:NiSkeleton = event.skeleton;
+				trace('Head: ' + skeleton.head.toString());
+				trace('Neck: ' + skeleton.neck.toString());
+				trace('Torso: ' + skeleton.torso.toString());
+				trace('L-Shoulder: ' + skeleton.leftShoulder.toString());
+				trace('L-Elbow: ' + skeleton.leftElbow.toString());
+				trace('L-Hand: ' + skeleton.leftHand.toString());
+				trace('R-Shoulder: ' + skeleton.rightShoulder.toString());
+				trace('R-Elbow: ' + skeleton.rightElbow.toString());
+				trace('R-Hand: ' + skeleton.rightHand.toString());
 			}
 		]]>
 	</fx:Script>

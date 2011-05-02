@@ -1,4 +1,4 @@
-package org.as3openni.events
+package org.as3openni.events.openni
 {
 	import flash.events.Event;
 	
@@ -6,7 +6,7 @@ package org.as3openni.events
 	
 	public class UserTrackingEvent extends Event
 	{
-		public static const USER_FOUND:String = "userFound";
+		public static const USER_TRACKED:String = "userTracked";
 		
 		public var userId:uint;
 		public var point3d:NiPoint3D;

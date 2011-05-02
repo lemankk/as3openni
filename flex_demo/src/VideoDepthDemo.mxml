@@ -17,7 +17,7 @@
 			
 			import org.as3openni.AS3OpenNI;
 			import org.as3openni.events.AS3OpenNIEvent;
-			import org.as3openni.events.OpenNIEvent;
+			import org.as3openni.events.openni.OpenNIEvent;
 			import org.as3openni.global.Definitions;
 			import org.as3openni.util.BitmapUtil;
 			
