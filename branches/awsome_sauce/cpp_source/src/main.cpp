@@ -247,12 +247,12 @@ void getPlayers()
 			copyNIData(g_ucSkeletonsBuffer[i].torso, torso.position.X, torso.position.Y, torso.position.Z);
 
 			copyNIData(g_ucSkeletonsBuffer[i].lshoulder, left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].lelbow, left_shoulder.position.X, left_elbow.position.Y, left_elbow.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].lelbow, left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z);
 			copyNIData(g_ucSkeletonsBuffer[i].lhand, left_hand.position.X, left_hand.position.Y, left_hand.position.Z);
 
 			copyNIData(g_ucSkeletonsBuffer[i].rshoulder, right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].relbow, right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].rhand, right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].relbow, right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].rhand, right_hand.position.X, right_hand.position.Y, right_hand.position.Z);
 
 			copyNIData(g_ucSkeletonsBuffer[i].lhip, left_hip.position.X, left_hip.position.Y, left_hip.position.Z);
 			copyNIData(g_ucSkeletonsBuffer[i].lknee, left_knee.position.X, left_knee.position.Y, left_knee.position.Z);
