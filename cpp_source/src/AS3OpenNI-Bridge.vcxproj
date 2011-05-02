@@ -18,12 +18,12 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="network.cpp" />
     <ClCompile Include="params.cpp" />
-    <ClCompile Include="skeleton.cpp" />
+    <ClCompile Include="players.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="network.h" />
     <ClInclude Include="params.h" />
-    <ClInclude Include="skeleton.h" />
+    <ClInclude Include="players.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>AS3OpenNI-Bridge</ProjectName>
