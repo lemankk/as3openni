@@ -144,7 +144,7 @@
 			{
 				var userId:uint = event.userId;
 				var skeleton:NiSkeleton = event.skeleton;
-				trace('Head: ' + skeleton.head.toString());
+				/*trace('Head: ' + skeleton.head.toString());
 				trace('Neck: ' + skeleton.neck.toString());
 				trace('Torso: ' + skeleton.torso.toString());
 				trace('L-Shoulder: ' + skeleton.leftShoulder.toString());
@@ -158,7 +158,7 @@
 				trace('L-Foot: ' + skeleton.leftFoot.toString());
 				trace('R-Hip: ' + skeleton.rightHip.toString());
 				trace('R-Knee: ' + skeleton.rightKnee.toString());
-				trace('R-Foot: ' + skeleton.rightFoot.toString());
+				trace('R-Foot: ' + skeleton.rightFoot.toString());*/
 			}
 		]]>
 	</fx:Script>
