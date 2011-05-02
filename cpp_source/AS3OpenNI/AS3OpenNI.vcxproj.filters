@@ -21,9 +21,6 @@
     <None Include="..\Res\mainicon.ico">
       <Filter>Res</Filter>
     </None>
-    <None Include="..\Res\NITE.APS">
-      <Filter>Res</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Res\NITE.rc">
@@ -41,9 +38,6 @@
     <ClInclude Include="skeleton.h" />
     <ClInclude Include="capture.h" />
     <ClInclude Include="FreeImage.h" />
-    <ClInclude Include="..\Res\Resource-OpenNIModule.h">
-      <Filter>Res</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="Libs\FreeImage.lib">
