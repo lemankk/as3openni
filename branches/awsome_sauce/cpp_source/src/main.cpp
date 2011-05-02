@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
+#include <algorithm>
 
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	#include <pthread/pthread.h>
@@ -31,7 +32,7 @@
 
 #include "network.h"
 #include "params.h"
-#include "skeleton.h"
+#include "players.h"
 
 //---------------------------------------------------------------------------
 // Namespaces
@@ -43,9 +44,7 @@ using namespace std;
 // Definitions
 //---------------------------------------------------------------------------
 #define MAX_DEPTH 10000
-#define SKEL_FORMAT "user_tracking:%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f"
-#define COM_FORMAT "user_found:%d,%f,%f,%f"
-#define MAX_USERS 15
+#define MAX_USERS 5
 
 //---------------------------------------------------------------------------
 // Globals
@@ -76,7 +75,7 @@ XnChar g_sPose[20] = "";
 
 unsigned char g_ucDepthBuffer[4*640*480];
 unsigned char g_ucImageBuffer[4*640*480];
-skeleton g_ucUsersBuffer[MAX_USERS];
+players g_ucPlayersBuffer[MAX_USERS];
 
 float g_pDepthHist[MAX_DEPTH];
 pthread_t g_ServerThread;
@@ -84,8 +83,6 @@ network g_AS3Network;
 
 int g_Exit = 0;
 int g_Connected = 0;
-int g_TotalUsers = 0;
-int g_UserSendCnt = 0;
 
 XnFPSData xnFPS;
 XnFloat Colors[][3] =
@@ -132,24 +129,15 @@ if (_status == XN_STATUS_NO_NODE_PRESENT)	\
 void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
 	printf("AS3OpenNI-Bridge :: New User: %d\n", nId);
-	#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-		g_ucUsersBuffer[nId-1] = skeleton();
-	#endif
-
-	g_AS3Network.sendMessage(0,5,0);
-
+	if(g_bUseSockets) g_AS3Network.sendMessage(1,2,nId);
 	//if(g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
 	//else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
-	g_TotalUsers++;
 }
 
 void XN_CALLBACK_TYPE User_LostUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
 	printf("AS3OpenNI-Bridge :: Lost user: %d\n", nId);
-	/*#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-		g_ucUsersBuffer[nId-1].~skeleton(); // Causes it to crash, not sure why yet.
-	#endif*/
-	g_TotalUsers--;
+	if(g_bUseSockets) g_AS3Network.sendMessage(1,3,nId);
 }
 
 //---------------------------------------------------------------------------
@@ -169,6 +157,13 @@ void CleanupExit()
 	exit(1);
 }
 
+void copyNIData(unsigned char * dest, float x, float y, float z)
+{
+	memcpy(dest, &x, 4);
+	memcpy(dest+4, &y, 4);
+	memcpy(dest+8, &z, 4);
+}
+
 void renderSkeleton()
 {	
 	XnUserID aUsers[MAX_USERS];
@@ -177,32 +172,19 @@ void renderSkeleton()
 	
 	for (int i = 0; i < nUsers; ++i)
 	{
+		XnUserID player;
+		player = aUsers[i];
+
+		// Track each player.
 		XnPoint3D com;
-		int player = aUsers[i];
-		int index = player-1;
 		g_UserGenerator.GetCoM(player, com);
-		memcpy(g_ucUsersBuffer[index].user_id, &player, 4);
-		
+		memcpy(g_ucPlayersBuffer[i].player_id, &player, 4);
+		copyNIData(g_ucPlayersBuffer[i].player_data, com.X, com.Y, com.Z);
+
 		// If a user is being tracked then do this.
 		if(g_UserGenerator.GetSkeletonCap().IsTracking(player))
 		{
 
-		}
-		// Else, just track the user's center point.
-		else
-		{
-			int _flagId = 33;
-			memcpy(g_ucUsersBuffer[index].flag, &_flagId, 4);
-
-			float _x, _y, _z;
-			unsigned char* dest = g_ucUsersBuffer[index].cpoint;
-			_x = com.X;
-			_y = com.Y;
-			_z = com.Z;
-
-			memcpy(dest, &_x, 4);
-			memcpy(dest+4, &_y, 4);
-			memcpy(dest+8, &_z, 4);
 		}
 	}
 }
@@ -352,17 +334,12 @@ void *serverData(void *arg)
 								if(g_bFeatureRGBCapture) g_AS3Network.sendMessage(1,1,g_ucImageBuffer,sizeof(g_ucImageBuffer));
 							break;
 							
-							case 2: // GET USERS
+							case 4: // GET USERS
 								if(g_bFeatureUserTracking) 
 								{
-									g_AS3Network.sendMessage(1,2,g_ucUsersBuffer[g_UserSendCnt].data,g_ucUsersBuffer[g_UserSendCnt].size);
-									if(g_UserSendCnt == g_TotalUsers) 
+									for (int i = 0; i < MAX_USERS; ++i)
 									{
-										g_UserSendCnt = 0;
-									}
-									else
-									{
-										g_UserSendCnt++;
+										g_AS3Network.sendMessage(1,4,g_ucPlayersBuffer[i].data,g_ucPlayersBuffer[i].size);
 									}
 								}
 							break;
