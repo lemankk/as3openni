@@ -33,6 +33,7 @@
 #include "network.h"
 #include "params.h"
 #include "players.h"
+#include "skeletons.h"
 
 //---------------------------------------------------------------------------
 // Namespaces
@@ -76,6 +77,7 @@ XnChar g_sPose[20] = "";
 unsigned char g_ucDepthBuffer[4*640*480];
 unsigned char g_ucImageBuffer[4*640*480];
 players g_ucPlayersBuffer[MAX_USERS];
+skeletons g_ucSkeletonsBuffer[MAX_USERS];
 
 float g_pDepthHist[MAX_DEPTH];
 pthread_t g_ServerThread;
@@ -130,14 +132,45 @@ void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void*
 {
 	printf("AS3OpenNI-Bridge :: New User: %d\n", nId);
 	if(g_bUseSockets) g_AS3Network.sendMessage(1,2,nId);
-	//if(g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
-	//else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
+	if(g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
+	else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
 }
 
 void XN_CALLBACK_TYPE User_LostUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
 	printf("AS3OpenNI-Bridge :: Lost user: %d\n", nId);
 	if(g_bUseSockets) g_AS3Network.sendMessage(1,3,nId);
+}
+
+void XN_CALLBACK_TYPE UserPose_PoseDetected(PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nId, void* pCookie)
+{
+	printf("Pose %s detected for user: %d\n", strPose, nId);
+	g_UserGenerator.GetPoseDetectionCap().StopPoseDetection(nId);
+	g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
+	if(g_bUseSockets) g_AS3Network.sendMessage(1,6,nId);
+}
+
+void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(SkeletonCapability& capability, XnUserID nId, void* pCookie)
+{
+	printf("Calibration started for user: %d\n", nId);
+	if(g_bUseSockets) g_AS3Network.sendMessage(1,7,nId);
+}
+
+void XN_CALLBACK_TYPE UserCalibration_CalibrationEnd(SkeletonCapability& capability, XnUserID nId, XnBool bSuccess, void* pCookie)
+{
+	if (bSuccess)
+	{
+		printf("Calibration complete, start tracking user: %d\n", nId);
+		g_UserGenerator.GetSkeletonCap().StartTracking(nId);
+		if(g_bUseSockets) g_AS3Network.sendMessage(1,8,nId);
+	}
+	else
+	{
+		printf("Calibration failed for user: %d\n", nId);
+		if (g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
+		else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
+		if(g_bUseSockets) g_AS3Network.sendMessage(1,9,nId);
+	}
 }
 
 //---------------------------------------------------------------------------
@@ -164,7 +197,7 @@ void copyNIData(unsigned char * dest, float x, float y, float z)
 	memcpy(dest+8, &z, 4);
 }
 
-void renderSkeleton()
+void getPlayers()
 {	
 	XnUserID aUsers[MAX_USERS];
 	XnUInt16 nUsers = MAX_USERS;
@@ -184,7 +217,50 @@ void renderSkeleton()
 		// If a user is being tracked then do this.
 		if(g_UserGenerator.GetSkeletonCap().IsTracking(player))
 		{
+			memcpy(g_ucSkeletonsBuffer[i].player_id, &player, 4);
 
+			XnSkeletonJointPosition head, neck, left_shoulder, left_elbow, left_hand, right_shoulder, right_elbow, right_hand;
+			XnSkeletonJointPosition torso, left_hip, left_knee, left_foot, right_hip, right_knee, right_foot;
+
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_HEAD, head);
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_NECK, neck);
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_TORSO, torso);
+			
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_SHOULDER, left_shoulder);
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_ELBOW, left_elbow);
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_HAND, left_hand);
+			
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_SHOULDER, right_shoulder);
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_ELBOW, right_elbow);
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_HAND, right_hand);
+		
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_HIP, left_hip);
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_KNEE, left_knee);
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_FOOT, left_foot);
+			
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_HIP, right_hip);
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_KNEE, right_knee);
+			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_FOOT, right_foot);
+
+			copyNIData(g_ucSkeletonsBuffer[i].head, head.position.X, head.position.Y, head.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].neck, neck.position.X, neck.position.Y, neck.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].torso, torso.position.X, torso.position.Y, torso.position.Z);
+
+			copyNIData(g_ucSkeletonsBuffer[i].lshoulder, left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].lelbow, left_shoulder.position.X, left_elbow.position.Y, left_elbow.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].lhand, left_hand.position.X, left_hand.position.Y, left_hand.position.Z);
+
+			copyNIData(g_ucSkeletonsBuffer[i].rshoulder, right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].relbow, right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].rhand, right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z);
+
+			copyNIData(g_ucSkeletonsBuffer[i].lhip, left_hip.position.X, left_hip.position.Y, left_hip.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].lknee, left_knee.position.X, left_knee.position.Y, left_knee.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].lfoot, left_foot.position.X, left_foot.position.Y, left_foot.position.Z);
+
+			copyNIData(g_ucSkeletonsBuffer[i].rhip, right_hip.position.X, right_hip.position.Y, right_hip.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].rknee, right_knee.position.X, right_knee.position.Y, right_knee.position.Z);
+			copyNIData(g_ucSkeletonsBuffer[i].rfoot, right_foot.position.X, right_foot.position.Y, right_foot.position.Z);
 		}
 	}
 }
@@ -343,6 +419,16 @@ void *serverData(void *arg)
 									}
 								}
 							break;
+
+							case 5: // GET SKELETONS
+								if(g_bFeatureUserTracking) 
+								{
+									for (int i = 0; i < MAX_USERS; ++i)
+									{
+										g_AS3Network.sendMessage(1,5,g_ucSkeletonsBuffer[i].data,g_ucSkeletonsBuffer[i].size);
+									}
+								}
+							break;
 						}
 					break;
 				}
@@ -418,6 +504,21 @@ int main(int argc, char *argv[])
 		// Setup user generator callbacks.
 		XnCallbackHandle hUserCallbacks, hCalibrationCallbacks, hPoseCallbacks;
 		g_UserGenerator.RegisterUserCallbacks(User_NewUser, User_LostUser, NULL, hUserCallbacks);
+	
+		// Setup Skeleton detection.
+		g_UserGenerator.GetSkeletonCap().RegisterCalibrationCallbacks(UserCalibration_CalibrationStart, UserCalibration_CalibrationEnd, NULL, hCalibrationCallbacks);
+		if (g_UserGenerator.GetSkeletonCap().NeedPoseForCalibration())
+		{
+			g_bNeedPose = true;
+			if (!g_UserGenerator.IsCapabilitySupported(XN_CAPABILITY_POSE_DETECTION))
+			{
+				printf("Pose required, but not supported\n");
+				return 1;
+			}
+			g_UserGenerator.GetPoseDetectionCap().RegisterToPoseCallbacks(UserPose_PoseDetected, NULL, NULL, hPoseCallbacks);
+			g_UserGenerator.GetSkeletonCap().GetCalibrationPose(g_sPose);
+		}
+		g_UserGenerator.GetSkeletonCap().SetSkeletonProfile(XN_SKEL_PROFILE_ALL);
 	}
 
 	// Create the hands generator.
@@ -465,7 +566,7 @@ int main(int argc, char *argv[])
 		g_SessionManager->Update(&g_Context);
 		if(g_bFeatureDepthMapCapture) getDepthMap(g_ucDepthBuffer);
 		if(g_bFeatureRGBCapture) getRGB(g_ucImageBuffer);
-		if(g_bFeatureUserTracking) renderSkeleton();
+		if(g_bFeatureUserTracking) getPlayers();
 	}
 	
 	CleanupExit();

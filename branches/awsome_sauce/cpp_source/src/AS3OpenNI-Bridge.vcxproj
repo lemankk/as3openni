@@ -19,11 +19,20 @@
     <ClCompile Include="network.cpp" />
     <ClCompile Include="params.cpp" />
     <ClCompile Include="players.cpp" />
+    <ClCompile Include="skeletons.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="network.h" />
     <ClInclude Include="params.h" />
     <ClInclude Include="players.h" />
+    <ClInclude Include="skeletons.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>AS3OpenNI-Bridge</ProjectName>
