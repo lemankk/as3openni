@@ -60,7 +60,6 @@
 			{
 				this.addEventListener(Event.ENTER_FRAME, onRender);
 				this._as3OpenNI.removeEventListener(AS3OpenNIEvent.READY, onReady);
-				
 				this._as3OpenNI.addEventListener(OpenNIEvent.ON_VIDEO, onVideo);
 				this._as3OpenNI.addEventListener(OpenNIEvent.ON_DEPTH, onDepth);
 				this._as3OpenNI.addEventListener(OpenNIEvent.USER_FOUND, onUserFound);
