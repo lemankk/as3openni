@@ -62,6 +62,7 @@ package org.as3openni
 		public var trackPadRows:Number = 9;
 		public var waitTime:Number = 8;
 		
+		public var clientSocketOnly:Boolean = false;
 		public var debug:Boolean = false;
 		public var video:Boolean = false;
 		public var depthMap:Boolean = false;
@@ -94,11 +95,14 @@ package org.as3openni
 			{
 				if(this.binaryPath.length > 0)
 				{
-					// Startup the AS3OpenNI _bridge.
-					this.startupBridge();
-					
-					// Add required listeners.
-					this.addListeners();
+					// Startup the AS3OpenNI-Bridge.
+					if(!this.clientSocketOnly)
+					{
+						this.startupBridge();
+						
+						// Add required listeners.
+						this.addListeners();
+					}
 					
 					// Setup the client socket.
 					setTimeout(this.setupClientSocket, (this.waitTime*1000));
@@ -169,6 +173,8 @@ package org.as3openni
 				var first:Number = event.data.first as Number;
 				var second:Number = event.data.second as Number;
 				var buffer:ByteArray = event.data.buffer as ByteArray;
+				
+				//trace('C: ' + this._clientSocket.connected);
 				
 				switch(first)
 				{
