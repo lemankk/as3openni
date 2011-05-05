@@ -25,7 +25,7 @@ package org.as3openni.util
 				this._data.clear();
 				this.writeBytes();
 				this._data.writeInt(0);
-				if(_socket.sendCommand(this._data) != Definitions.SUCCESS)
+				if(this._socket.sendCommand(this._data) != Definitions.SUCCESS)
 				{
 					throw new Error(Definitions.AS3OPENNI_LABEL + 'Data was not complete');
 				}
