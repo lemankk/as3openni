@@ -16,6 +16,7 @@ extern XnBool g_bFeatureRGBCapture;
 extern XnBool g_bFeatureDepthMapCapture;
 
 // Extra functions.
+extern XnBool g_bPrintOutput;
 extern XnBool g_bMirror;
 extern XnBool g_bDrawBackground;
 extern XnBool g_bUseSockets;
