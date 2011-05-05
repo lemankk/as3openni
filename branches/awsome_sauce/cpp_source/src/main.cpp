@@ -20,6 +20,7 @@
 #include <XnOS.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <iostream>
 #include <algorithm>
@@ -71,6 +72,7 @@ XnBool g_bFeatureUserTracking = FALSE;
 XnBool g_bFeatureRGBCapture = FALSE;
 XnBool g_bFeatureDepthMapCapture = FALSE;
 
+XnBool g_bPrintOutput = FALSE;
 XnBool g_bNeedPose = false;
 XnChar g_sPose[20] = "";
 
@@ -130,7 +132,7 @@ if (_status == XN_STATUS_NO_NODE_PRESENT)	\
 
 void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
-	printf("AS3OpenNI-Bridge :: New User: %d\n", nId);
+	if(g_bPrintOutput) printf("AS3OpenNI-Bridge :: New User: %d\n", nId);
 	if(g_bUseSockets) g_AS3Network.sendMessage(1,2,nId);
 	if(g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
 	else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
@@ -138,13 +140,13 @@ void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void*
 
 void XN_CALLBACK_TYPE User_LostUser(UserGenerator& generator, XnUserID nId, void* pCookie)
 {
-	printf("AS3OpenNI-Bridge :: Lost user: %d\n", nId);
+	if(g_bPrintOutput) printf("AS3OpenNI-Bridge :: Lost user: %d\n", nId);
 	if(g_bUseSockets) g_AS3Network.sendMessage(1,3,nId);
 }
 
 void XN_CALLBACK_TYPE UserPose_PoseDetected(PoseDetectionCapability& capability, const XnChar* strPose, XnUserID nId, void* pCookie)
 {
-	printf("Pose %s detected for user: %d\n", strPose, nId);
+	if(g_bPrintOutput) printf("AS3OpenNI-Bridge :: Pose %s detected for user: %d\n", strPose, nId);
 	g_UserGenerator.GetPoseDetectionCap().StopPoseDetection(nId);
 	g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
 	if(g_bUseSockets) g_AS3Network.sendMessage(1,6,nId);
@@ -152,7 +154,7 @@ void XN_CALLBACK_TYPE UserPose_PoseDetected(PoseDetectionCapability& capability,
 
 void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(SkeletonCapability& capability, XnUserID nId, void* pCookie)
 {
-	printf("Calibration started for user: %d\n", nId);
+	if(g_bPrintOutput) printf("AS3OpenNI-Bridge :: Calibration started for user: %d\n", nId);
 	if(g_bUseSockets) g_AS3Network.sendMessage(1,7,nId);
 }
 
@@ -160,13 +162,13 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationEnd(SkeletonCapability& capabil
 {
 	if (bSuccess)
 	{
-		printf("Calibration complete, start tracking user: %d\n", nId);
+		if(g_bPrintOutput) printf("AS3OpenNI-Bridge :: Calibration complete, start tracking user: %d\n", nId);
 		g_UserGenerator.GetSkeletonCap().StartTracking(nId);
 		if(g_bUseSockets) g_AS3Network.sendMessage(1,8,nId);
 	}
 	else
 	{
-		printf("Calibration failed for user: %d\n", nId);
+		if(g_bPrintOutput) printf("AS3OpenNI-Bridge :: Calibration failed for user: %d\n", nId);
 		if (g_bNeedPose) g_UserGenerator.GetPoseDetectionCap().StartPoseDetection(g_sPose, nId);
 		else g_UserGenerator.GetSkeletonCap().RequestCalibration(nId, true);
 		if(g_bUseSockets) g_AS3Network.sendMessage(1,9,nId);
@@ -214,6 +216,8 @@ void getPlayers()
 		memcpy(g_ucPlayersBuffer[i].player_id, &player, 4);
 		copyNIData(g_ucPlayersBuffer[i].player_data, com.X, com.Y, com.Z);
 
+		if(g_bPrintOutput) printf("AS3OpenNI-Bridge :: User Tracking: %f, %f, %f\n", com.X, com.Y, com.Z);
+		
 		// If a user is being tracked then do this.
 		if(g_UserGenerator.GetSkeletonCap().IsTracking(player))
 		{
@@ -381,9 +385,10 @@ void getRGB(unsigned char* g_ucImageBuffer)
 
 void *serverData(void *arg) 
 {
-	printf("AS3OpenNI-Bridge :: Server Running\n");
+	if(g_bPrintOutput) printf("AS3OpenNI-Bridge :: Server Running\n");
 	int len = 8*10;
 	unsigned char *buff = (unsigned char*)malloc(len); // Command buffer
+	
 	while(g_Connected)
 	{
 		len = g_AS3Network.getData(buff, 1024);
@@ -413,20 +418,21 @@ void *serverData(void *arg)
 							case 4: // GET USERS
 								if(g_bFeatureUserTracking) 
 								{
-									for (int i = 0; i < MAX_USERS; ++i)
+									g_AS3Network.sendMessage(1,4,g_ucPlayersBuffer[0].data,g_ucPlayersBuffer[0].size);
+									/*for (int i = 0; i < MAX_USERS; ++i)
 									{
 										g_AS3Network.sendMessage(1,4,g_ucPlayersBuffer[i].data,g_ucPlayersBuffer[i].size);
-									}
+									}*/
 								}
 							break;
 
 							case 5: // GET SKELETONS
 								if(g_bFeatureUserTracking) 
 								{
-									for (int i = 0; i < MAX_USERS; ++i)
+									/*for (int i = 0; i < MAX_USERS; ++i)
 									{
 										g_AS3Network.sendMessage(1,5,g_ucSkeletonsBuffer[i].data,g_ucSkeletonsBuffer[i].size);
-									}
+									}*/
 								}
 							break;
 						}
@@ -441,7 +447,7 @@ void *serverData(void *arg)
 
 void setupServer() 
 {
-	printf("AS3OpenNI-Bridge :: Server Connected\n");
+	if(g_bPrintOutput) printf("AS3OpenNI-Bridge :: Server Connected\n");
 	g_Connected = 1;
 	if (pthread_create(&g_ServerThread, NULL, &serverData, NULL)) 
 	{
@@ -463,7 +469,7 @@ int main(int argc, char *argv[])
     
     // Context Init and Add license.
     g_Status = g_Context.Init();
-	CHECK_RC(g_Status, "Initialize context");
+	CHECK_RC(g_Status, "AS3OpenNI-Bridge :: Initialize context");
 	g_Context.SetGlobalMirror(g_bMirror);
 	
 	// Set the license up.
@@ -473,7 +479,7 @@ int main(int argc, char *argv[])
 	g_License.strKey[XN_MAX_LICENSE_LENGTH] = strcmp(license, "0KOIk2JeIBYClPWVnMoRKn5cdY4=");
 	
 	g_Status = g_Context.AddLicense(g_License);
-   	CHECK_RC(g_Status, "Added license");
+   	CHECK_RC(g_Status, "AS3OpenNI-Bridge :: Added license");
    	
    	// Set it to VGA maps at 30 FPS
 	g_DepthMode.nXRes = 640;
@@ -482,12 +488,12 @@ int main(int argc, char *argv[])
 	
 	// Depth map create.
 	g_Status = g_DepthGenerator.Create(g_Context);
-	CHECK_RC(g_Status, "Create depth generator");
+	CHECK_RC(g_Status, "AS3OpenNI-Bridge :: Create depth generator");
 	g_Status = g_DepthGenerator.SetMapOutputMode(g_DepthMode);
 	
 	// Depth map create.
 	g_Status = g_ImageGenerator.Create(g_Context);
-	CHECK_RC(g_Status, "Create image generator");
+	CHECK_RC(g_Status, "AS3OpenNI-Bridge :: Create image generator");
 	g_Status = g_ImageGenerator.SetMapOutputMode(g_DepthMode);
 	g_Status = g_ImageGenerator.SetPixelFormat(XN_PIXEL_FORMAT_RGB24);
 	
@@ -496,7 +502,7 @@ int main(int argc, char *argv[])
 	
 	// Create user generator.
 	g_Status = g_UserGenerator.Create(g_Context);
-	CHECK_RC(g_Status, "Find user generator");
+	CHECK_RC(g_Status, "AS3OpenNI-Bridge :: Find user generator");
 	
 	// Feature User Tracking.
 	if(g_bFeatureUserTracking)
@@ -512,7 +518,7 @@ int main(int argc, char *argv[])
 			g_bNeedPose = true;
 			if (!g_UserGenerator.IsCapabilitySupported(XN_CAPABILITY_POSE_DETECTION))
 			{
-				printf("Pose required, but not supported\n");
+				printf("AS3OpenNI-Bridge :: Pose required, but not supported\n");
 				return 1;
 			}
 			g_UserGenerator.GetPoseDetectionCap().RegisterToPoseCallbacks(UserPose_PoseDetected, NULL, NULL, hPoseCallbacks);
@@ -523,19 +529,19 @@ int main(int argc, char *argv[])
 
 	// Create the hands generator.
 	g_Status = g_Hands.Create(g_Context);
-	CHECK_RC(g_Status, "Create hands generator");
+	CHECK_RC(g_Status, "AS3OpenNI-Bridge :: Create hands generator");
 	g_Hands.SetSmoothing(0.1);
 
 	// Create the gesture generator.
 	g_Status = g_Gesture.Create(g_Context);
-	CHECK_RC(g_Status, "Create gesture generator");
+	CHECK_RC(g_Status, "AS3OpenNI-Bridge :: Create gesture generator");
 
 	// Create and initialize point tracker
 	g_SessionManager = new XnVSessionManager();
 	g_Status = g_SessionManager->Initialize(&g_Context, "Wave", "RaiseHand");
 	if (g_Status != XN_STATUS_OK)
 	{
-		printf("Couldn't initialize the Session Manager: %s\n", xnGetStatusString(g_Status));
+		printf("AS3OpenNI-Bridge :: Couldn't initialize the Session Manager: %s\n", xnGetStatusString(g_Status));
 		CleanupExit();
 	}
 
@@ -550,14 +556,16 @@ int main(int argc, char *argv[])
 
 	// Set the frame rate.
 	g_Status = xnFPSInit(&xnFPS, 180);
-	CHECK_RC(g_Status, "FPS Init");
+	CHECK_RC(g_Status, "AS3OpenNI-Bridge :: FPS Init");
 	
-	// Setup the socket server.
-	if(g_bUseSockets)
-	{
-		g_AS3Network = network();
-		g_AS3Network.init(setupServer);
-	}
+	#if (XN_PLATFORM == XN_PLATFORM_WIN32)
+		// Setup the socket server.
+		if(g_bUseSockets)
+		{
+			g_AS3Network = network();
+			g_AS3Network.init(setupServer);
+		}
+	#endif
 
 	while(!g_Exit)
 	{

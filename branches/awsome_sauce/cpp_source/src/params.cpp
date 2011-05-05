@@ -22,6 +22,7 @@ void setupParams(int argc, char *argv[])
 				cout<<"-dmbg || Turn on the DepthMapCapture background, default is false\n";
 				cout<<"-mrev || Mirror mode will be set to false, default is true\n";
 				cout<<"-aso || Turn off the socket server\n";
+				cout<<"-fp || Print output messages from the features data\n";
 				cout<<" \n";
 				cout<<"Turn On Features:\n";
 				cout<<"-ospf || Turn on the SinglePoint feature\n";
@@ -74,6 +75,30 @@ void setupParams(int argc, char *argv[])
 				cout<<"AS3OpenNI-Bridge :: DepthMapCapture background is now on\n";
 			}
 			
+			if(param == "-fp")
+			{
+				g_bPrintOutput = true;
+				cout<<"AS3OpenNI-Bridge :: Printing output messages is now on\n";
+			}
+			
+			if(param == "-outf")
+			{
+				g_bFeatureUserTracking = true;
+				cout<<"AS3OpenNI-Bridge :: UserTracking feature turned on\n";
+			}
+			
+			if(param == "-orgbc")
+			{
+				g_bFeatureRGBCapture = true;
+				cout<<"AS3OpenNI-Bridge :: RGBCapture feature turned on\n";
+			}
+			
+			if(param == "-odmc")
+			{
+				g_bFeatureDepthMapCapture = true;
+				cout<<"AS3OpenNI-Bridge :: DepthMapCapture feature turned on\n";
+			}
+			
 			/*// Turn on features.
 			if(param == "-ospf")
 			{
@@ -104,24 +129,6 @@ void setupParams(int argc, char *argv[])
 				_featureTrackPad = true;
 				cout<<"TrackPad feature turned on\n";
 			}*/
-			
-			if(param == "-outf")
-			{
-				g_bFeatureUserTracking = true;
-				cout<<"AS3OpenNI-Bridge :: UserTracking feature turned on\n";
-			}
-			
-			if(param == "-orgbc")
-			{
-				g_bFeatureRGBCapture = true;
-				cout<<"AS3OpenNI-Bridge :: RGBCapture feature turned on\n";
-			}
-			
-			if(param == "-odmc")
-			{
-				g_bFeatureDepthMapCapture = true;
-				cout<<"AS3OpenNI-Bridge :: DepthMapCapture feature turned on\n";
-			}
 		}
 	}
 }

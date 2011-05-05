@@ -73,15 +73,9 @@ void network::sendMessage(int first, int second, unsigned char *data, int len)
 int network::sendData(unsigned char *buffer, int length)
 {
 	#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-		if(dataClientSocket != INVALID_SOCKET) 
-		{
-			return send(dataClientSocket, (char*)buffer, length, 0);
-		}
+		if(dataClientSocket != INVALID_SOCKET) return send(dataClientSocket, (char*)buffer, length, 0);
 	#else
-		if(dataClientSocket != 0) 
-		{
-			return send(dataClientSocket, (char*)buffer, length, 0);
-		}
+		if(dataClientSocket != 0) return send(dataClientSocket, (char*)buffer, length, 0);
 	#endif
 	return 0;
 }
@@ -89,22 +83,16 @@ int network::sendData(unsigned char *buffer, int length)
 int network::getData(unsigned char *buffer, int length)
 {
 	#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-		if(dataClientSocket != INVALID_SOCKET) 
-		{
-			return recv(dataClientSocket, (char*)buffer, 1024, 0);
-		}
+		if(dataClientSocket != INVALID_SOCKET) return recv(dataClientSocket, (char*)buffer, 1024, 0);
 	#else
-		if(dataClientSocket != 0) 
-		{
-			return recv(dataClientSocket, (char*)buffer, 1024, 0);
-		}
+		if(dataClientSocket != 0) return recv(dataClientSocket, (char*)buffer, 1024, 0);
 	#endif
 	return 0;	
 }
 
 void network::waitForClient() 
 {
-	printf("AS3OpenNI-Bridge :: Waiting for client.\n");
+	printf("AS3OpenNI-Bridge :: Waiting for client\n");
 	dataClientSocket = accept(dataSocket, NULL, NULL);
 	
 	#if (XN_PLATFORM == XN_PLATFORM_WIN32)
@@ -122,7 +110,7 @@ void network::waitForClient()
 		}
 	#endif
 
-	printf("AS3OpenNI-Bridge :: Got data client.\n");
+	printf("AS3OpenNI-Bridge :: Got data client\n");
 	networkCallback();
 }
 
@@ -143,7 +131,7 @@ int network::init(callback cb)
 	    iResult = WSAStartup(MAKEWORD(2,2), &serverData);
 	    if(iResult != 0) 
 	    {
-	        printf("WSAStartup session failed: %d\n", iResult);
+	        printf("AS3OpenNI-Bridge :: WSAStartup session failed: %d\n", iResult);
 			return 1;
 	    }
 	    	
