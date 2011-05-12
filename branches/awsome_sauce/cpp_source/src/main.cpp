@@ -467,6 +467,15 @@ int main(int argc, char *argv[])
 	// Setup the command line parameters.
 	setupParams(argc, argv);
 	
+	#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+		// Setup the socket server.
+		if(g_bUseSockets)
+		{
+			g_AS3Network = network();
+			g_AS3Network.init(setupServer);
+		}
+	#endif
+	
 	// Setup the status.
     XnStatus g_Status = XN_STATUS_OK;
     EnumerationErrors _errors;
