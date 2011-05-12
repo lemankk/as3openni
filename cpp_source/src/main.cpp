@@ -46,7 +46,7 @@ using namespace std;
 // Definitions
 //---------------------------------------------------------------------------
 #define MAX_DEPTH 10000
-#define MAX_USERS 5
+#define MAX_USERS 3
 
 //---------------------------------------------------------------------------
 // Globals
@@ -192,6 +192,35 @@ void CleanupExit()
 	exit(1);
 }
 
+void getJointPosition(XnUserID player, XnSkeletonJoint eJoint1, unsigned char * dest)
+{
+	if (!g_UserGenerator.GetSkeletonCap().IsTracking(player))
+	{
+		printf("not tracked!\n");
+		return;
+	}
+	
+	XnSkeletonJointPosition joint1;
+	g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, eJoint1, joint1);
+
+	if (joint1.fConfidence < 0.5)
+	{
+		return;
+	}
+	
+	XnPoint3D pt[1];
+	pt[0] = joint1.position;
+	g_DepthGenerator.ConvertRealWorldToProjective(1, pt, pt);
+	
+	float _x, _y, _z;
+	_x = pt[0].X;
+	_y = pt[0].Y;
+	_z = pt[0].Z;
+	memcpy(dest, &_x, 4);
+	memcpy(dest+4, &_y, 4);
+	memcpy(dest+8, &_z, 4);
+}
+
 void copyNIData(unsigned char * dest, float x, float y, float z)
 {
 	memcpy(dest, &x, 4);
@@ -222,49 +251,24 @@ void getPlayers()
 		if(g_UserGenerator.GetSkeletonCap().IsTracking(player))
 		{
 			memcpy(g_ucSkeletonsBuffer[i].player_id, &player, 4);
+			getJointPosition(player, XN_SKEL_HEAD, g_ucSkeletonsBuffer[i].head);
+			getJointPosition(player, XN_SKEL_NECK, g_ucSkeletonsBuffer[i].neck);
+			getJointPosition(player, XN_SKEL_LEFT_SHOULDER, g_ucSkeletonsBuffer[i].lshoulder);
+			getJointPosition(player, XN_SKEL_LEFT_ELBOW, g_ucSkeletonsBuffer[i].lelbow);
+			getJointPosition(player, XN_SKEL_LEFT_HAND, g_ucSkeletonsBuffer[i].lhand);
 
-			XnSkeletonJointPosition head, neck, left_shoulder, left_elbow, left_hand, right_shoulder, right_elbow, right_hand;
-			XnSkeletonJointPosition torso, left_hip, left_knee, left_foot, right_hip, right_knee, right_foot;
+			getJointPosition(player, XN_SKEL_RIGHT_SHOULDER, g_ucSkeletonsBuffer[i].rshoulder);
+			getJointPosition(player, XN_SKEL_RIGHT_ELBOW, g_ucSkeletonsBuffer[i].relbow);
+			getJointPosition(player, XN_SKEL_RIGHT_HAND, g_ucSkeletonsBuffer[i].rhand);
+			getJointPosition(player, XN_SKEL_TORSO, g_ucSkeletonsBuffer[i].torso);
 
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_HEAD, head);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_NECK, neck);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_TORSO, torso);
-			
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_SHOULDER, left_shoulder);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_ELBOW, left_elbow);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_HAND, left_hand);
-			
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_SHOULDER, right_shoulder);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_ELBOW, right_elbow);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_HAND, right_hand);
-		
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_HIP, left_hip);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_KNEE, left_knee);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_FOOT, left_foot);
-			
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_HIP, right_hip);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_KNEE, right_knee);
-			g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_FOOT, right_foot);
+			getJointPosition(player, XN_SKEL_LEFT_HIP, g_ucSkeletonsBuffer[i].lhip);
+			getJointPosition(player, XN_SKEL_LEFT_KNEE, g_ucSkeletonsBuffer[i].lknee);
+			getJointPosition(player, XN_SKEL_LEFT_FOOT, g_ucSkeletonsBuffer[i].lfoot);
 
-			copyNIData(g_ucSkeletonsBuffer[i].head, head.position.X, head.position.Y, head.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].neck, neck.position.X, neck.position.Y, neck.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].torso, torso.position.X, torso.position.Y, torso.position.Z);
-
-			copyNIData(g_ucSkeletonsBuffer[i].lshoulder, left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].lelbow, left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].lhand, left_hand.position.X, left_hand.position.Y, left_hand.position.Z);
-
-			copyNIData(g_ucSkeletonsBuffer[i].rshoulder, right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].relbow, right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].rhand, right_hand.position.X, right_hand.position.Y, right_hand.position.Z);
-
-			copyNIData(g_ucSkeletonsBuffer[i].lhip, left_hip.position.X, left_hip.position.Y, left_hip.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].lknee, left_knee.position.X, left_knee.position.Y, left_knee.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].lfoot, left_foot.position.X, left_foot.position.Y, left_foot.position.Z);
-
-			copyNIData(g_ucSkeletonsBuffer[i].rhip, right_hip.position.X, right_hip.position.Y, right_hip.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].rknee, right_knee.position.X, right_knee.position.Y, right_knee.position.Z);
-			copyNIData(g_ucSkeletonsBuffer[i].rfoot, right_foot.position.X, right_foot.position.Y, right_foot.position.Z);
+			getJointPosition(player, XN_SKEL_RIGHT_HIP, g_ucSkeletonsBuffer[i].rhip);
+			getJointPosition(player, XN_SKEL_RIGHT_KNEE, g_ucSkeletonsBuffer[i].rknee);
+			getJointPosition(player, XN_SKEL_RIGHT_FOOT, g_ucSkeletonsBuffer[i].rfoot);
 		}
 	}
 }
@@ -418,21 +422,20 @@ void *serverData(void *arg)
 							case 4: // GET USERS
 								if(g_bFeatureUserTracking) 
 								{
-									g_AS3Network.sendMessage(1,4,g_ucPlayersBuffer[0].data,g_ucPlayersBuffer[0].size);
-									/*for (int i = 0; i < MAX_USERS; ++i)
+									for (int i = 0; i < MAX_USERS; ++i)
 									{
 										g_AS3Network.sendMessage(1,4,g_ucPlayersBuffer[i].data,g_ucPlayersBuffer[i].size);
-									}*/
+									}
 								}
 							break;
 
 							case 5: // GET SKELETONS
 								if(g_bFeatureUserTracking) 
 								{
-									/*for (int i = 0; i < MAX_USERS; ++i)
+									for (int i = 0; i < MAX_USERS; ++i)
 									{
 										g_AS3Network.sendMessage(1,5,g_ucSkeletonsBuffer[i].data,g_ucSkeletonsBuffer[i].size);
-									}*/
+									}
 								}
 							break;
 						}
