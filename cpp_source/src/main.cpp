@@ -253,6 +253,8 @@ void getPlayers()
 			memcpy(g_ucSkeletonsBuffer[i].player_id, &player, 4);
 			getJointPosition(player, XN_SKEL_HEAD, g_ucSkeletonsBuffer[i].head);
 			getJointPosition(player, XN_SKEL_NECK, g_ucSkeletonsBuffer[i].neck);
+			getJointPosition(player, XN_SKEL_TORSO, g_ucSkeletonsBuffer[i].torso);
+			
 			getJointPosition(player, XN_SKEL_LEFT_SHOULDER, g_ucSkeletonsBuffer[i].lshoulder);
 			getJointPosition(player, XN_SKEL_LEFT_ELBOW, g_ucSkeletonsBuffer[i].lelbow);
 			getJointPosition(player, XN_SKEL_LEFT_HAND, g_ucSkeletonsBuffer[i].lhand);
@@ -260,8 +262,7 @@ void getPlayers()
 			getJointPosition(player, XN_SKEL_RIGHT_SHOULDER, g_ucSkeletonsBuffer[i].rshoulder);
 			getJointPosition(player, XN_SKEL_RIGHT_ELBOW, g_ucSkeletonsBuffer[i].relbow);
 			getJointPosition(player, XN_SKEL_RIGHT_HAND, g_ucSkeletonsBuffer[i].rhand);
-			getJointPosition(player, XN_SKEL_TORSO, g_ucSkeletonsBuffer[i].torso);
-
+			
 			getJointPosition(player, XN_SKEL_LEFT_HIP, g_ucSkeletonsBuffer[i].lhip);
 			getJointPosition(player, XN_SKEL_LEFT_KNEE, g_ucSkeletonsBuffer[i].lknee);
 			getJointPosition(player, XN_SKEL_LEFT_FOOT, g_ucSkeletonsBuffer[i].lfoot);
