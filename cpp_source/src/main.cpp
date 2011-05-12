@@ -73,7 +73,7 @@ XnBool g_bFeatureRGBCapture = FALSE;
 XnBool g_bFeatureDepthMapCapture = FALSE;
 
 XnBool g_bPrintOutput = FALSE;
-XnBool g_bNeedPose = false;
+XnBool g_bNeedPose = FALSE;
 XnChar g_sPose[20] = "";
 
 unsigned char g_ucDepthBuffer[4*640*480];
@@ -467,14 +467,14 @@ int main(int argc, char *argv[])
 	// Setup the command line parameters.
 	setupParams(argc, argv);
 	
-	#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
+	/*#if (XN_PLATFORM == XN_PLATFORM_MACOSX)
 		// Setup the socket server.
 		if(g_bUseSockets)
 		{
 			g_AS3Network = network();
 			g_AS3Network.init(setupServer);
 		}
-	#endif
+	#endif*/
 	
 	// Setup the status.
     XnStatus g_Status = XN_STATUS_OK;
@@ -571,14 +571,14 @@ int main(int argc, char *argv[])
 	g_Status = xnFPSInit(&xnFPS, 180);
 	CHECK_RC(g_Status, "AS3OpenNI-Bridge :: FPS Init");
 	
-	#if (XN_PLATFORM == XN_PLATFORM_WIN32)
+	//#if (XN_PLATFORM == XN_PLATFORM_WIN32)
 		// Setup the socket server.
 		if(g_bUseSockets)
 		{
 			g_AS3Network = network();
 			g_AS3Network.init(setupServer);
 		}
-	#endif
+	//#endif
 
 	while(!g_Exit)
 	{
