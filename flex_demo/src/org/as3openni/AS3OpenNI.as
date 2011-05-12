@@ -62,6 +62,7 @@ package org.as3openni
 		public var trackPadRows:Number = 9;
 		public var waitTime:Number = 8;
 		
+		public var noNativeProcess:Boolean = false;
 		public var debug:Boolean = false;
 		public var video:Boolean = false;
 		public var depthMap:Boolean = false;
@@ -95,11 +96,14 @@ package org.as3openni
 			{
 				if(this.binaryPath.length > 0)
 				{
-					// Startup the AS3OpenNI-Bridge.
-					this.startupBridge();
-						
-					// Add required listeners.
-					this.addListeners();
+					if(this.noNativeProcess)
+					{
+						// Startup the AS3OpenNI-Bridge.
+						this.startupBridge();
+							
+						// Add required listeners.
+						this.addListeners();
+					}
 					
 					// Setup the client socket.
 					setTimeout(this.setupClientSocket, (this.waitTime*1000));
