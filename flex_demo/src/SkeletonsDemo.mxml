@@ -47,7 +47,6 @@
 					this._as3OpenNI = new AS3OpenNI();
 					this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
 					this._as3OpenNI.binaryPath = 'bin/AS3OpenNI-Bridge';
-					this._as3OpenNI.clientSocketOnly = true;
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.video = true;
 					this._as3OpenNI.depthMap = true;
@@ -78,7 +77,7 @@
 				if(this._as3OpenNI.isReady())
 				{
 					//this._as3OpenNI.getSkeletonsBuffer();
-					this._as3OpenNI.getUserTrackingBuffer();
+					//this._as3OpenNI.getUserTrackingBuffer();
 					this._as3OpenNI.getVideoBuffer();
 					this._as3OpenNI.getDepthBuffer();
 				}
@@ -145,10 +144,10 @@
 			{
 				var userId:uint = event.userId;
 				var skeleton:NiSkeleton = event.skeleton;
-				/*trace('Head: ' + skeleton.head.toString());
+				trace('Head: ' + skeleton.head.toString());
 				trace('Neck: ' + skeleton.neck.toString());
 				trace('Torso: ' + skeleton.torso.toString());
-				trace('L-Shoulder: ' + skeleton.leftShoulder.toString());
+				/*trace('L-Shoulder: ' + skeleton.leftShoulder.toString());
 				trace('L-Elbow: ' + skeleton.leftElbow.toString());
 				trace('L-Hand: ' + skeleton.leftHand.toString());
 				trace('R-Shoulder: ' + skeleton.rightShoulder.toString());
@@ -165,8 +164,8 @@
 	</fx:Script>
 	
 	<mx:VBox verticalAlign="bottom" height="100%" width="100%">
-		<mx:HBox width="100%" height="480" verticalAlign="bottom" horizontalAlign="center">
-			<mx:Image id="_videoBox" source="{this._videoBmp}" width="640" height="480" cacheAsBitmap="true"/>
+		<mx:HBox width="100%" height="240" verticalAlign="bottom" horizontalAlign="center">
+			<mx:Image id="_videoBox" source="{this._videoBmp}" width="320" height="240" cacheAsBitmap="true"/>
 			<mx:Spacer width="100%" />
 			<mx:Image id="_depthBox" source="{this._depthBmp}" width="320" height="240" cacheAsBitmap="true"/>
 		</mx:HBox>
