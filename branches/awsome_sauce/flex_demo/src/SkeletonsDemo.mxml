@@ -47,6 +47,7 @@
 					this._as3OpenNI = new AS3OpenNI();
 					this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
 					this._as3OpenNI.binaryPath = 'bin/AS3OpenNI-Bridge';
+					this._as3OpenNI.noNativeProcess = true;
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.video = true;
 					this._as3OpenNI.depthMap = true;
@@ -77,7 +78,7 @@
 				if(this._as3OpenNI.isReady())
 				{
 					//this._as3OpenNI.getSkeletonsBuffer();
-					//this._as3OpenNI.getUserTrackingBuffer();
+					this._as3OpenNI.getUserTrackingBuffer();
 					this._as3OpenNI.getVideoBuffer();
 					this._as3OpenNI.getDepthBuffer();
 				}
