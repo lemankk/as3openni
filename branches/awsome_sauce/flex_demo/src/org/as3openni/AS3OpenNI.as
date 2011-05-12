@@ -62,7 +62,6 @@ package org.as3openni
 		public var trackPadRows:Number = 9;
 		public var waitTime:Number = 8;
 		
-		public var clientSocketOnly:Boolean = false;
 		public var debug:Boolean = false;
 		public var video:Boolean = false;
 		public var depthMap:Boolean = false;
@@ -78,6 +77,7 @@ package org.as3openni
 		private var _depthBuffer:DepthBuffer;
 		private var _userTrackingBuffer:UserTrackingBuffer;
 		private var _skeletonsBuffer:SkeletonsBuffer;
+		private var _isMac:Boolean = false;
 		
 		/**
 		 * AS3OpenNI - Constructor.
@@ -96,13 +96,10 @@ package org.as3openni
 				if(this.binaryPath.length > 0)
 				{
 					// Startup the AS3OpenNI-Bridge.
-					if(!this.clientSocketOnly)
-					{
-						this.startupBridge();
+					this.startupBridge();
 						
-						// Add required listeners.
-						this.addListeners();
-					}
+					// Add required listeners.
+					this.addListeners();
 					
 					// Setup the client socket.
 					setTimeout(this.setupClientSocket, (this.waitTime*1000));
@@ -340,7 +337,7 @@ package org.as3openni
 		{
 			this.dispatchEvent(new ProgressEvent(event.type, event.bubbles, event.cancelable, event.bytesLoaded, event.bytesTotal));
 			var msg:String = this._bridge.standardOutput.readMultiByte(this._bridge.standardOutput.bytesAvailable, File.systemCharset);
-			this.log(msg);
+			this.log('Console: ' + msg);
 		}
 		
 		protected function onErrorData(event:ProgressEvent):void
