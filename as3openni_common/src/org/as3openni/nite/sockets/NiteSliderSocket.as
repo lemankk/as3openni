@@ -2,6 +2,7 @@ package org.as3openni.nite.sockets
 {
 	import flash.events.ProgressEvent;
 	
+	import org.as3openni.global.Definitions;
 	import org.as3openni.nite.events.NiteSliderEvent;
 	import org.as3openni.util.BasicSocket;
 
@@ -12,7 +13,7 @@ package org.as3openni.nite.sockets
 		public function NiteSliderSocket()
 		{
 			super();
-			this.name = NITE_SLIDER_SOCKET;
+			this.name = Definitions.NITE_SLIDER_SOCKET;
 			this.port = 9502;
 		}
 		

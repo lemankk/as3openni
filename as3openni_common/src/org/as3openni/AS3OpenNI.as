@@ -30,11 +30,24 @@ package org.as3openni
 	import flash.desktop.NativeProcessStartupInfo;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.IEventDispatcher;
 	import flash.events.NativeProcessExitEvent;
 	import flash.events.ProgressEvent;
 	import flash.filesystem.File;
 	import flash.system.Capabilities;
+	import flash.utils.ByteArray;
+	import flash.utils.setTimeout;
 	
+	import org.as3openni.buffers.DepthBuffer;
+	import org.as3openni.buffers.SkeletonsBuffer;
+	import org.as3openni.buffers.UserTrackingBuffer;
+	import org.as3openni.buffers.VideoBuffer;
+	import org.as3openni.events.AS3OpenNIEvent;
+	import org.as3openni.events.ClientSocketEvent;
+	import org.as3openni.events.openni.OpenNIEvent;
+	import org.as3openni.events.openni.SkeletonEvent;
+	import org.as3openni.events.openni.UserTrackingEvent;
+	import org.as3openni.global.Definitions;
 	import org.as3openni.nite.events.NiteCircleEvent;
 	import org.as3openni.nite.events.NiteGestureEvent;
 	import org.as3openni.nite.events.NitePointEvent;
@@ -44,36 +57,25 @@ package org.as3openni
 	import org.as3openni.nite.sockets.NitePointSocket;
 	import org.as3openni.nite.sockets.NiteSessionSocket;
 	import org.as3openni.nite.sockets.NiteSliderSocket;
-	import org.as3openni.openni.events.ONICaptureEvent;
+	import org.as3openni.objects.NiPoint3D;
+	import org.as3openni.objects.NiSkeleton;
 	import org.as3openni.openni.events.ONISkeletonEvent;
 	import org.as3openni.openni.events.ONIUserTrackingEvent;
-	import org.as3openni.openni.sockets.ONIDepthMapSocket;
-	import org.as3openni.openni.sockets.ONIRGBSocket;
 	import org.as3openni.openni.sockets.ONIUserTrackingSocket;
+	import org.as3openni.util.ClientSocket;
 
 	public class AS3OpenNI extends EventDispatcher
 	{
-		public static const VGA_MAX_WIDTH:Number = 640;
-		public static const VGA_MAX_HEIGHT:Number = 480;
-		public static const JPEG_QUALITYBAD:Number = 0;
-		public static const JPEG_QUALITYAVERAGE:Number = 1;
-		public static const JPEG_QUALITYNORMAL:Number = 2;
-		public static const JPEG_QUALITYHIGH:Number = 3;
-		
 		public var singlePointSocket:NitePointSocket;
 		public var sessionSocket:NiteSessionSocket;
 		public var sliderSocket:NiteSliderSocket;
 		public var userTrackingSocket:ONIUserTrackingSocket;
-		public var depthMapSocket:ONIDepthMapSocket;
-		public var videoSocket:ONIRGBSocket;
 		public var bridge:NativeProcess;
 		
 		public var binaryPath:String = "";
-		public var outputMessage:String = "";
 		public var trackPadColumns:Number = 4;
 		public var trackPadRows:Number = 9;
-		public var depthMapQuality:Number = 1;
-		public var videoQuality:Number = 1;
+		public var waitTime:Number = 8;
 		
 		public var debug:Boolean = false;
 		public var traceLog:Boolean = false;
@@ -85,14 +87,28 @@ package org.as3openni
 		public var userTracking:Boolean = false;
 		public var depthMap:Boolean = false;
 		public var depthMapBackground:Boolean = false;
-		public var depthMapSnap:Boolean = false;
+		public var depthMapSnapOff:Boolean = false;
 		public var video:Boolean = false;
-		public var videoGrayscale:Boolean = false;
 		public var mirrorModeOff:Boolean = false;
+		public var isWindows:Boolean = true;
 		
-		public function AS3OpenNI()
+		private var _bridgeReady:Boolean = false;
+		private var _clientReady:Boolean = false;
+		private var _bridge:NativeProcess;
+		private var _captureClientSocket:ClientSocket;
+		private var _videoBuffer:VideoBuffer;
+		private var _depthBuffer:DepthBuffer;
+		private var _userTrackingBuffer:UserTrackingBuffer;
+		private var _skeletonsBuffer:SkeletonsBuffer;
+		
+		/**
+		 * AS3OpenNI - Constructor.
+		 * @target	IEventDispatcher
+		 */
+		public function AS3OpenNI(target:IEventDispatcher=null)
 		{
-			trace('INFO: AS3OpenNI - Alpha 1.0.9');
+			super(target);
+			trace(Definitions.HEADER);
 		}
 		
 		public function init():void
@@ -101,6 +117,9 @@ package org.as3openni
 			{
 				if(this.binaryPath.length > 0)
 				{
+					// Determine which OS.
+					this.findOS();
+					
 					// Startup the session server it's required.
 					this.sessionSocket = new NiteSessionSocket();
 					this.sessionSocket.traceLog = this.traceLog;
@@ -123,7 +142,8 @@ package org.as3openni
 						this.addSliderListeners();
 					}
 					
-					if(this.userTracking)
+					// Not sure if this is needed, yet still need to test on a PC.
+					if(this.userTracking /*&& !this.isWindows*/)
 					{
 						this.userTrackingSocket = new ONIUserTrackingSocket();
 						this.userTrackingSocket.traceLog = this.traceLog;
@@ -131,20 +151,10 @@ package org.as3openni
 						this.addUserTrackingListeners();
 					}
 					
-					if(this.depthMap)
+					if(this.video || this.depthMap)
 					{
-						this.depthMapSocket = new ONIDepthMapSocket();
-						this.depthMapSocket.traceLog = this.traceLog;
-						this.depthMapSocket.bind();
-						this.addDepthMapCaptureListeners();
-					}
-					
-					if(this.video)
-					{
-						this.videoSocket = new ONIRGBSocket();
-						this.videoSocket.traceLog = this.traceLog;
-						this.videoSocket.bind();
-						this.addRGBCaptureListeners();
+						// Setup the client socket.
+						setTimeout(this.setupCaptureClientSocket, (this.waitTime*1000));
 					}
 					
 					// Add optional listeners.
@@ -162,6 +172,31 @@ package org.as3openni
 			}
 		}
 		
+		public function getVideoBuffer():void
+		{
+			if(this.isReady() && this.video) this._videoBuffer.getBuffer();
+		}
+		
+		public function getDepthBuffer():void
+		{
+			if(this.isReady() && this.depthMap) this._depthBuffer.getBuffer();
+		}
+		
+		public function getUserTrackingBuffer():void
+		{
+			if(this.isReady() && this.userTracking && this.isWindows) this._userTrackingBuffer.getBuffer();
+		}
+		
+		public function getSkeletonsBuffer():void
+		{
+			if(this.isReady() && this.userTracking && this.isWindows) this._skeletonsBuffer.getBuffer();
+		}
+		
+		public function isReady():Boolean
+		{
+			return (this._clientReady && this._bridgeReady) ? true : false;
+		}
+		
 		public function closeSockets():void
 		{
 			if(this.sessionSocket.server && this.sessionSocket.server.bound) this.sessionSocket.server.close();
@@ -175,29 +210,167 @@ package org.as3openni
 			
 			if(this.userTracking && this.userTrackingSocket.server && this.userTrackingSocket.server.bound) this.userTrackingSocket.server.close();
 			if(this.userTracking && this.userTrackingSocket.client && this.userTrackingSocket.client.connected) this.userTrackingSocket.client.close();
-			
-			if(this.depthMap && this.depthMapSocket.server && this.depthMapSocket.server.bound) this.depthMapSocket.server.close();
-			if(this.depthMap && this.depthMapSocket.client && this.depthMapSocket.client.connected) this.depthMapSocket.client.close();
-			
-			if(this.video && this.videoSocket.server && this.videoSocket.server) this.videoSocket.server.close();
-			if(this.video && this.videoSocket.client && this.videoSocket.client) this.videoSocket.client.close();
 		}
 		
 		/**
 		 * Protected methods will go here.
 		 */
+		protected function setupCaptureClientSocket():void
+		{
+			this._captureClientSocket = new ClientSocket();
+			this._captureClientSocket.addEventListener(ClientSocketEvent.ON_DATA, onDataReceived);
+			this._captureClientSocket.addEventListener(ClientSocketEvent.ON_ERROR, onClientSocketError);
+			this._captureClientSocket.addEventListener(ClientSocketEvent.ON_CONNECT, onClientSocketConnected);
+			this._captureClientSocket.connect();
+		}
+		
+		protected function onDataReceived(event:ClientSocketEvent):void
+		{
+			if(this._clientReady)
+			{
+				var first:Number = event.data.first as Number;
+				var second:Number = event.data.second as Number;
+				var buffer:ByteArray = event.data.buffer as ByteArray;
+				
+				switch(first)
+				{
+					case Definitions.AS3OPENNI_ID:
+						switch(second)
+						{
+							case Definitions.AS3OPENNI_SERVER_INIT:
+								this._bridgeReady = true;
+								this.setupCaptureFeatures();
+								this.log(Definitions.AS3OPENNI_CAPTURE_CONNECTED);
+								this.dispatchEvent(new AS3OpenNIEvent(AS3OpenNIEvent.READY));
+								break;
+						}
+						break;
+					
+					case Definitions.OPENNI_ID:
+						switch(second)
+						{
+							case Definitions.OPENNI_GET_DEPTH:
+								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.ON_DEPTH, buffer));
+								this._depthBuffer.busy = false;
+								break;
+							
+							case Definitions.OPENNI_GET_VIDEO:
+								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.ON_VIDEO, buffer));
+								this._videoBuffer.busy = false;
+								break;
+							
+							case Definitions.OPENNI_USER_FOUND:
+								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.USER_FOUND, buffer.readInt()));
+								break;
+							
+							case Definitions.OPENNI_USER_LOST:
+								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.USER_LOST, buffer.readInt()));
+								break;
+							
+							case Definitions.OPENNI_GET_USERS:
+								var userId:uint = buffer.readInt();
+								if(userId.toString().length < 2 && userId > 0)
+								{
+									var userData:NiPoint3D = new NiPoint3D();
+									userData.pointX = buffer.readFloat();
+									userData.pointY = buffer.readFloat();
+									userData.pointZ = buffer.readFloat();
+									this.dispatchEvent(new UserTrackingEvent(UserTrackingEvent.USER_TRACKED, userId, userData));
+								}
+								this._userTrackingBuffer.busy = false;
+								break;
+							
+							case Definitions.OPENNI_GET_SKELETONS:
+								var skelId:uint = buffer.readInt();
+								if(skelId.toString().length < 2 && skelId > 0)
+								{
+									var skel:NiSkeleton = new NiSkeleton();
+									skel.update(buffer);
+									this.dispatchEvent(new SkeletonEvent(SkeletonEvent.SKELETONS, skelId, skel));
+								}
+								this._skeletonsBuffer.busy = false;
+								break;
+							
+							case Definitions.OPENNI_POSE_DETECTED:
+								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.POSE_DETECTED, buffer.readInt()));
+								break;
+							
+							case Definitions.OPENNI_CALIBRATION_STARTED:
+								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.CALIBRATION_STARTED, buffer.readInt()));
+								break;
+							
+							case Definitions.OPENNI_CALIBRATION_COMPLETE:
+								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.CALIBRATION_COMPLETE, buffer.readInt()));
+								break;
+							
+							case Definitions.OPENNI_CALIBRATION_FAILED:
+								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.CALIBRATION_FAILED, buffer.readInt()));
+								break;
+						}
+						break;
+					
+					case Definitions.NITE_ID:
+						break;
+				}
+			}
+		}
+		
+		protected function onClientSocketConnected(event:ClientSocketEvent):void
+		{
+			this._clientReady = true;
+			this.log(Definitions.CLIENT_SOCKET_CONNECTED);
+			this.dispatchEvent(new ClientSocketEvent(event.type, event.data));
+		}
+		
+		protected function onClientSocketError(event:ClientSocketEvent):void
+		{
+			this.log(Definitions.CLIENT_SOCKET_ERROR);
+			this.dispatchEvent(new ClientSocketEvent(event.type, event.data));
+		}
+		
+		protected function setupCaptureFeatures():void
+		{
+			if(this._clientReady && this._bridgeReady)
+			{
+				// Setup the video buffer.
+				if(this.video) this._videoBuffer = new VideoBuffer(this._captureClientSocket);
+				
+				// Setup the depth map buffer.
+				if(this.depthMap) this._depthBuffer = new DepthBuffer(this._captureClientSocket);
+				
+				// Setup the user tracking buffer.
+				if(this.userTracking && this.isWindows)
+				{
+					this._userTrackingBuffer = new UserTrackingBuffer(this._captureClientSocket);
+					this._skeletonsBuffer = new SkeletonsBuffer(this._captureClientSocket);
+				}
+			}
+		}
+		
+		protected function findOS():void
+		{
+			if(Capabilities.os.toLowerCase().indexOf("win") > -1)
+			{
+				this.isWindows = true;
+			}
+			else if (Capabilities.os.toLowerCase().indexOf("mac") > -1) 
+			{
+				this.isWindows = false;
+			}
+		}
+		
 		protected function startupBridge():void
 		{     
 			var file:File = new File();
 			var startupInfo:NativeProcessStartupInfo = new NativeProcessStartupInfo();
 			
-			if (Capabilities.os.toLowerCase().indexOf("win") > -1)
+			if(this.isWindows)
 			{
 				var ext:String = this.binaryPath.substr((this.binaryPath.length-4), this.binaryPath.length);
 				var path:String = (ext == '.exe') ? this.binaryPath : (this.binaryPath + '.exe');
 				file = File.applicationDirectory.resolvePath(path);
 			} 
-			else if (Capabilities.os.toLowerCase().indexOf("mac") > -1) 
+			else if (!this.isWindows) 
 			{
 				file = File.applicationDirectory.resolvePath(this.binaryPath);
 			}
@@ -248,15 +421,11 @@ package org.as3openni
 				// Pass to the binary.
 				processArgs.push("-odmc");
 				
-				// Set the DepthMapCapture quality, default is 0 = Low, 1 = Average, 2 = High, 3 = Super High.
-				processArgs.push("-dmq");
-				processArgs.push(String(this.depthMapQuality + ''));
-				
 				// Turn the DepthMaptCapture background on.
 				if(this.depthMapBackground) processArgs.push("-dmbg");
 				
 				// Snap the pixels of the DepthMap and RGB together or not, default is false.
-				if(this.depthMapSnap) processArgs.push("-snap");
+				if(this.depthMapSnapOff) processArgs.push("-snapoff");
 			}
 			
 			// Turn on the RGBCapture feature only testing one or the other in this file.
@@ -264,13 +433,6 @@ package org.as3openni
 			{
 				// Pass to the binary.
 				processArgs.push("-orgbc");
-				
-				// Set the RGBCapture quality, default is 0 = Low, 1 = Average, 2 = High, 3 = Super High.
-				processArgs.push("-rgbq");
-				processArgs.push(String(this.videoQuality + ''));
-				
-				// Sets the RGBCapture to render in greyscale.
-				if(this.videoGrayscale) processArgs.push("-grey");
 			}
 			
 			// Continue...
@@ -346,14 +508,9 @@ package org.as3openni
 			this.userTrackingSocket.addEventListener(ONISkeletonEvent.USER_TRACKING, this.onSkeleton);
 		}
 		
-		protected function addDepthMapCaptureListeners():void
+		protected function log(msg:String):void
 		{
-			this.depthMapSocket.addEventListener(ONICaptureEvent.ONI_DEPTH_MAP, this.onCapture);
-		}
-		
-		protected function addRGBCaptureListeners():void
-		{
-			this.videoSocket.addEventListener(ONICaptureEvent.ONI_RGB, this.onCapture);
+			if(this.debug) trace(msg);
 		}
 		
 		/**
@@ -399,11 +556,6 @@ package org.as3openni
 			this.dispatchEvent(new ONISkeletonEvent(event.type, event.user, event.leftHand, event.rightHand, event.skeleton, event.bubbles, event.cancelable));
 		}
 		
-		protected function onCapture(event:ONICaptureEvent):void
-		{
-			this.dispatchEvent(new ONICaptureEvent(event.type, event.bytes, event.bubbles, event.cancelable));
-		}
-		
 		protected function onClose(event:Event):void
 		{
 			this.dispatchEvent(new Event(event.type, event.bubbles, event.cancelable));
@@ -413,8 +565,8 @@ package org.as3openni
 		protected function onOutputData(event:ProgressEvent):void
 		{
 			this.dispatchEvent(new ProgressEvent(event.type, event.bubbles, event.cancelable, event.bytesLoaded, event.bytesTotal));
-			this.outputMessage = this.bridge.standardOutput.readMultiByte(this.bridge.standardOutput.bytesAvailable, File.systemCharset);
-			if(this.debug) trace("Console:", this.outputMessage);
+			var msg:String = this.bridge.standardOutput.readMultiByte(this.bridge.standardOutput.bytesAvailable, File.systemCharset);
+			this.log(msg);
 		}
 		
 		protected function onErrorData(event:ProgressEvent):void
@@ -425,8 +577,8 @@ package org.as3openni
 				var ba:Number = this.bridge.standardOutput.bytesAvailable;
 				if(ba > 0) 
 				{
-					this.outputMessage = this.bridge.standardError.readMultiByte(ba, File.systemCharset);
-					if(this.debug) trace(this.outputMessage);
+					var msg:String = this.bridge.standardError.readMultiByte(ba, File.systemCharset);
+					this.log(msg);
 				}
 				this.bridge.closeInput();
 			}

@@ -1,6 +1,7 @@
 package org.as3openni.util.math
 {
 	import org.as3openni.AS3OpenNI;
+	import org.as3openni.global.Definitions;
 	import org.as3openni.objects.NiPoint2D;
 	import org.as3openni.objects.NiPoint3D;
 
@@ -10,8 +11,8 @@ package org.as3openni.util.math
 		
 		public static function convertRealWorldToScreen(point3D:NiPoint3D, width:Number, height:Number):NiPoint2D
 		{
-			var offsetX:Number = width/AS3OpenNI.VGA_MAX_WIDTH;
-			var offsetY:Number = height/AS3OpenNI.VGA_MAX_HEIGHT;
+			var offsetX:Number = width/Definitions.VGA_MAX_WIDTH;
+			var offsetY:Number = height/Definitions.VGA_MAX_HEIGHT;
 			
 			var newX:Number = (width/2) + point3D.pointX * offsetY;
 			var newY:Number = (height/2) - point3D.pointY * offsetY;
@@ -20,7 +21,6 @@ package org.as3openni.util.math
 			point2D.pointX = newX;
 			point2D.pointY = newY;
 			point2D.user = point3D.user;
-			point2D.pointTime = point3D.pointTime;
 			
 			return point2D;
 		}
