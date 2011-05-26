@@ -14,8 +14,6 @@ extern XnBool _printSlider;
 extern XnBool _printTrackPad;
 extern XnBool _printSinglePoint;
 extern XnBool _printUserTracking;
-extern XnBool _printRGBCapture;
-extern XnBool _printDepthMapCapture;
 
 // Toggle on/off features
 extern XnBool _featureGesture;
@@ -26,7 +24,8 @@ extern XnBool _featureSinglePoint;
 extern XnBool _featureUserTracking;
 extern XnBool _featureRGBCapture;
 extern XnBool _featureDepthMapCapture;
-extern XnBool _rgbGoGrey;
+
+// Toggle extra features
 extern XnBool _snapPixels;
 extern XnBool _mirror;
 extern XnBool _depthMapBackground;
@@ -36,9 +35,6 @@ extern XnBool _useSockets;
 
 // Trackpad vars.
 extern int trackpad_columns, trackpad_rows;
-
-// Define the JPEG quality on the DepthMap and RGB capturing.
-extern int depthmap_quality, rgb_quality;
 
 void setupParams(int argc, char *argv[]);
 

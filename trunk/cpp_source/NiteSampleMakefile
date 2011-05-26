@@ -13,12 +13,11 @@
 # LDFLAGS - [Optional] additional flags for the linker
 #############################################################################
 
-INC_DIRS += /usr/include/nite /usr/include/ni /usr/local/include
-LIB_DIRS += /usr/local/lib
+INC_DIRS += /usr/include/nite /usr/include/ni
 
-BIN_DIR = ../Bin
+BIN_DIR = ../bin
 
-USED_LIBS += OpenNI XnVNite FreeImage
+USED_LIBS += OpenNI XnVNite
 # -The new version works on the Mac, but crashes a lot.
 #XnVNite_1_3_1
 
