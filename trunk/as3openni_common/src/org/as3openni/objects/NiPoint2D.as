@@ -5,7 +5,6 @@ package org.as3openni.objects
 		public var user:Number;
 		public var pointX:Number;
 		public var pointY:Number;
-		public var pointTime:Number;
 		
 		public function NiPoint2D(){}
 		

@@ -2,6 +2,7 @@ package org.as3openni.openni.sockets
 {
 	import flash.events.ProgressEvent;
 	
+	import org.as3openni.global.Definitions;
 	import org.as3openni.objects.NiPoint3D;
 	import org.as3openni.objects.NiSkeleton;
 	import org.as3openni.openni.events.ONISkeletonEvent;
@@ -15,7 +16,7 @@ package org.as3openni.openni.sockets
 		public function ONIUserTrackingSocket()
 		{
 			super();
-			this.name = OPEN_NI_USER_TRACKING_SOCKET;
+			this.name = Definitions.OPEN_NI_USER_TRACKING_SOCKET;
 			this.port = 9503;
 		}
 		

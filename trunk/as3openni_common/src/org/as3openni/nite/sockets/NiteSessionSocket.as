@@ -2,6 +2,7 @@ package org.as3openni.nite.sockets
 {
 	import flash.events.ProgressEvent;
 	
+	import org.as3openni.global.Definitions;
 	import org.as3openni.nite.events.NiteCircleEvent;
 	import org.as3openni.nite.events.NiteGestureEvent;
 	import org.as3openni.nite.events.NiteSessionEvent;
@@ -11,12 +12,10 @@ package org.as3openni.nite.sockets
 
 	public class NiteSessionSocket extends BasicSocket
 	{
-		public static const NITE_SESSION_SOCKET:String = "nite_session_socket";
-		
 		public function NiteSessionSocket()
 		{
 			super();
-			this.name = NITE_SESSION_SOCKET;
+			this.name = Definitions.NITE_SESSION_SOCKET;
 			this.port = 9501;
 		}
 		
