@@ -23,8 +23,9 @@
 			import net.hires.debug.Stats;
 			
 			import org.as3openni.AS3OpenNI;
+			import org.as3openni.events.openni.OpenNIEvent;
+			import org.as3openni.global.Definitions;
 			import org.as3openni.nite.events.NiteSessionEvent;
-			import org.as3openni.openni.events.ONICaptureEvent;
 
 			// Setup the AS3OpenNI client and server.
 			private var _as3OpenNI:AS3OpenNI;
@@ -33,9 +34,9 @@
 			private var _runAppOnly:Boolean = false;
 			
 			// For the depth camera/rgb testing.
-			private var _depthMapCanvas:BitmapData = new BitmapData(AS3OpenNI.VGA_MAX_WIDTH, AS3OpenNI.VGA_MAX_HEIGHT, false, 0);
-			private var _rgbCanvas:BitmapData = new BitmapData(AS3OpenNI.VGA_MAX_WIDTH, AS3OpenNI.VGA_MAX_HEIGHT, false, 0);
-			private var _maskCanvas:BitmapData = new BitmapData(AS3OpenNI.VGA_MAX_WIDTH, AS3OpenNI.VGA_MAX_HEIGHT, true, 0x00000000);
+			private var _depthMapCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
+			private var _rgbCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
+			private var _maskCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, true, 0x00000000);
 			
 			[Bindable]
 			private var _depthMapBmp:Bitmap;
@@ -88,18 +89,13 @@
 					this._as3OpenNI.debug = true;
 					
 					this._as3OpenNI.depthMap = true;
-					this._as3OpenNI.depthMapQuality = AS3OpenNI.JPEG_QUALITYBAD;
 					this._as3OpenNI.depthMapBackground = false;
-					this._as3OpenNI.depthMapSnap = true;
+					this._as3OpenNI.depthMapSnapOff = false;
 					
 					this._as3OpenNI.video = true;
-					this._as3OpenNI.videoQuality = AS3OpenNI.JPEG_QUALITYBAD;
-					this._as3OpenNI.videoGrayscale = true;
 					this._as3OpenNI.init();
 					
 					this.addSessionListeners();
-					this._as3OpenNI.addEventListener(ONICaptureEvent.ONI_DEPTH_MAP, getDepthMap);
-					this._as3OpenNI.addEventListener(ONICaptureEvent.ONI_RGB, getRGB);
 				}
 				
 				// Setup stage listeners.
@@ -131,16 +127,16 @@
 				trace('Session Ended');
 			}
 			
-			protected function getDepthMap(event:ONICaptureEvent):void
+			protected function getDepthMap(event:OpenNIEvent):void
 			{
 				this._depthMapLoader.unloadAndStop();
-				this._depthMapLoader.source = event.bytes;
+				//this._depthMapLoader.source = event.bytes;
 			}
 			
-			protected function getRGB(event:ONICaptureEvent):void
+			protected function getRGB(event:OpenNIEvent):void
 			{
 				this._rgbLoader.unloadAndStop();
-				this._rgbLoader.source = event.bytes;
+				//this._rgbLoader.source = event.bytes;
 			}
 			
 			protected function _depthMapLoader_completeHandler(event:Event):void
