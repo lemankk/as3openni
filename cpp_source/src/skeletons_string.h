@@ -1,5 +1,5 @@
-#ifndef __SKELETON_H__
-#define __SKELETON_H__
+#ifndef __SKELETONS_STRING_H__
+#define __SKELETONS_STRING_H__
 
 #include <XnOpenNI.h>
 #include <XnTypes.h>
@@ -19,7 +19,7 @@ extern XnBool _useSockets;
 
 #define SKEL_FORMAT "user_tracking:%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f||"
 #define COM_FORMAT "user_found:%d,%f,%f,%f||"
-#define MAX_USERS 15
+#define MAC_MAX_USERS 5
 
 void renderSkeleton();
 extern void sendToSocket(int socket, const char *data);

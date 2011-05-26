@@ -1,4 +1,4 @@
-#include "skeleton.h"
+#include "skeletons_string.h"
 
 #if (XN_PLATFORM == XN_PLATFORM_WIN32)
 	#include "socket.h"
@@ -16,11 +16,11 @@ NIPlayer *_niPlayer;
 
 void renderSkeleton()
 {
-	_niPlayer = (NIPlayer*)malloc(sizeof(NIPlayer)*MAX_USERS*375);
+	_niPlayer = (NIPlayer*)malloc(sizeof(NIPlayer)*MAC_MAX_USERS*375);
 	_niPlayer->players = new std::string();
 	
-	XnUserID aUsers[MAX_USERS];
-	XnUInt16 nUsers = MAX_USERS;
+	XnUserID aUsers[MAC_MAX_USERS];
+	XnUInt16 nUsers = MAC_MAX_USERS;
 	_userGenerator.GetUsers(aUsers, nUsers);
 	
 	for (int i = 0; i < nUsers; ++i)
@@ -194,7 +194,7 @@ void renderSkeleton()
 	// Pass along the player data.
 	if(_niPlayer->players->length() > 0)
 	{
-		if(_printUserTracking) cout<<"Players: "<< _niPlayer->players->c_str() <<"\n";
+		if(_printUserTracking) cout<<"AS3OpenNI :: Players: "<< _niPlayer->players->c_str() <<"\n";
 		if(_useSockets) sendToSocket(USER_TRACKING_SOCKET, _niPlayer->players->c_str());
 	}
 	

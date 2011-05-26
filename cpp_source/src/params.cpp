@@ -20,10 +20,8 @@ void setupParams(int argc, char *argv[])
 				cout<<"-tpc 4 || # of TrackPad Columns, default is 4\n";
 				cout<<"-tpr 9 || # of TrackPad Rows, default is 9\n";
 				cout<<"-grey || RGBCapture render in grayscale, default is false\n";
-				cout<<"-rgbq 1 || RGBCapture quality, 0 = Low, 1 = Average, 2 = High, 3 = Super High, default is 1\n";
-				cout<<"-dmq 1 || DepthMapCapture quality, 0 = Low, 1 = Average, 2 = High, 3 = Super High, default is 1\n";
 				cout<<"-dmbg || Turn on the DepthMapCapture background, default is false\n";
-				cout<<"-snap || Snap the RGBCapture pixels with the DepthMapCapture pixels, default is false\n";
+				cout<<"-snapoff || Snap the RGBCapture pixels with the DepthMapCapture pixels, default is on\n";
 				cout<<"-mrev || Mirror mode will be set to false, default is true\n";
 				cout<<"-aso || Turn off all sockets\n";
 				cout<<" \n";
@@ -44,8 +42,6 @@ void setupParams(int argc, char *argv[])
 				cout<<"-psldf || Print out the Slider events\n";
 				cout<<"-ptpf || Print out the TrackPad events\n";
 				cout<<"-putf || Print out the UserTracking events\n";
-				cout<<"-prgbc || Print out the RGBCapture file size\n";
-				cout<<"-pdmc || Print out the DepthMapCapture file size\n";
 				cout<<" \n";
 				cout<<"===============================================================\n";
 				cout<<" \n";
@@ -59,25 +55,13 @@ void setupParams(int argc, char *argv[])
 				if(param == "-tpc")
 				{
 					trackpad_columns = atoi(argv[i + 1]);
-					cout<<"TrackPad Columns: "<< trackpad_columns <<"\n";
+					cout<<"AS3OpenNI :: TrackPad Columns: "<< trackpad_columns <<"\n";
 				}
 			
 				if(param == "-tpr")
 				{
 					trackpad_rows = atoi(argv[i + 1]);
-					cout<<"TrackPad Rows: "<< trackpad_rows <<"\n";
-				}
-				
-				if(param == "-rgbq")
-				{
-					rgb_quality = atoi(argv[i + 1]);
-					cout<<"RGBCapture Quality: "<< rgb_quality <<"\n";
-				}
-				
-				if(param == "-dmq")
-				{
-					depthmap_quality = atoi(argv[i + 1]);
-					cout<<"DepthMapCapture Quality: "<< depthmap_quality <<"\n";
+					cout<<"AS3OpenNI :: TrackPad Rows: "<< trackpad_rows <<"\n";
 				}
 			}
 			
@@ -85,129 +69,111 @@ void setupParams(int argc, char *argv[])
 			if(param == "-aso")
 			{
 				_useSockets = false;
-				cout<<"All sockets are off\n";
+				cout<<"AS3OpenNI :: All sockets are off\n";
 			}
 			
 			if(param == "-mrev")
 			{
 				_mirror = false;
-				cout<<"Mirror mode is now false\n";
+				cout<<"AS3OpenNI :: Mirror mode is now false\n";
 			}
 			
 			if(param == "-dmbg")
 			{
 				_depthMapBackground = true;
-				cout<<"DepthMapCapture background is now on\n";
+				cout<<"AS3OpenNI :: DepthMapCapture background is now on\n";
 			}
 			
 			// Turn on features.
 			if(param == "-ospf")
 			{
 				_featureSinglePoint = true;
-				cout<<"SinglePoint feature turned on\n";
+				cout<<"AS3OpenNI :: SinglePoint feature turned on\n";
 			}
 			
 			if(param == "-ogf")
 			{
 				_featureGesture = true;
-				cout<<"Gesture feature turned on\n";
+				cout<<"AS3OpenNI :: Gesture feature turned on\n";
 			}
 			
 			if(param == "-ocf")
 			{
 				_featureCircle = true;
-				cout<<"Circle feature turned on\n";
+				cout<<"AS3OpenNI :: Circle feature turned on\n";
 			}
 			
 			if(param == "-osldf")
 			{
 				_featureSlider = true;
-				cout<<"Slider feature turned on\n";
+				cout<<"AS3OpenNI :: Slider feature turned on\n";
 			}
 			
 			if(param == "-otpf")
 			{
 				_featureTrackPad = true;
-				cout<<"TrackPad feature turned on\n";
+				cout<<"AS3OpenNI :: TrackPad feature turned on\n";
 			}
 			
 			if(param == "-outf")
 			{
 				_featureUserTracking = true;
-				cout<<"UserTracking feature turned on\n";
+				cout<<"AS3OpenNI :: UserTracking feature turned on\n";
 			}
 			
 			if(param == "-orgbc")
 			{
 				_featureRGBCapture = true;
-				cout<<"RGBCapture feature turned on\n";
+				cout<<"AS3OpenNI :: RGBCapture feature turned on\n";
 			}
 			
 			if(param == "-odmc")
 			{
 				_featureDepthMapCapture = true;
-				cout<<"DepthMapCapture feature turned on\n";
+				cout<<"AS3OpenNI :: DepthMapCapture feature turned on\n";
 			}
 			
 			// Print out feature events.
 			if(param == "-pspf")
 			{
 				_printSinglePoint = true;
-				cout<<"SinglePoint events will print out\n";
+				cout<<"AS3OpenNI :: SinglePoint events will print out\n";
 			}
 			
 			if(param == "-pgf")
 			{
 				_printGesture = true;
-				cout<<"Gesture events will print out\n";
+				cout<<"AS3OpenNI :: Gesture events will print out\n";
 			}
 			
 			if(param == "-pcf")
 			{
 				_printCircle = true;
-				cout<<"Circle events will print out\n";
+				cout<<"AS3OpenNI :: Circle events will print out\n";
 			}
 			
 			if(param == "-psldf")
 			{
 				_printSlider = true;
-				cout<<"Slider events will print out\n";
+				cout<<"AS3OpenNI :: Slider events will print out\n";
 			}
 			
 			if(param == "-ptpf")
 			{
 				_printTrackPad = true;
-				cout<<"TrackPad events will print out\n";
+				cout<<"AS3OpenNI :: TrackPad events will print out\n";
 			}
 			
 			if(param == "-putf")
 			{
 				_printUserTracking = true;
-				cout<<"UserTracking events will print out\n";
+				cout<<"AS3OpenNI :: UserTracking events will print out\n";
 			}
 			
-			if(param == "-prgbc")
+			if(param == "-snapoff")
 			{
-				_printRGBCapture = true;
-				cout<<"Print out the RGBCapture file size\n";
-			}
-			
-			if(param == "-pdmc")
-			{
-				_printDepthMapCapture = true;
-				cout<<"Print out the DepthMapCapture file size\n";
-			}
-			
-			if(param == "-grey")
-			{
-				_rgbGoGrey = true;
-				cout<<"RGBCapture render in grayscale\n";
-			}
-			
-			if(param == "-snap")
-			{
-				_snapPixels = true;
-				cout<<"Snapping the RGBCapture pixels with the DepthMapCapture pixels is on\n";
+				_snapPixels = false;
+				cout<<"AS3OpenNI :: Snapping the RGBCapture pixels with the DepthMapCapture pixels is now off\n";
 			}
 		}
 	}

@@ -15,8 +15,6 @@ extern XnBool _featureSlider;
 extern XnBool _featureTrackPad;
 extern XnBool _featureSinglePoint;
 extern XnBool _featureUserTracking;
-extern XnBool _featureRGBCapture;
-extern XnBool _featureDepthMapCapture;
 extern XnBool _useSockets;
 
 void setupSockets();
