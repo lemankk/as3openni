@@ -47,6 +47,7 @@
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.traceLog = false;
 					this._as3OpenNI.userTracking = true;
+					this._as3OpenNI.convertRealWorldToProjective = false;
 					this._as3OpenNI.init();
 					
 					this.addSessionListeners();
@@ -57,7 +58,11 @@
 			protected function setupSkeletons3DWorld():void
 			{
 				this._user1SkelWorld = new Skeletons3DWorld();
+				this._user1SkelWorld.convertRealWorldToProjective = false;
+				
 				this._user2SkelWorld = new Skeletons3DWorld();
+				this._user2SkelWorld.convertRealWorldToProjective = false;
+				
 				this._skeletons.addChild(this._user1SkelWorld);
 				this._skeletons.addChild(this._user2SkelWorld);
 				this._user2SkelWorld.alpha = .7;
