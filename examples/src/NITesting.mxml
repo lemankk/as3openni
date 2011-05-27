@@ -88,6 +88,7 @@
 					this._as3OpenNI.circle = false;
 					this._as3OpenNI.slider = false;
 					this._as3OpenNI.userTracking = false;
+					this._as3OpenNI.convertRealWorldToProjective = false;
 					
 					this._as3OpenNI.trackPad = false;
 					this._as3OpenNI.trackPadColumns = 2;

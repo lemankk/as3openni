@@ -18,6 +18,7 @@ package
 		private var _skeletonsCollection:ArrayCollection;
 		private var _currentSkelBody:Lines3D;
 		public var skeleton:NiSkeleton;
+		public var convertRealWorldToProjective:Boolean = false;
 		
 		public function Skeletons3DWorld(viewportWidth:Number=640, viewportHeight:Number=480, scaleToStage:Boolean=true, interactive:Boolean=false, cameraType:String="Target")
 		{
@@ -134,8 +135,17 @@ package
 			var v1:Vertex3D;
 			var v2:Vertex3D;
 			
-			v1 = new Vertex3D(from.pointX, from.pointY+300, from.pointZ/5);
-			v2 = new Vertex3D(to.pointX, to.pointY+300, to.pointZ/5);
+			if(this.convertRealWorldToProjective)
+			{
+				v1 = new Vertex3D(from.pointX, -from.pointY+300, from.pointZ/5);
+				v2 = new Vertex3D(to.pointX, -to.pointY+300, to.pointZ/5);
+			}
+			else
+			{
+				v1 = new Vertex3D(from.pointX, from.pointY+300, from.pointZ/5);
+				v2 = new Vertex3D(to.pointX, to.pointY+300, to.pointZ/5);
+			}
+			
 			line = new Line3D(skelBody, new LineMaterial(0xFF0000) , 2, v1, v2);
 			skelBody.addLine(line);
 		}
