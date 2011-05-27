@@ -23,6 +23,7 @@ void setupParams(int argc, char *argv[])
 				cout<<"-dmbg || Turn on the DepthMapCapture background, default is false\n";
 				cout<<"-snapoff || Snap the RGBCapture pixels with the DepthMapCapture pixels, default is on\n";
 				cout<<"-mrev || Mirror mode will be set to false, default is true\n";
+				cout<<"-crwp || Convert skeleton data from real world to projective, default is off\n";
 				cout<<"-aso || Turn off all sockets\n";
 				cout<<" \n";
 				cout<<"Turn On Features:\n";
@@ -72,10 +73,16 @@ void setupParams(int argc, char *argv[])
 				cout<<"AS3OpenNI :: All sockets are off\n";
 			}
 			
+			if(param == "-crwp")
+			{
+				_convertRealWorldToProjective = true;
+				cout<<"AS3OpenNI :: Converting skeleton data from real world to projective is now on\n";
+			}
+			
 			if(param == "-mrev")
 			{
 				_mirror = false;
-				cout<<"AS3OpenNI :: Mirror mode is now false\n";
+				cout<<"AS3OpenNI :: Mirror mode is now off\n";
 			}
 			
 			if(param == "-dmbg")
