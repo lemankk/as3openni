@@ -14,6 +14,7 @@ extern UserGenerator _userGenerator;
 extern SceneMetaData _sceneData;
 extern DepthGenerator _depth;
 
+extern XnBool _convertRealWorldToProjective;
 extern XnBool _printUserTracking;
 extern XnBool _useSockets;
 

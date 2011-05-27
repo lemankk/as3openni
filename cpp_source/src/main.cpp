@@ -125,6 +125,7 @@ XnBool _drawPixels = true;
 XnBool _inSession = false;
 XnBool _quit = false;
 XnBool _useSockets = true;
+XnBool _convertRealWorldToProjective = false;
 
 // User tracking vars
 XnBool _needPose = false;
@@ -295,48 +296,73 @@ if (_status == XN_STATUS_NO_NODE_PRESENT)	\
 			if(g_UserGenerator.GetSkeletonCap().IsTracking(player))
 			{
 				memcpy(g_ucSkeletonsBuffer[i].player_id, &player, 4);
-				XnSkeletonJointPosition head, neck, left_shoulder, left_elbow, left_hand, right_shoulder, right_elbow, right_hand;
-				XnSkeletonJointPosition torso, left_hip, left_knee, left_foot, right_hip, right_knee, right_foot;
-				
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_HEAD, head);
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_NECK, neck);
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_TORSO, torso);
-	
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_SHOULDER, left_shoulder);
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_ELBOW, left_elbow);
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_HAND, left_hand);
-	
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_SHOULDER, right_shoulder);
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_ELBOW, right_elbow);
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_HAND, right_hand);
-	
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_HIP, left_hip);
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_KNEE, left_knee);
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_FOOT, left_foot);
-	
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_HIP, right_hip);
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_KNEE, right_knee);
-				g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_FOOT, right_foot);
-	
-				copyNIData(g_ucSkeletonsBuffer[i].head, head.position.X, head.position.Y, head.position.Z);
-				copyNIData(g_ucSkeletonsBuffer[i].neck, neck.position.X, neck.position.Y, neck.position.Z);
-				copyNIData(g_ucSkeletonsBuffer[i].torso, torso.position.X, torso.position.Y, torso.position.Z);
-	
-				copyNIData(g_ucSkeletonsBuffer[i].lshoulder, left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z);
-				copyNIData(g_ucSkeletonsBuffer[i].lelbow, left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z);
-				copyNIData(g_ucSkeletonsBuffer[i].lhand, left_hand.position.X, left_hand.position.Y, left_hand.position.Z);
-	
-				copyNIData(g_ucSkeletonsBuffer[i].rshoulder, right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z);
-				copyNIData(g_ucSkeletonsBuffer[i].relbow, right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z);
-				copyNIData(g_ucSkeletonsBuffer[i].rhand, right_hand.position.X, right_hand.position.Y, right_hand.position.Z);
-	
-				copyNIData(g_ucSkeletonsBuffer[i].lhip, left_hip.position.X, left_hip.position.Y, left_hip.position.Z);
-				copyNIData(g_ucSkeletonsBuffer[i].lknee, left_knee.position.X, left_knee.position.Y, left_knee.position.Z);
-				copyNIData(g_ucSkeletonsBuffer[i].lfoot, left_foot.position.X, left_foot.position.Y, left_foot.position.Z);
-	
-				copyNIData(g_ucSkeletonsBuffer[i].rhip, right_hip.position.X, right_hip.position.Y, right_hip.position.Z);
-				copyNIData(g_ucSkeletonsBuffer[i].rknee, right_knee.position.X, right_knee.position.Y, right_knee.position.Z);
-				copyNIData(g_ucSkeletonsBuffer[i].rfoot, right_foot.position.X, right_foot.position.Y, right_foot.position.Z);
+				if(_convertRealWorldToProjective)
+				{
+					getJointPosition(player, XN_SKEL_HEAD, g_ucSkeletonsBuffer[i].head);
+					getJointPosition(player, XN_SKEL_NECK, g_ucSkeletonsBuffer[i].neck);
+					getJointPosition(player, XN_SKEL_TORSO, g_ucSkeletonsBuffer[i].torso);
+					
+					getJointPosition(player, XN_SKEL_LEFT_SHOULDER, g_ucSkeletonsBuffer[i].lshoulder);
+					getJointPosition(player, XN_SKEL_LEFT_ELBOW, g_ucSkeletonsBuffer[i].lelbow);
+					getJointPosition(player, XN_SKEL_LEFT_HAND, g_ucSkeletonsBuffer[i].lhand);
+
+					getJointPosition(player, XN_SKEL_RIGHT_SHOULDER, g_ucSkeletonsBuffer[i].rshoulder);
+					getJointPosition(player, XN_SKEL_RIGHT_ELBOW, g_ucSkeletonsBuffer[i].relbow);
+					getJointPosition(player, XN_SKEL_RIGHT_HAND, g_ucSkeletonsBuffer[i].rhand);
+					
+					getJointPosition(player, XN_SKEL_LEFT_HIP, g_ucSkeletonsBuffer[i].lhip);
+					getJointPosition(player, XN_SKEL_LEFT_KNEE, g_ucSkeletonsBuffer[i].lknee);
+					getJointPosition(player, XN_SKEL_LEFT_FOOT, g_ucSkeletonsBuffer[i].lfoot);
+
+					getJointPosition(player, XN_SKEL_RIGHT_HIP, g_ucSkeletonsBuffer[i].rhip);
+					getJointPosition(player, XN_SKEL_RIGHT_KNEE, g_ucSkeletonsBuffer[i].rknee);
+					getJointPosition(player, XN_SKEL_RIGHT_FOOT, g_ucSkeletonsBuffer[i].rfoot);
+				}
+				else
+				{
+					XnSkeletonJointPosition head, neck, left_shoulder, left_elbow, left_hand, right_shoulder, right_elbow, right_hand;
+					XnSkeletonJointPosition torso, left_hip, left_knee, left_foot, right_hip, right_knee, right_foot;
+					
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_HEAD, head);
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_NECK, neck);
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_TORSO, torso);
+		
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_SHOULDER, left_shoulder);
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_ELBOW, left_elbow);
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_HAND, left_hand);
+		
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_SHOULDER, right_shoulder);
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_ELBOW, right_elbow);
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_HAND, right_hand);
+		
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_HIP, left_hip);
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_KNEE, left_knee);
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_LEFT_FOOT, left_foot);
+		
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_HIP, right_hip);
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_KNEE, right_knee);
+					g_UserGenerator.GetSkeletonCap().GetSkeletonJointPosition(player, XN_SKEL_RIGHT_FOOT, right_foot);
+		
+					copyNIData(g_ucSkeletonsBuffer[i].head, head.position.X, head.position.Y, head.position.Z);
+					copyNIData(g_ucSkeletonsBuffer[i].neck, neck.position.X, neck.position.Y, neck.position.Z);
+					copyNIData(g_ucSkeletonsBuffer[i].torso, torso.position.X, torso.position.Y, torso.position.Z);
+		
+					copyNIData(g_ucSkeletonsBuffer[i].lshoulder, left_shoulder.position.X, left_shoulder.position.Y, left_shoulder.position.Z);
+					copyNIData(g_ucSkeletonsBuffer[i].lelbow, left_elbow.position.X, left_elbow.position.Y, left_elbow.position.Z);
+					copyNIData(g_ucSkeletonsBuffer[i].lhand, left_hand.position.X, left_hand.position.Y, left_hand.position.Z);
+		
+					copyNIData(g_ucSkeletonsBuffer[i].rshoulder, right_shoulder.position.X, right_shoulder.position.Y, right_shoulder.position.Z);
+					copyNIData(g_ucSkeletonsBuffer[i].relbow, right_elbow.position.X, right_elbow.position.Y, right_elbow.position.Z);
+					copyNIData(g_ucSkeletonsBuffer[i].rhand, right_hand.position.X, right_hand.position.Y, right_hand.position.Z);
+		
+					copyNIData(g_ucSkeletonsBuffer[i].lhip, left_hip.position.X, left_hip.position.Y, left_hip.position.Z);
+					copyNIData(g_ucSkeletonsBuffer[i].lknee, left_knee.position.X, left_knee.position.Y, left_knee.position.Z);
+					copyNIData(g_ucSkeletonsBuffer[i].lfoot, left_foot.position.X, left_foot.position.Y, left_foot.position.Z);
+		
+					copyNIData(g_ucSkeletonsBuffer[i].rhip, right_hip.position.X, right_hip.position.Y, right_hip.position.Z);
+					copyNIData(g_ucSkeletonsBuffer[i].rknee, right_knee.position.X, right_knee.position.Y, right_knee.position.Z);
+					copyNIData(g_ucSkeletonsBuffer[i].rfoot, right_foot.position.X, right_foot.position.Y, right_foot.position.Z);
+				}
 			}
 		}
 	}
@@ -930,9 +956,10 @@ void XN_CALLBACK_TYPE User_NewUser(UserGenerator& generator, XnUserID nId, void*
 	sprintf(cValue, "user_tracking_new_user:%d", nId);
 	if(_useSockets) 
 	{
-		sendToSocket(USER_TRACKING_SOCKET, cValue);
 		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
 			g_AS3Network.sendMessage(1,2,nId);
+		#else
+			sendToSocket(USER_TRACKING_SOCKET, cValue);
 		#endif
 	}
 }
@@ -945,9 +972,10 @@ void XN_CALLBACK_TYPE User_LostUser(UserGenerator& generator, XnUserID nId, void
 	sprintf(cValue, "user_tracking_lost_user:%d", nId);
 	if(_useSockets) 
 	{
-		sendToSocket(USER_TRACKING_SOCKET, cValue);
 		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
 			g_AS3Network.sendMessage(1,3,nId);
+		#else
+			sendToSocket(USER_TRACKING_SOCKET, cValue);
 		#endif
 	}
 }
@@ -962,9 +990,10 @@ void XN_CALLBACK_TYPE UserPose_PoseDetected(PoseDetectionCapability& capability,
 	sprintf(cValue, "user_tracking_pose_detected:%d", nId);
 	if(_useSockets) 
 	{
-		sendToSocket(USER_TRACKING_SOCKET, cValue);
 		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
 			g_AS3Network.sendMessage(1,6,nId);
+		#else
+			sendToSocket(USER_TRACKING_SOCKET, cValue);
 		#endif
 	}
 }
@@ -977,9 +1006,10 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationStart(SkeletonCapability& capab
 	sprintf(cValue, "user_tracking_user_calibration_start:%d", nId);
 	if(_useSockets) 
 	{
-		sendToSocket(USER_TRACKING_SOCKET, cValue);
 		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
 			g_AS3Network.sendMessage(1,7,nId);
+		#else
+			sendToSocket(USER_TRACKING_SOCKET, cValue);
 		#endif
 	}
 }
@@ -995,9 +1025,10 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationEnd(SkeletonCapability& capabil
 		sprintf(cValue, "user_tracking_user_calibration_complete:%d", nId);
 		if(_useSockets) 
 		{
-			sendToSocket(USER_TRACKING_SOCKET, cValue);
 			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
 				g_AS3Network.sendMessage(1,8,nId);
+			#else
+				sendToSocket(USER_TRACKING_SOCKET, cValue);
 			#endif
 		}
 	}
@@ -1017,9 +1048,10 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationEnd(SkeletonCapability& capabil
 		sprintf(cValue, "user_tracking_user_calibration_failed:%d", nId);
 		if(_useSockets) 
 		{
-			sendToSocket(USER_TRACKING_SOCKET, cValue);
 			#if (XN_PLATFORM == XN_PLATFORM_WIN32)
 				g_AS3Network.sendMessage(1,9,nId);
+			#else
+				sendToSocket(USER_TRACKING_SOCKET, cValue);
 			#endif
 		}
 	}
@@ -1294,12 +1326,7 @@ int main(int argc, char *argv[])
 		_sessionManager->Update(&_context);
 		
 		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-			//if(_featureUserTracking) getPlayers();
-			
-			// Test this out first on PC, and see if you get the same results.
-			// Known bug with this, is that it can crash quicker on the PC.
-			// So using the getPlayers method doesn't crash.
-			if(_featureUserTracking) renderSkeleton();
+			if(_featureUserTracking) getPlayers();
 		#else
 			if(_featureUserTracking) renderSkeleton();
 		#endif

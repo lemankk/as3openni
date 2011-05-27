@@ -65,6 +65,7 @@ Author: Tony Birleffi
   * Need to improve RGB capture performance on PC and Mac, still pretty slow
   * Add multiple skeleton support with the Skeletons examples.
   * Removed the FreeImage support.
+  * Added an option to convert the skeleton data from real world to projective.
   
 ===TODO LIST:===
   * Add Hand/Finger Tracking
