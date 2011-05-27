@@ -114,7 +114,6 @@
 			{
 				this.addEventListener(Event.ENTER_FRAME, onRender);
 				this._as3OpenNI.removeEventListener(AS3OpenNIEvent.READY, onReady);
-				
 				this._as3OpenNI.addEventListener(OpenNIEvent.ON_VIDEO, onVideo);
 				this._as3OpenNI.addEventListener(OpenNIEvent.ON_DEPTH, onDepth);
 			}
@@ -125,8 +124,6 @@
 				{
 					this._as3OpenNI.getVideoBuffer();
 					this._as3OpenNI.getDepthBuffer();
-					
-					// This is an alternative way to get the data, however this only works on PC's.
 					this._as3OpenNI.getUserTrackingBuffer();
 					this._as3OpenNI.getSkeletonsBuffer();
 				}
