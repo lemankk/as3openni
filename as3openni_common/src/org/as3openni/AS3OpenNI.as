@@ -45,8 +45,6 @@ package org.as3openni
 	import org.as3openni.events.AS3OpenNIEvent;
 	import org.as3openni.events.ClientSocketEvent;
 	import org.as3openni.events.openni.OpenNIEvent;
-	import org.as3openni.events.openni.SkeletonEvent;
-	import org.as3openni.events.openni.UserTrackingEvent;
 	import org.as3openni.global.Definitions;
 	import org.as3openni.nite.events.NiteCircleEvent;
 	import org.as3openni.nite.events.NiteGestureEvent;
@@ -90,6 +88,7 @@ package org.as3openni
 		public var depthMapSnapOff:Boolean = false;
 		public var video:Boolean = false;
 		public var mirrorModeOff:Boolean = false;
+		public var convertRealWorldToProjective:Boolean = false;
 		public var isWindows:Boolean = true;
 		
 		private var _bridgeReady:Boolean = false;
@@ -142,8 +141,7 @@ package org.as3openni
 						this.addSliderListeners();
 					}
 					
-					// Not sure if this is needed, yet still need to test on a PC.
-					if(this.userTracking /*&& !this.isWindows*/)
+					if(this.userTracking && !this.isWindows)
 					{
 						this.userTrackingSocket = new ONIUserTrackingSocket();
 						this.userTrackingSocket.traceLog = this.traceLog;
@@ -260,11 +258,11 @@ package org.as3openni
 								break;
 							
 							case Definitions.OPENNI_USER_FOUND:
-								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.USER_FOUND, buffer.readInt()));
+								this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_NEW_USER, Number(buffer.readInt())));
 								break;
 							
 							case Definitions.OPENNI_USER_LOST:
-								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.USER_LOST, buffer.readInt()));
+								this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_LOST_USER, Number(buffer.readInt())));
 								break;
 							
 							case Definitions.OPENNI_GET_USERS:
@@ -275,7 +273,7 @@ package org.as3openni
 									userData.pointX = buffer.readFloat();
 									userData.pointY = buffer.readFloat();
 									userData.pointZ = buffer.readFloat();
-									this.dispatchEvent(new UserTrackingEvent(UserTrackingEvent.USER_TRACKED, userId, userData));
+									this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_USER_FOUND, Number(buffer.readInt()), userData));
 								}
 								this._userTrackingBuffer.busy = false;
 								break;
@@ -286,25 +284,25 @@ package org.as3openni
 								{
 									var skel:NiSkeleton = new NiSkeleton();
 									skel.update(buffer);
-									this.dispatchEvent(new SkeletonEvent(SkeletonEvent.SKELETONS, skelId, skel));
+									this.dispatchEvent(new ONISkeletonEvent(ONISkeletonEvent.USER_TRACKING, skelId, skel.leftHand, skel.rightHand, skel));
 								}
 								this._skeletonsBuffer.busy = false;
 								break;
 							
 							case Definitions.OPENNI_POSE_DETECTED:
-								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.POSE_DETECTED, buffer.readInt()));
+								this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_POSE_DETECTED, Number(buffer.readInt())));
 								break;
 							
 							case Definitions.OPENNI_CALIBRATION_STARTED:
-								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.CALIBRATION_STARTED, buffer.readInt()));
+								this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_START, Number(buffer.readInt())));
 								break;
 							
 							case Definitions.OPENNI_CALIBRATION_COMPLETE:
-								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.CALIBRATION_COMPLETE, buffer.readInt()));
+								this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_COMPLETE, Number(buffer.readInt())));
 								break;
 							
 							case Definitions.OPENNI_CALIBRATION_FAILED:
-								this.dispatchEvent(new OpenNIEvent(OpenNIEvent.CALIBRATION_FAILED, buffer.readInt()));
+								this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, Number(buffer.readInt())));
 								break;
 						}
 						break;
@@ -413,7 +411,14 @@ package org.as3openni
 			}
 			
 			// Turn on the UserTracking feature.
-			if(this.userTracking) processArgs.push("-outf");
+			if(this.userTracking) 
+			{
+				// Pass to the binary.
+				processArgs.push("-outf");
+				
+				// Turn on the convert real world to projective for the skeleton data.
+				if(this.convertRealWorldToProjective) processArgs.push("-crwp");
+			}
 			
 			// Turn on the DepthMapCapture feature only testing one or the other in this file.
 			if(this.depthMap) 
