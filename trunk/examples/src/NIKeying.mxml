@@ -8,209 +8,105 @@
 			   verticalAlign="top" 
 			   horizontalScrollPolicy="off"
 			   verticalScrollPolicy="off"
-			   resizing="resizingHandler()"
-			   backgroundColor="#000000">
+			   backgroundColor="#000000"
+			   frameRate="210">
 	
 	<fx:Script>
 		<![CDATA[
-			import com.quasimondo.bitmapdata.ThresholdBitmap;
 			
 			import flash.filters.BlurFilter;
 			
-			import mx.events.ResizeEvent;
-			import mx.events.StateChangeEvent;
-			
-			import net.hires.debug.Stats;
-			
 			import org.as3openni.AS3OpenNI;
+			import org.as3openni.events.AS3OpenNIEvent;
 			import org.as3openni.events.openni.OpenNIEvent;
 			import org.as3openni.global.Definitions;
-			import org.as3openni.nite.events.NiteSessionEvent;
-
-			// Setup the AS3OpenNI client and server.
+			import org.as3openni.util.BitmapUtil;
+			
+			private var _flexUIOnly:Boolean = false;
 			private var _as3OpenNI:AS3OpenNI;
-			
-			// Run or debug application.
-			private var _runAppOnly:Boolean = false;
-			
-			// For the depth camera/rgb testing.
-			private var _depthMapCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
-			private var _rgbCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
-			private var _maskCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, true, 0x00000000);
+			private var _videoCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
+			private var _videoCanvas2:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
+			private var _depthCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, true, 0xFF0000);
 			
 			[Bindable]
-			private var _depthMapBmp:Bitmap;
+			private var _videoBmp:Bitmap;
 			
 			[Bindable]
-			private var _rgbBmp:Bitmap;
+			private var _videoBmp2:Bitmap;
 			
 			[Bindable]
-			private var _rgbBmp2:Bitmap;
-			
-			[Bindable]
-			private var _thresholdBmp:Bitmap;
-			
-			[Bindable]
-			private var _maskBmp:Bitmap;
-			
-			// Setup the threshold map.
-			private var _thresholdMap:ThresholdBitmap;
+			private var _depthBmp:Bitmap;
 			
 			protected function init(event:Event):void
 			{
-				// Setup garbage collection.
-				System.gc();
+				// Define bitmaps to draw on to.
+				this._videoBmp = new Bitmap(this._videoCanvas);
+				this._videoBmp2 = new Bitmap(this._videoCanvas2);
+				this._depthBmp = new Bitmap(this._depthCanvas);
 				
-				// Setup the DepthMap bitmap and the RGB bitmap.
-				this._depthMapBmp = new Bitmap(this._depthMapCanvas);
-				this._rgbBmp = new Bitmap(this._rgbCanvas);
-				this._rgbBmp2 = new Bitmap(this._rgbCanvas);
-				this._maskBmp = new Bitmap(this._maskCanvas);
-				
-				// Setup the threshold bitmap.
-				this._thresholdMap = new ThresholdBitmap(this._depthMapBmp.bitmapData);
-				this._thresholdMap.mode = ThresholdBitmap.ENTROPY;
-				this._thresholdMap.smooth = 5; //0-16.
-				this._thresholdMap.adaptiveTolerance = 50; //0-255.
-				this._thresholdMap.thresholdValue = 170; //0-255.
-				this._thresholdMap.adaptiveRadius = 32; //0-255.
-				this._thresholdMap.applyDespeckle = true;
-				this._thresholdMap.applyEdges = false;
-				this._thresholdBmp = new Bitmap(this._thresholdMap);
-				
-				// Stats object by Mr.Doob.
-				var stats:Stats = new Stats();
-				this._stats.addChild(stats);
-				
-				if(!this._runAppOnly)
+				// Run AS3OpenNI.
+				if(!this._flexUIOnly)
 				{
 					this._as3OpenNI = new AS3OpenNI();
-					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.0.9";
+					this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
+					this._as3OpenNI.binaryPath = 'bin/AS3OpenNI_Alpha_1.3.0';
 					this._as3OpenNI.debug = true;
-					
+					this._as3OpenNI.video = true;
 					this._as3OpenNI.depthMap = true;
 					this._as3OpenNI.depthMapBackground = false;
-					this._as3OpenNI.depthMapSnapOff = false;
-					
-					this._as3OpenNI.video = true;
+					this._as3OpenNI.mirrorModeOff = false;
 					this._as3OpenNI.init();
-					
-					this.addSessionListeners();
 				}
 				
-				// Setup stage listeners.
-				this.stage.nativeWindow.addEventListener(NativeWindowDisplayStateEvent.DISPLAY_STATE_CHANGE, trackState);
+				var bf:BlurFilter = new BlurFilter(4, 4, 3);
+				this._depthBox.filters = [bf];
+				this._videoBox.mask = this._depthBox;
+			}
+			
+			protected function onReady(event:AS3OpenNIEvent):void
+			{
+				this.addEventListener(Event.ENTER_FRAME, onRender);
+				this._as3OpenNI.removeEventListener(AS3OpenNIEvent.READY, onReady);
 				
-				// Apply the mask.
-				this._rgbFeed.mask = this._maskFeed;
+				this._as3OpenNI.addEventListener(OpenNIEvent.ON_VIDEO, onVideo);
+				this._as3OpenNI.addEventListener(OpenNIEvent.ON_DEPTH, onDepth);
 			}
 			
-			protected function addSessionListeners():void
+			protected function onRender(event:Event):void
 			{
-				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
-				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_PROGRESS, sessionProgress);
-				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_ENDED, sessionEnded);
+				if(this._as3OpenNI.isReady())
+				{
+					this._as3OpenNI.getVideoBuffer();
+					this._as3OpenNI.getDepthBuffer();
+				}
 			}
 			
-			protected function sessionStarted(event:NiteSessionEvent):void
+			protected function onVideo(event:OpenNIEvent):void
 			{
-				trace('Session Started');
+				this._videoCanvas2.fillRect(this._videoCanvas2.rect, 0);
+				this._videoCanvas.fillRect(this._videoCanvas.rect, 0);
+				var buff:ByteArray = event.data as ByteArray;
+				var buff2:ByteArray = new ByteArray();
+				buff2.writeBytes(buff, 0, buff.bytesAvailable);
+				buff2.position = 0;
+				
+				BitmapUtil.byteArrayToBitmapData(buff, this._videoCanvas);
+				BitmapUtil.byteArrayToBitmapData(buff2, this._videoCanvas2);
+				BitmapUtil.setBlackWhiteFilter(this._videoCanvas2);
 			}
 			
-			protected function sessionProgress(event:NiteSessionEvent):void
+			protected function onDepth(event:OpenNIEvent):void
 			{
-				trace('Session Progress');
-			}
-			
-			protected function sessionEnded(event:NiteSessionEvent):void
-			{
-				trace('Session Ended');
-			}
-			
-			protected function getDepthMap(event:OpenNIEvent):void
-			{
-				this._depthMapLoader.unloadAndStop();
-				//this._depthMapLoader.source = event.bytes;
-			}
-			
-			protected function getRGB(event:OpenNIEvent):void
-			{
-				this._rgbLoader.unloadAndStop();
-				//this._rgbLoader.source = event.bytes;
-			}
-			
-			protected function _depthMapLoader_completeHandler(event:Event):void
-			{
-				this._depthMapCanvas.fillRect(this._depthMapCanvas.rect, 0);
-				this._depthMapCanvas.draw(this._depthMapLoader.content);
-				this._thresholdMap.fillRect(this._thresholdMap.rect, 0);
-				this._thresholdMap.render();
-				this.keying();
-			}
-			
-			protected function keying():void
-			{
-				var bf:BlurFilter = new BlurFilter(3, 3, 2);
-				var bmd:BitmapData = this._thresholdBmp.bitmapData;
-				this._maskCanvas.fillRect(this._maskCanvas.rect, 0);
-				this._maskCanvas.threshold(bmd, bmd.rect, new Point(0,0), "==", 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, false);
-				this._maskCanvas.applyFilter(this._maskCanvas, this._maskCanvas.rect, new Point(0,0), bf);
-			}
-			
-			protected function _rgbLoader_completeHandler(event:Event):void
-			{
-				this._rgbCanvas.fillRect(this._rgbCanvas.rect, 0);
-				this._rgbCanvas.draw(this._rgbLoader.content);
-			}
-
-			protected function resizingHandler():void
-			{
-				this._bar.width = this._rgbFeed2.width = this._rgbFeed.width = this.stage.stageWidth;
-				this._rgbFeed2.height = this._rgbFeed.height = this.stage.stageHeight;
-				this._maskFeed.width = this.stage.stageWidth;
-				this._maskFeed.height = this.stage.stageHeight;
-			}
-			
-			protected function trackState(event:NativeWindowDisplayStateEvent):void
-			{
-				this.resizingHandler();
+				this._depthCanvas.fillRect(this._depthCanvas.rect, 0);
+				var buff:ByteArray = event.data as ByteArray;
+				BitmapUtil.byteArrayToBitmapData(buff, this._depthCanvas);
 			}
 		]]>
 	</fx:Script>
 	
-	<mx:Canvas>
-		<!-- RGB & DepthMap Capture -->
-		<mx:Canvas clipContent="false" visible="false">
-			<mx:Image id="_depthMapLoader" width="320" height="240" complete="_depthMapLoader_completeHandler(event)"/>
-			<mx:Image id="_rgbLoader" x="330" width="320" height="240" complete="_rgbLoader_completeHandler(event)"/>
-		</mx:Canvas>
-		
-		<!-- RGB & Beach Image Display -->
-		<mx:Canvas clipContent="false" visible="true">
-			<!-- Background Image 
-			<mx:Image id="_bgImg" width="800" height="600" smoothBitmapContent="true" 
-					  source="@Embed('../proj-assets/img/beach.jpg')" cacheAsBitmap="true"
-					  maintainAspectRatio="false"/>-->
-			
-			<!-- RGB Feed -->
-			<mx:Image id="_rgbFeed2" width="800" height="600" visible="true" cacheAsBitmap="true" 
-					  source="{this._rgbBmp}" maintainAspectRatio="false" />
-			
-			<mx:Box id="_bar" width="800" height="75" backgroundColor="#FF0000" y="300"/>
-			
-			<!-- RGB Feed - That is Masked! -->
-			<mx:Image id="_rgbFeed" width="800" height="600" visible="true" cacheAsBitmap="true" 
-					  source="{this._rgbBmp2}" maintainAspectRatio="false" />	
-		</mx:Canvas>
-		
-		<!-- Mask Display -->
-		<mx:Canvas clipContent="false" visible="true">
-			<!-- The Mask Feed for the RGB Feed -->
-			<mx:Image id="_maskFeed" width="800" height="600" source="{this._maskBmp}"
-					  maintainAspectRatio="false" visible="true" cacheAsBitmap="true"/>
-		</mx:Canvas>
-	</mx:Canvas>
-	
-	<mx:UIComponent id="_stats" />
+	<mx:Image id="_videoBox2" source="{this._videoBmp2}" width="800" height="600" cacheAsBitmap="true" />
+	<mx:Box id="_depthLine" y="300" width="800" height="50" backgroundColor="#FF0000" visible="false"/>
+	<mx:Image id="_videoBox" source="{this._videoBmp}" width="800" height="600" cacheAsBitmap="true"/>
+	<mx:Image id="_depthBox" source="{this._depthBmp}" width="800" height="600" cacheAsBitmap="true"/>
 	
 </mx:WindowedApplication>

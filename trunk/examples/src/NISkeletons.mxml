@@ -12,6 +12,7 @@
 			import mx.collections.ArrayCollection;
 			
 			import org.as3openni.AS3OpenNI;
+			import org.as3openni.events.AS3OpenNIEvent;
 			import org.as3openni.nite.events.NiteSessionEvent;
 			import org.as3openni.objects.NiPoint2D;
 			import org.as3openni.objects.NiPoint3D;
@@ -43,15 +44,33 @@
 				if(!this._runAppOnly)
 				{
 					this._as3OpenNI = new AS3OpenNI();
+					this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
 					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.3.0";
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.traceLog = false;
 					this._as3OpenNI.userTracking = true;
+					this._as3OpenNI.depthMap = true;
 					this._as3OpenNI.convertRealWorldToProjective = false;
 					this._as3OpenNI.init();
 					
 					this.addSessionListeners();
 					this.addUserTrackingListeners();
+				}
+			}
+			
+			protected function onReady(event:AS3OpenNIEvent):void
+			{
+				this.addEventListener(Event.ENTER_FRAME, onRender);
+				this._as3OpenNI.removeEventListener(AS3OpenNIEvent.READY, onReady);
+			}
+			
+			protected function onRender(event:Event):void
+			{
+				if(this._as3OpenNI.isReady())
+				{
+					this._as3OpenNI.getDepthBuffer();
+					this._as3OpenNI.getUserTrackingBuffer();
+					this._as3OpenNI.getSkeletonsBuffer();
 				}
 			}
 			
