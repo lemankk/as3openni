@@ -150,9 +150,19 @@ package org.as3openni
 					}
 					
 					// Setup the client socket.
-					if(this.video || this.depthMap || this.userTracking)
+					if(this.isWindows)
 					{
-						setTimeout(this.setupCaptureClientSocket, (this.waitTime*1000));
+						if(this.video || this.depthMap || this.userTracking)
+						{
+							setTimeout(this.setupCaptureClientSocket, (this.waitTime*1000));
+						}
+					}
+					else
+					{
+						if(this.video || this.depthMap)
+						{
+							setTimeout(this.setupCaptureClientSocket, (this.waitTime*1000));
+						}
 					}
 					
 					// Add optional listeners.
