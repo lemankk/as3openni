@@ -149,9 +149,9 @@ package org.as3openni
 						this.addUserTrackingListeners();
 					}
 					
-					if(this.video || this.depthMap)
+					// Setup the client socket.
+					if(this.video || this.depthMap || this.userTracking)
 					{
-						// Setup the client socket.
 						setTimeout(this.setupCaptureClientSocket, (this.waitTime*1000));
 					}
 					
@@ -206,8 +206,8 @@ package org.as3openni
 			if(this.slider && this.sliderSocket.server && this.sliderSocket.server.bound) this.sliderSocket.server.close();
 			if(this.slider && this.sliderSocket.client && this.sliderSocket.client.connected) this.sliderSocket.client.close();
 			
-			if(this.userTracking && this.userTrackingSocket.server && this.userTrackingSocket.server.bound) this.userTrackingSocket.server.close();
-			if(this.userTracking && this.userTrackingSocket.client && this.userTrackingSocket.client.connected) this.userTrackingSocket.client.close();
+			if(!this.isWindows && this.userTracking && this.userTrackingSocket.server && this.userTrackingSocket.server.bound) this.userTrackingSocket.server.close();
+			if(!this.isWindows && this.userTracking && this.userTrackingSocket.client && this.userTrackingSocket.client.connected) this.userTrackingSocket.client.close();
 		}
 		
 		/**
@@ -270,10 +270,11 @@ package org.as3openni
 								if(userId.toString().length < 2 && userId > 0)
 								{
 									var userData:NiPoint3D = new NiPoint3D();
+									userData.user = userId;
 									userData.pointX = buffer.readFloat();
 									userData.pointY = buffer.readFloat();
 									userData.pointZ = buffer.readFloat();
-									this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_USER_FOUND, Number(buffer.readInt()), userData));
+									this.dispatchEvent(new ONIUserTrackingEvent(ONIUserTrackingEvent.USER_TRACKING_USER_FOUND, userId, userData));
 								}
 								this._userTrackingBuffer.busy = false;
 								break;
@@ -283,6 +284,7 @@ package org.as3openni
 								if(skelId.toString().length < 2 && skelId > 0)
 								{
 									var skel:NiSkeleton = new NiSkeleton();
+									skel.user = skelId;
 									skel.update(buffer);
 									this.dispatchEvent(new ONISkeletonEvent(ONISkeletonEvent.USER_TRACKING, skelId, skel.leftHand, skel.rightHand, skel));
 								}
@@ -410,16 +412,6 @@ package org.as3openni
 				processArgs.push(String(this.trackPadRows + '')); // default is 9.
 			}
 			
-			// Turn on the UserTracking feature.
-			if(this.userTracking) 
-			{
-				// Pass to the binary.
-				processArgs.push("-outf");
-				
-				// Turn on the convert real world to projective for the skeleton data.
-				if(this.convertRealWorldToProjective) processArgs.push("-crwp");
-			}
-			
 			// Turn on the DepthMapCapture feature only testing one or the other in this file.
 			if(this.depthMap) 
 			{
@@ -438,6 +430,16 @@ package org.as3openni
 			{
 				// Pass to the binary.
 				processArgs.push("-orgbc");
+			}
+			
+			// Turn on the UserTracking feature.
+			if(this.userTracking) 
+			{
+				// Pass to the binary.
+				processArgs.push("-outf");
+				
+				// Turn on the convert real world to projective for the skeleton data.
+				if(this.convertRealWorldToProjective) processArgs.push("-crwp");
 			}
 			
 			// Continue...
