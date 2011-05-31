@@ -87,7 +87,7 @@
 					this._as3OpenNI.gestures = true;
 					this._as3OpenNI.circle = false;
 					this._as3OpenNI.slider = false;
-					this._as3OpenNI.userTracking = false;
+					this._as3OpenNI.userTracking = true;
 					this._as3OpenNI.convertRealWorldToProjective = false;
 					
 					this._as3OpenNI.trackPad = false;
@@ -96,9 +96,9 @@
 					
 					this._as3OpenNI.mirrorModeOff = false;
 					this._as3OpenNI.depthMap = true;
-					this._as3OpenNI.depthMapBackground = false;
+					this._as3OpenNI.depthMapBackground = true;
 					this._as3OpenNI.depthMapSnapOff = false;
-					this._as3OpenNI.video = true;
+					this._as3OpenNI.video = false;
 					this._as3OpenNI.init();
 					
 					this.addSessionListeners();
