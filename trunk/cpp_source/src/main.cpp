@@ -290,7 +290,7 @@ if (_status == XN_STATUS_NO_NODE_PRESENT)	\
 			memcpy(g_ucPlayersBuffer[i].player_id, &player, 4);
 			copyNIData(g_ucPlayersBuffer[i].player_data, com.X, com.Y, com.Z);
 	
-			//printf("AS3OpenNI :: User Tracking: %f, %f, %f\n", com.X, com.Y, com.Z);
+			//if(_printUserTracking) printf("AS3OpenNI :: User Tracking: %f, %f, %f\n", com.X, com.Y, com.Z);
 			
 			// If a user is being tracked then do this.
 			if(_userGenerator.GetSkeletonCap().IsTracking(player))
@@ -1308,7 +1308,7 @@ int main(int argc, char *argv[])
 	
 	// Setup the capture socket server for PC.
 	#if (XN_PLATFORM == XN_PLATFORM_WIN32)
-		if(_featureDepthMapCapture || _featureRGBCapture)
+		if(_featureDepthMapCapture || _featureRGBCapture || _featureUserTracking)
 		{
 			if(_useSockets)
 			{
@@ -1324,15 +1324,13 @@ int main(int argc, char *argv[])
 		xnFPSMarkFrame(&xnFPS);
 		_context.WaitAndUpdateAll();
 		_sessionManager->Update(&_context);
-		
+		if(_featureDepthMapCapture) captureDepthMap(g_ucDepthBuffer);
+		if(_featureRGBCapture) captureRGB(g_ucImageBuffer);
 		#if (XN_PLATFORM == XN_PLATFORM_WIN32)
 			if(_featureUserTracking) getPlayers();
 		#else
 			if(_featureUserTracking) renderSkeleton();
 		#endif
-		
-		if(_featureDepthMapCapture) captureDepthMap(g_ucDepthBuffer);
-		if(_featureRGBCapture) captureRGB(g_ucImageBuffer);
 	}
 	
 	CleanupExit();
