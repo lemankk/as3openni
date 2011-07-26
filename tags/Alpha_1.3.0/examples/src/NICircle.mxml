@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   minWidth="800" minHeight="600"
+			   addedToStage="init(event)" 
+			   horizontalAlign="center"
+			   verticalAlign="middle" 
+			   horizontalScrollPolicy="off"
+			   verticalScrollPolicy="off">
+	
+	<fx:Script>
+		<![CDATA[
+			import org.as3openni.AS3OpenNI;
+			import org.as3openni.nite.events.NiteCircleEvent;
+			import org.as3openni.nite.events.NiteSessionEvent;
+			
+			private var _as3OpenNI:AS3OpenNI;
+			
+			// Run or debug application.
+			private var _runAppOnly:Boolean = false;
+			private var _radius:Number = 250;
+			private var _armRadius:Number = 25;
+			
+			protected function init(event:Event):void
+			{
+				this.drawCircle();
+				this.drawArm();
+				
+				if(!this._runAppOnly)
+				{
+					this._as3OpenNI = new AS3OpenNI();
+					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.3.0";
+					this._as3OpenNI.debug = true;
+					this._as3OpenNI.circle = true;
+					this._as3OpenNI.init();
+					
+					this.addSessionListeners();
+					this.addCircleListeners();
+				}
+			}
+			
+			protected function drawCircle():void
+			{
+				this._circle.graphics.beginFill(0xFF0000);
+				this._circle.graphics.drawCircle(0, 0, this._radius);
+				this._circle.graphics.endFill();
+			}
+			
+			protected function drawArm():void
+			{
+				this._arm.graphics.beginFill(0xFFFFFF);
+				this._arm.graphics.drawCircle(0, 0, this._armRadius);
+				this._arm.graphics.endFill();
+			}
+			
+			protected function addSessionListeners():void
+			{
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_PROGRESS, sessionProgress);
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_ENDED, sessionEnded);
+			}
+			
+			protected function addCircleListeners():void
+			{
+				this._as3OpenNI.addEventListener(NiteCircleEvent.ANGLE, circleAngle);
+				this._as3OpenNI.addEventListener(NiteCircleEvent.NO_CIRCLE, noCircle);
+			}
+			
+			protected function sessionStarted(event:NiteSessionEvent):void
+			{
+				trace('Session Started');
+			}
+			
+			protected function sessionProgress(event:NiteSessionEvent):void
+			{
+				trace('Session Progress');
+			}
+			
+			protected function sessionEnded(event:NiteSessionEvent):void
+			{
+				trace('Session Ended');
+			}
+			
+			protected function circleAngle(event:NiteCircleEvent):void
+			{
+				//trace('Circle Angle: ' + event.angle);
+				//trace('Clockwise: ' + event.clockwise);
+				
+				var angle:Number = event.angle;
+				var rad:Number = (this._radius - this._armRadius - 10);
+				var centerPoint:Number = this._circleArea.width/2;
+				
+				this._arm.x = centerPoint + Math.cos(angle) * rad;
+				this._arm.y = centerPoint + Math.sin(angle) * rad;
+			}
+			
+			protected function noCircle(event:NiteCircleEvent):void
+			{
+				trace('No Circle Found');
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:Canvas id="_circleArea" width="500" height="500" clipContent="true" 
+			   horizontalScrollPolicy="off" verticalScrollPolicy="off">
+		<mx:UIComponent id="_circle" x="250" y="250"/>
+		<mx:UIComponent id="_arm" x="250" y="35" />
+	</mx:Canvas>
+	
+</mx:WindowedApplication>

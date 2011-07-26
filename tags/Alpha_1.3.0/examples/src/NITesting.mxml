@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   minWidth="800" minHeight="600"
+			   addedToStage="init(event)" 
+			   horizontalAlign="left"
+			   verticalAlign="top" 
+			   horizontalScrollPolicy="off"
+			   verticalScrollPolicy="off"
+			   layout="absolute"
+			   frameRate="210">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.senocular.ui.IVirtualMouseEvent;
+			import com.senocular.ui.VirtualMouse;
+			
+			import org.as3openni.AS3OpenNI;
+			import org.as3openni.events.AS3OpenNIEvent;
+			import org.as3openni.events.openni.OpenNIEvent;
+			import org.as3openni.global.Definitions;
+			import org.as3openni.nite.events.NiteCircleEvent;
+			import org.as3openni.nite.events.NiteGestureEvent;
+			import org.as3openni.nite.events.NitePointEvent;
+			import org.as3openni.nite.events.NiteSessionEvent;
+			import org.as3openni.nite.events.NiteSliderEvent;
+			import org.as3openni.nite.events.NiteTrackPadEvent;
+			import org.as3openni.objects.NiPoint2D;
+			import org.as3openni.objects.NiPoint3D;
+			import org.as3openni.openni.events.ONISkeletonEvent;
+			import org.as3openni.openni.events.ONIUserTrackingEvent;
+			import org.as3openni.util.BitmapUtil;
+			import org.as3openni.util.math.NiPoint3DUtil;
+			
+			private var _as3OpenNI:AS3OpenNI;
+			private var _virtualMouse:VirtualMouse;
+			private var _currentX:Number = 0;
+			private var _currentY:Number = 0;
+			
+			// Run or debug application.
+			private var _runAppOnly:Boolean = false;
+			
+			// For the depth camera/rgb testing.
+			private var _depthMapCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
+			private var _videoCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
+			
+			[Bindable]
+			private var _depthMapBmp:Bitmap;
+			
+			[Bindable]
+			private var _videoBmp:Bitmap;
+			
+			protected function init(event:Event):void
+			{
+				// Setup garbage collection.
+				System.gc();
+				
+				// Setup the virtual mouse.
+				this._virtualMouse = new VirtualMouse(this.stage, this._cursor.x, this._cursor.y);
+				this._virtualMouse.ignore(this._cursor);
+				this.stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
+				
+				// Setup the DepthMap bitmap and the RGB bitmap.
+				this._depthMapBmp = new Bitmap(this._depthMapCanvas);
+				this._videoBmp = new Bitmap(this._videoCanvas);
+				
+				// Draw left hand tracking ball.
+				this._leftHandBall.graphics.beginFill(0xFF0000);
+				this._leftHandBall.graphics.drawCircle(0,0,40);
+				this._leftHandBall.graphics.endFill();
+				
+				// Draw right hand tracking ball.
+				this._rightHandBall.graphics.beginFill(0xFF0000);
+				this._rightHandBall.graphics.drawCircle(0,0,40);
+				this._rightHandBall.graphics.endFill();
+				
+				// Run the AS3OpenNI setup.
+				if(!this._runAppOnly)
+				{
+					this._as3OpenNI = new AS3OpenNI();
+					this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
+					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.3.0";
+					this._as3OpenNI.debug = true;
+					this._as3OpenNI.traceLog = false;
+					
+					this._as3OpenNI.singlePoint = false;
+					this._as3OpenNI.gestures = false;
+					this._as3OpenNI.circle = false;
+					this._as3OpenNI.slider = false;
+					this._as3OpenNI.userTracking = true;
+					this._as3OpenNI.convertRealWorldToProjective = false;
+					
+					this._as3OpenNI.trackPad = false;
+					this._as3OpenNI.trackPadColumns = 2;
+					this._as3OpenNI.trackPadRows = 4;
+					
+					this._as3OpenNI.mirrorModeOff = false;
+					this._as3OpenNI.depthMap = true;
+					this._as3OpenNI.depthMapBackground = true;
+					this._as3OpenNI.depthMapSnapOff = false;
+					this._as3OpenNI.video = true;
+					this._as3OpenNI.init();
+					
+					this.addSessionListeners();
+					this.addSinglePointListeners();
+					this.addGestureListeners();
+					this.addCircleListeners();
+					this.addSliderListeners();
+					this.addTrackPadListeners();
+					this.addUserTrackingListeners();
+				}
+			}
+			
+			protected function onReady(event:AS3OpenNIEvent):void
+			{
+				this.addEventListener(Event.ENTER_FRAME, onRender);
+				this._as3OpenNI.removeEventListener(AS3OpenNIEvent.READY, onReady);
+				this._as3OpenNI.addEventListener(OpenNIEvent.ON_VIDEO, onVideo);
+				this._as3OpenNI.addEventListener(OpenNIEvent.ON_DEPTH, onDepth);
+			}
+			
+			protected function onRender(event:Event):void
+			{
+				if(this._as3OpenNI.isReady())
+				{
+					this._as3OpenNI.getVideoBuffer();
+					this._as3OpenNI.getDepthBuffer();
+					this._as3OpenNI.getUserTrackingBuffer();
+					this._as3OpenNI.getSkeletonsBuffer();
+				}
+			}
+			
+			protected function mouseMove(event:MouseEvent):void
+			{
+				if(event is IVirtualMouseEvent)
+				{
+					this._cursor.x = this._virtualMouse.x;
+					this._cursor.y = this._virtualMouse.y;
+				}
+			}
+			
+			protected function addSessionListeners():void
+			{
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_STARTED, sessionStarted);
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_PROGRESS, sessionProgress);
+				this._as3OpenNI.addEventListener(NiteSessionEvent.SESSION_ENDED, sessionEnded);
+			}
+			
+			protected function addSinglePointListeners():void
+			{
+				this._as3OpenNI.addEventListener(NitePointEvent.POINT_DETECTED, pointDetected);
+			}
+			
+			protected function addGestureListeners():void
+			{
+				this._as3OpenNI.addEventListener(NiteGestureEvent.PUSH, pushDetected);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.WAVE, waveDetected);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.SWIPE_UP, swipeUp);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.SWIPE_DOWN, swipeDown);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.SWIPE_LEFT, swipeLeft);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.SWIPE_RIGHT, swipeRight);
+				this._as3OpenNI.addEventListener(NiteGestureEvent.STEADY, steadyDetected);
+			}
+			
+			protected function addCircleListeners():void
+			{
+				this._as3OpenNI.addEventListener(NiteCircleEvent.ANGLE, circleAngle);
+				this._as3OpenNI.addEventListener(NiteCircleEvent.NO_CIRCLE, noCircle);
+			}
+			
+			protected function addSliderListeners():void
+			{
+				this._as3OpenNI.addEventListener(NiteSliderEvent.SLIDER_LEFT_RIGHT_VALUE, sliderLeftRightValue);
+				this._as3OpenNI.addEventListener(NiteSliderEvent.SLIDER_UP_DOWN_VALUE, sliderUpDownValue);
+				this._as3OpenNI.addEventListener(NiteSliderEvent.SLIDER_IN_OUT_VALUE, sliderInOutValue);
+			}
+			
+			protected function addTrackPadListeners():void
+			{
+				this._as3OpenNI.addEventListener(NiteTrackPadEvent.TRACKPAD_HOVER, trackPadHover);
+			}
+			
+			protected function addUserTrackingListeners():void
+			{
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_NEW_USER, newUser);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_LOST_USER, userLost);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_POSE_DETECTED, userPoseDetected);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_START, userCalibrationStarted);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_COMPLETE, userCalibrationComplete);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_CALIBRATION_FAILED, userCalibrationFailed);
+				this._as3OpenNI.addEventListener(ONIUserTrackingEvent.USER_TRACKING_USER_FOUND, userFound);
+				this._as3OpenNI.addEventListener(ONISkeletonEvent.USER_TRACKING, skeleton);
+			}
+			
+			protected function sessionStarted(event:NiteSessionEvent):void
+			{
+				trace('Session Started');
+			}
+			
+			protected function sessionProgress(event:NiteSessionEvent):void
+			{
+				trace('Session Progress');
+			}
+			
+			protected function sessionEnded(event:NiteSessionEvent):void
+			{
+				trace('Session Ended');
+			}
+			
+			protected function userFound(event:ONIUserTrackingEvent):void
+			{
+				trace('User: ' + event.user + ', Single-Point: ' + event.userSinglePoint.toString());
+			}
+			
+			protected function newUser(event:ONIUserTrackingEvent):void
+			{
+				trace('New User Found: ' + event.user);
+			}
+			
+			protected function userLost(event:ONIUserTrackingEvent):void
+			{
+				trace('Lost User: ' + event.user);
+			}
+			
+			protected function userPoseDetected(event:ONIUserTrackingEvent):void
+			{
+				trace('Pose Detected for User: ' + event.user);
+			}
+			
+			protected function userCalibrationStarted(event:ONIUserTrackingEvent):void
+			{
+				trace('Calibration Started for User: ' + event.user);
+			}
+			
+			protected function userCalibrationComplete(event:ONIUserTrackingEvent):void
+			{
+				trace('Calibration Complete for User: ' + event.user);
+			}
+			
+			protected function userCalibrationFailed(event:ONIUserTrackingEvent):void
+			{
+				trace('Calibration Failed for User: ' + event.user);
+			}
+			
+			protected function skeleton(event:ONISkeletonEvent):void
+			{
+				var leftHand3D:NiPoint3D = event.leftHand as NiPoint3D;
+				var rightHand3D:NiPoint3D = event.rightHand as NiPoint3D;
+				if(leftHand3D && rightHand3D)
+				{
+					var sw:Number = this.stage.stageWidth;
+					var sh:Number = this.stage.stageHeight;
+					
+					var leftHand:NiPoint2D = NiPoint3DUtil.convertRealWorldToScreen(leftHand3D, sw, sh);
+					var rightHand:NiPoint2D = NiPoint3DUtil.convertRealWorldToScreen(rightHand3D, sw, sh);
+					
+					this._leftHandBall.x = leftHand.pointX;
+					this._leftHandBall.y = leftHand.pointY;
+					
+					this._rightHandBall.x = rightHand.pointX;
+					this._rightHandBall.y = rightHand.pointY;
+				}
+			}
+			
+			protected function trackPadHover(event:NiteTrackPadEvent):void
+			{
+				trace('TrackPad-Hover Column: ' + event.column);
+				trace('TrackPad-Hover Row: ' + event.row);
+				trace('TrackPad-Hover Direction: ' + event.direction);
+			}
+			
+			protected function sliderLeftRightValue(event:NiteSliderEvent):void
+			{
+				trace('Left/Right Dir: ' + event.direction);
+				trace('Left/Right Value: ' + event.value);
+			}
+			
+			protected function sliderUpDownValue(event:NiteSliderEvent):void
+			{
+				trace('Up/Down Dir: ' + event.direction);
+				trace('Up/Down Value: ' + event.value);
+			}
+			
+			protected function sliderInOutValue(event:NiteSliderEvent):void
+			{
+				trace('In/Out Dir: ' + event.direction);
+				trace('In/Out Value: ' + event.value);
+			}
+			
+			protected function circleAngle(event:NiteCircleEvent):void
+			{
+				trace('Circle Angle: ' + event.angle);
+				trace('Clockwise: ' + event.clockwise);
+			}
+			
+			protected function noCircle(event:NiteCircleEvent):void
+			{
+				trace('No Circle Found');
+			}
+			
+			protected function pushDetected(event:NiteGestureEvent):void
+			{
+				trace('Push Detected - Velocity: ' + event.velocity + ', Angle: ' + event.angle);
+			}
+			
+			protected function waveDetected(event:NiteGestureEvent):void
+			{
+				trace('Wave Detected');
+			}
+			
+			protected function swipeUp(event:NiteGestureEvent):void
+			{
+				trace('Swipe Up - Velocity: ' + event.velocity + ', Angle: ' + event.angle);
+			}
+			
+			protected function swipeDown(event:NiteGestureEvent):void
+			{
+				trace('Swipe Down - Velocity: ' + event.velocity + ', Angle: ' + event.angle);
+			}
+			
+			protected function swipeLeft(event:NiteGestureEvent):void
+			{
+				trace('Swipe Left - Velocity: ' + event.velocity + ', Angle: ' + event.angle);
+			}
+			
+			protected function swipeRight(event:NiteGestureEvent):void
+			{
+				trace('Swipe Right - Velocity: ' + event.velocity + ', Angle: ' + event.angle);
+			}
+			
+			protected function steadyDetected(event:NiteGestureEvent):void
+			{
+				trace('Steady Hand - Velocity: ' + event.velocity);
+			}
+			
+			protected function pointDetected(event:NitePointEvent):void
+			{
+				var point3D:NiPoint3D = event.point3D as NiPoint3D;
+				var obj:NiPoint2D = NiPoint3DUtil.convertRealWorldToScreen(point3D, this.stage.stageWidth, this.stage.stageHeight);
+				this._currentX = obj.pointX;
+				this._currentY = obj.pointY;
+				
+				if(point3D)
+				{
+					this._virtualMouse.lock();
+					this._virtualMouse.x = this._currentX;
+					this._virtualMouse.y = this._currentY;
+					this._virtualMouse.unlock();
+				}
+			}
+
+			protected function onVideo(event:OpenNIEvent):void
+			{
+				this._videoCanvas.fillRect(this._videoCanvas.rect, 0);
+				var buff:ByteArray = event.data as ByteArray;
+				BitmapUtil.byteArrayToBitmapData(buff, this._videoCanvas);
+			}
+			
+			protected function onDepth(event:OpenNIEvent):void
+			{
+				this._depthMapCanvas.fillRect(this._depthMapCanvas.rect, 0);
+				var buff:ByteArray = event.data as ByteArray;
+				BitmapUtil.byteArrayToBitmapData(buff, this._depthMapCanvas);
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:Canvas x="50" y="50">
+		<mx:Image id="_videoBox" source="{this._videoBmp}" width="320" height="240" cacheAsBitmap="true"/>
+		<mx:Image id="_depthMapBox" x="330" source="{this._depthMapBmp}" width="320" height="240" cacheAsBitmap="true"/>
+	</mx:Canvas>
+	
+	<mx:Image id="_cursor" source="@Embed('../proj-assets/swf/hand.swf')" scaleX="2.5" scaleY="2.5"/>
+	<mx:UIComponent id="_leftHandBall" />
+	<mx:UIComponent id="_rightHandBall" />
+	
+</mx:WindowedApplication>

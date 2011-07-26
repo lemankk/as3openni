@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   minWidth="800" minHeight="600"
+			   addedToStage="init(event)"
+			   layout="absolute"
+			   horizontalAlign="left"
+			   verticalAlign="top" 
+			   horizontalScrollPolicy="off"
+			   verticalScrollPolicy="off"
+			   backgroundColor="#000000"
+			   frameRate="210">
+	
+	<fx:Script>
+		<![CDATA[
+			
+			import flash.filters.BlurFilter;
+			
+			import org.as3openni.AS3OpenNI;
+			import org.as3openni.events.AS3OpenNIEvent;
+			import org.as3openni.events.openni.OpenNIEvent;
+			import org.as3openni.global.Definitions;
+			import org.as3openni.util.BitmapUtil;
+			
+			private var _flexUIOnly:Boolean = false;
+			private var _as3OpenNI:AS3OpenNI;
+			private var _videoCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
+			private var _videoCanvas2:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, false, 0);
+			private var _depthCanvas:BitmapData = new BitmapData(Definitions.VGA_MAX_WIDTH, Definitions.VGA_MAX_HEIGHT, true, 0xFF0000);
+			
+			[Bindable]
+			private var _videoBmp:Bitmap;
+			
+			[Bindable]
+			private var _videoBmp2:Bitmap;
+			
+			[Bindable]
+			private var _depthBmp:Bitmap;
+			
+			protected function init(event:Event):void
+			{
+				// Define bitmaps to draw on to.
+				this._videoBmp = new Bitmap(this._videoCanvas);
+				this._videoBmp2 = new Bitmap(this._videoCanvas2);
+				this._depthBmp = new Bitmap(this._depthCanvas);
+				
+				// Run AS3OpenNI.
+				if(!this._flexUIOnly)
+				{
+					this._as3OpenNI = new AS3OpenNI();
+					this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
+					this._as3OpenNI.binaryPath = 'bin/AS3OpenNI_Alpha_1.3.0';
+					this._as3OpenNI.debug = true;
+					this._as3OpenNI.video = true;
+					this._as3OpenNI.depthMap = true;
+					this._as3OpenNI.depthMapBackground = false;
+					this._as3OpenNI.mirrorModeOff = false;
+					this._as3OpenNI.init();
+				}
+				
+				var bf:BlurFilter = new BlurFilter(4, 4, 3);
+				this._depthBox.filters = [bf];
+				this._videoBox.mask = this._depthBox;
+			}
+			
+			protected function onReady(event:AS3OpenNIEvent):void
+			{
+				this.addEventListener(Event.ENTER_FRAME, onRender);
+				this._as3OpenNI.removeEventListener(AS3OpenNIEvent.READY, onReady);
+				
+				this._as3OpenNI.addEventListener(OpenNIEvent.ON_VIDEO, onVideo);
+				this._as3OpenNI.addEventListener(OpenNIEvent.ON_DEPTH, onDepth);
+			}
+			
+			protected function onRender(event:Event):void
+			{
+				if(this._as3OpenNI.isReady())
+				{
+					this._as3OpenNI.getVideoBuffer();
+					this._as3OpenNI.getDepthBuffer();
+				}
+			}
+			
+			protected function onVideo(event:OpenNIEvent):void
+			{
+				this._videoCanvas2.fillRect(this._videoCanvas2.rect, 0);
+				this._videoCanvas.fillRect(this._videoCanvas.rect, 0);
+				var buff:ByteArray = event.data as ByteArray;
+				var buff2:ByteArray = new ByteArray();
+				buff2.writeBytes(buff, 0, buff.bytesAvailable);
+				buff2.position = 0;
+				
+				BitmapUtil.byteArrayToBitmapData(buff, this._videoCanvas);
+				BitmapUtil.byteArrayToBitmapData(buff2, this._videoCanvas2);
+				BitmapUtil.setBlackWhiteFilter(this._videoCanvas2);
+			}
+			
+			protected function onDepth(event:OpenNIEvent):void
+			{
+				this._depthCanvas.fillRect(this._depthCanvas.rect, 0);
+				var buff:ByteArray = event.data as ByteArray;
+				BitmapUtil.byteArrayToBitmapData(buff, this._depthCanvas);
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:Image id="_videoBox2" source="{this._videoBmp2}" width="800" height="600" cacheAsBitmap="true" />
+	<mx:Box id="_depthLine" y="300" width="800" height="50" backgroundColor="#FF0000" visible="false"/>
+	<mx:Image id="_videoBox" source="{this._videoBmp}" width="800" height="600" cacheAsBitmap="true"/>
+	<mx:Image id="_depthBox" source="{this._depthBmp}" width="800" height="600" cacheAsBitmap="true"/>
+	
+</mx:WindowedApplication>
