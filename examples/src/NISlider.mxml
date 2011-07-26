@@ -24,7 +24,7 @@
 				if(!this._runAppOnly)
 				{
 					this._as3OpenNI = new AS3OpenNI();
-					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.3.0";
+					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.3.2";
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.slider = true;
 					this._as3OpenNI.init();
