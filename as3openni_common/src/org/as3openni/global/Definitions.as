@@ -10,7 +10,7 @@ package org.as3openni.global
 		
 		public static const OPEN_NI_USER_TRACKING_SOCKET:String = AS3OPENNI_LABEL + 'OPENNI User Tracking Socket';
 		
-		public static const HEADER:String = 'Info (' + AS3OPENNI_LABEL + 'Alpha 1.3.0)';
+		public static const HEADER:String = 'Info (' + AS3OPENNI_LABEL + 'Alpha 1.3.2)';
 		public static const AS3OPENNI_CAPTURE_CONNECTED:String = AS3OPENNI_LABEL + 'Server Connected';
 		
 		public static const CLIENT_SOCKET_CONNECTED:String = AS3OPENNI_LABEL + 'Capture Socket Connected';
