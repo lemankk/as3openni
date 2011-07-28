@@ -86,6 +86,7 @@ package org.as3openni
 		public var depthMap:Boolean = false;
 		public var depthMapBackground:Boolean = false;
 		public var depthMapSnapOff:Boolean = false;
+		public var depthMapDetectOff:Boolean = false;
 		public var video:Boolean = false;
 		public var mirrorModeOff:Boolean = false;
 		public var convertRealWorldToProjective:Boolean = false;
