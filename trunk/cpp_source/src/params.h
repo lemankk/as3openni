@@ -29,6 +29,7 @@ extern XnBool _featureDepthMapCapture;
 extern XnBool _snapPixels;
 extern XnBool _mirror;
 extern XnBool _depthMapBackground;
+extern XnBool _depthMapDetect;
 extern XnBool _convertRealWorldToProjective;
 
 // Use sockets or not

@@ -1,7 +1,7 @@
 /****************************************************************************
 *                                                                           *
 *   Project:	AS3OpenNI	                                        		*
-*   Version:	Alpha 1.3.0                                                 *
+*   Version:	Alpha 1.3.2                                                 *
 *   Author:     Tony Birleffi												*
 *   URL: 		http://code.google.com/p/as3openni/							*
 *                                                                           *
@@ -9,7 +9,7 @@
 
 /****************************************************************************
 *                                                                           *
-*   AS3OpenNI Alpha 1.3.0	                                                *
+*   AS3OpenNI Alpha 1.3.2	                                                *
 *   Copyright (C) 2011 Tony Birleffi. All Rights Reserved.                  *
 *                                                                           *
 *   This file has been provided pursuant to a License Agreement containing  *
@@ -121,6 +121,7 @@ XnBool _featureDepthMapCapture = false;
 XnBool _snapPixels = true;
 XnBool _mirror = true;
 XnBool _depthMapBackground = false;
+XnBool _depthMapDetect = true;
 XnBool _drawPixels = true;
 XnBool _inSession = false;
 XnBool _quit = false;
@@ -444,9 +445,19 @@ void captureDepthMap(unsigned char* g_ucDepthBuffer)
 					if (nValue != 0)
 					{
 						nHistValue = g_pDepthHist[nValue];
-						g_ucDepthBuffer[0] = nHistValue * Colors[nColorID][0]; 
-						g_ucDepthBuffer[1] = nHistValue * Colors[nColorID][1];
-						g_ucDepthBuffer[2] = nHistValue * Colors[nColorID][2];
+						if(_depthMapDetect)
+						{
+							g_ucDepthBuffer[0] = nHistValue * Colors[nColorID][0]; 
+							g_ucDepthBuffer[1] = nHistValue * Colors[nColorID][1];
+							g_ucDepthBuffer[2] = nHistValue * Colors[nColorID][2];
+						}
+						else
+						{
+							g_ucDepthBuffer[0] = nHistValue; 
+							g_ucDepthBuffer[1] = nHistValue;
+							g_ucDepthBuffer[2] = nHistValue;
+						}
+						
 						g_ucDepthBuffer[3] = 0xFF;
 					}
 				}

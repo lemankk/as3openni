@@ -21,6 +21,7 @@ void setupParams(int argc, char *argv[])
 				cout<<"-tpr 9 || # of TrackPad Rows, default is 9\n";
 				cout<<"-grey || RGBCapture render in grayscale, default is false\n";
 				cout<<"-dmbg || Turn on the DepthMapCapture background, default is false\n";
+				cout<<"-dmdo || Turn off the DepthMapDetect, default is true\n";
 				cout<<"-snapoff || Snap the RGBCapture pixels with the DepthMapCapture pixels, default is on\n";
 				cout<<"-mrev || Mirror mode will be set to false, default is true\n";
 				cout<<"-crwp || Convert skeleton data from real world to projective, default is off\n";
@@ -89,6 +90,12 @@ void setupParams(int argc, char *argv[])
 			{
 				_depthMapBackground = true;
 				cout<<"AS3OpenNI :: DepthMapCapture background is now on\n";
+			}
+			
+			if(param == "-dmdo")
+			{
+				_depthMapDetect = false;
+				cout<<"AS3OpenNI :: DepthMapDetect is now off\n";
 			}
 			
 			// Turn on features.
