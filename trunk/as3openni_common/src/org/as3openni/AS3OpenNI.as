@@ -429,8 +429,11 @@ package org.as3openni
 				// Pass to the binary.
 				processArgs.push("-odmc");
 				
-				// Turn the DepthMaptCapture background on.
+				// Turn the DepthMapCapture background on.
 				if(this.depthMapBackground) processArgs.push("-dmbg");
+				
+				// Turn the DepthMapDetect off.
+				if(this.depthMapDetectOff) processArgs.push("-dmdo");
 				
 				// Snap the pixels of the DepthMap and RGB together or not, default is false.
 				if(this.depthMapSnapOff) processArgs.push("-snapoff");
