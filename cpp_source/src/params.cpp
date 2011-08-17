@@ -95,6 +95,7 @@ void setupParams(int argc, char *argv[])
 			if(param == "-dmdo")
 			{
 				_depthMapDetect = false;
+				if(!_depthMapBackground) _depthMapBackground = true;
 				cout<<"AS3OpenNI :: DepthMapDetect is now off\n";
 			}
 			
