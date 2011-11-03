@@ -1,7 +1,7 @@
 /****************************************************************************
 *                                                                           *
 *   Project:	AS3OpenNI	                                        		*
-*   Version:	Alpha 1.3.2                                                 *
+*   Version:	Alpha 1.4.0                                                *
 *   Author:     Tony Birleffi												*
 *   URL: 		http://code.google.com/p/as3openni/							*
 *                                                                           *
@@ -9,7 +9,7 @@
 
 /****************************************************************************
 *                                                                           *
-*   AS3OpenNI Alpha 1.3.2	                                                *
+*   AS3OpenNI Alpha 1.4.0	                                                *
 *   Copyright (C) 2011 Tony Birleffi. All Rights Reserved.                  *
 *                                                                           *
 *   This file has been provided pursuant to a License Agreement containing  *

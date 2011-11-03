@@ -49,7 +49,7 @@
 				{
 					this._as3OpenNI = new AS3OpenNI();
 					this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
-					this._as3OpenNI.binaryPath = 'bin/AS3OpenNI_Alpha_1.3.2';
+					this._as3OpenNI.binaryPath = 'bin/AS3OpenNI_Alpha_1.4.0';
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.video = true;
 					this._as3OpenNI.depthMap = true;

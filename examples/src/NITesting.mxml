@@ -79,7 +79,7 @@
 				{
 					this._as3OpenNI = new AS3OpenNI();
 					this._as3OpenNI.addEventListener(AS3OpenNIEvent.READY, onReady);
-					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.3.2";
+					this._as3OpenNI.binaryPath = "bin/AS3OpenNI_Alpha_1.4.0";
 					this._as3OpenNI.debug = true;
 					this._as3OpenNI.traceLog = false;
 					
@@ -98,7 +98,7 @@
 					this._as3OpenNI.depthMap = true;
 					this._as3OpenNI.depthMapBackground = true;
 					this._as3OpenNI.depthMapSnapOff = false;
-					this._as3OpenNI.depthMapDetectOff = true;
+					this._as3OpenNI.depthMapDetectOff = false;
 					this._as3OpenNI.video = true;
 					this._as3OpenNI.init();
 					

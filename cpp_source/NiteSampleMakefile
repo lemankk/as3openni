@@ -17,6 +17,6 @@ INC_DIRS += /usr/include/nite /usr/include/ni
 
 BIN_DIR = ../bin
 
-USED_LIBS += OpenNI XnVNite_1_4_1
+USED_LIBS += OpenNI XnVNite_1_4_2
 
 include ../CommonMakefile
