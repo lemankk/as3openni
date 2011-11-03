@@ -74,6 +74,13 @@ Author: Tony Birleffi
   * Updated to the latest frameworks for both OpenNI and NITE.
   * Added the 'depthMapDetectOff' boolean in.
   
+===Version: Alpha 1.4.0: Features:===
+  * Updated and tested on the latest supported frameworks:
+  		* OpenNI Framework v1.3.3.6 - (Stable) Windows x64 (64-bit) 
+  		* PrimeSense NITE Framework v1.4.2.4 - (Stable) Windows x64 (64-bit) 
+  		* OpenNI Framework v1.3.4.3 - (Unstable) MacOSX 10.6 Universal (x86/x64 - (32/64-bit))
+  		* PrimeSense NITE Framework v1.4.2.4 - (Unstable) MacOSX 10.6 Universal (x86/x64 - (32/64-bit))
+  
 ===TODO LIST:===
   * Add Hand/Finger Tracking
   * Node.js/Pure ActionScript 3.0 project examples
